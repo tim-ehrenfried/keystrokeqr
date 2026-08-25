@@ -5,7 +5,9 @@ RELEASE_BIN := $(BUILD_DIR)/release/$(BINARY)
 DIST_DIR    := dist
 BUNDLE      := $(DIST_DIR)/$(APP_NAME).app
 DMG         := $(DIST_DIR)/KeystrokeQR-Host.dmg
-DMG_BG      := $(BUILD_DIR)/dmg-background.png
+# Vorgeneriertes, eingechecktes Hintergrundbild (wie Support/AppIcon.icns) —
+# so braucht `make dmg` (und die CI) KEIN ImageMagick. Neu erzeugen mit `make dmg-bg`.
+DMG_BG      := Support/dmg-background.png
 LANGS       := en de
 
 # Signatur-Identität: Standard ist ad-hoc ("-"). Mit Apple-Developer-Account
@@ -13,7 +15,7 @@ LANGS       := en de
 # (verfügbare Identitäten anzeigen: security find-identity -v -p codesigning)
 SIGN_IDENTITY ?= -
 
-.PHONY: build app icon dmg run clean
+.PHONY: build app icon dmg dmg-bg run clean
 
 ## Release-Binary bauen
 build:
@@ -39,9 +41,13 @@ app: build
 	codesign --force --options runtime --sign "$(SIGN_IDENTITY)" "$(BUNDLE)"
 	@echo "Bundle erstellt: $(BUNDLE)"
 
-## Gestyltes DMG „KeystrokeQR-Host.dmg" bauen (App links, /Applications rechts)
-dmg: app
+## DMG-Hintergrundbild neu erzeugen (nur bei Design-Änderung; braucht ImageMagick)
+dmg-bg:
 	bash ./Support/make-dmg-background.sh "$(DMG_BG)"
+
+## Gestyltes DMG „KeystrokeQR-Host.dmg" bauen (App links, /Applications rechts).
+## Nutzt das eingecheckte $(DMG_BG) — kein ImageMagick zur Build-Zeit nötig.
+dmg: app
 	bash ./Support/make-dmg.sh "$(BUNDLE)" "$(APP_NAME)" "$(DMG)" "$(DMG_BG)" "$(SIGN_IDENTITY)"
 	@echo "DMG erstellt: $(DMG)"
 
@@ -53,4 +59,3 @@ run: app
 clean:
 	swift package clean
 	rm -rf "$(DIST_DIR)"
-	rm -f "$(DMG_BG)"

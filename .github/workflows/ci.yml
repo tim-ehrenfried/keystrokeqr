@@ -28,10 +28,10 @@ jobs:
       - name: Bundle verifizieren
         working-directory: macos
         run: |
-          test -x "dist/QR Keyboard Host.app/Contents/MacOS/QRKeyboardHost"
-          test -f "dist/QR Keyboard Host.app/Contents/Resources/AppIcon.icns"
-          plutil -lint "dist/QR Keyboard Host.app/Contents/Info.plist"
-          codesign --verify --verbose=2 "dist/QR Keyboard Host.app"
+          test -x "dist/KeystrokeQR Host.app/Contents/MacOS/QRKeyboardHost"
+          test -f "dist/KeystrokeQR Host.app/Contents/Resources/AppIcon.icns"
+          plutil -lint "dist/KeystrokeQR Host.app/Contents/Info.plist"
+          codesign --verify --verbose=2 "dist/KeystrokeQR Host.app"
 
   ios-scanner:
     name: iOS-Scanner (Simulator-Build)
