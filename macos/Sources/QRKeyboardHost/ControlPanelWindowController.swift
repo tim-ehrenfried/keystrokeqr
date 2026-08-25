@@ -757,27 +757,44 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             format: L("menu.device.pairedAt"), Self.dateFormatter.string(from: device.pairedAt)))
         date.font = .systemFont(ofSize: 11)
         date.textColor = .secondaryLabelColor
+        date.lineBreakMode = .byTruncatingTail
+        // Datum soll nicht von den Buttons weggedrückt werden (deutsche Labels sind
+        // länger) — daher Icon-Buttons unten + hohe Kompressionsresistenz hier.
+        date.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
 
         let textStack = NSStackView(views: [name, date])
         textStack.orientation = .vertical
         textStack.alignment = .leading
         textStack.spacing = 2
 
-        let renameButton = NSButton(
-            title: L("menu.device.rename"), target: self, action: #selector(renameDevice(_:)))
-        renameButton.bezelStyle = .rounded
-        renameButton.controlSize = .regular
-        renameButton.identifier = NSUserInterfaceItemIdentifier(device.deviceID.uuidString)
-        renameButton.setContentHuggingPriority(.required, for: .horizontal)
+        // Icon-Buttons (sprachneutral, platzsparend): Stift = Umbenennen, Papierkorb
+        // = Entfernen. Tooltip/Accessibility tragen den Text.
+        func iconButton(symbol: String, fallback: String, tint: NSColor?, action: Selector, tip: String) -> NSButton {
+            let b = NSButton(title: "", target: self, action: action)
+            b.bezelStyle = .rounded
+            b.controlSize = .regular
+            b.imagePosition = .imageOnly
+            if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: tip) {
+                b.image = img
+            } else {
+                b.title = fallback
+            }
+            b.contentTintColor = tint
+            b.toolTip = tip
+            b.identifier = NSUserInterfaceItemIdentifier(device.deviceID.uuidString)
+            b.setContentHuggingPriority(.required, for: .horizontal)
+            b.setContentCompressionResistancePriority(.required, for: .horizontal)
+            return b
+        }
+
+        let renameButton = iconButton(
+            symbol: "pencil", fallback: L("menu.device.rename"), tint: nil,
+            action: #selector(renameDevice(_:)), tip: L("menu.device.rename"))
         renameButton.setAccessibilityLabel(String(format: L("a11y.device.rename"), device.name))
 
-        let removeButton = NSButton(
-            title: L("menu.device.remove"), target: self, action: #selector(removeDevice(_:)))
-        removeButton.bezelStyle = .rounded
-        removeButton.controlSize = .regular
-        removeButton.contentTintColor = .systemRed
-        removeButton.identifier = NSUserInterfaceItemIdentifier(device.deviceID.uuidString)
-        removeButton.setContentHuggingPriority(.required, for: .horizontal)
+        let removeButton = iconButton(
+            symbol: "trash", fallback: L("menu.device.remove"), tint: .systemRed,
+            action: #selector(removeDevice(_:)), tip: L("menu.device.remove"))
         removeButton.setAccessibilityLabel(String(format: L("a11y.device.remove"), device.name))
 
         let spacer = NSView()

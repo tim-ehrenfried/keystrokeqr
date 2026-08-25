@@ -3,6 +3,12 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.13.1] – 2026-08-25 (nur macOS)
+
+### Fixed
+- **macOS – Absturz/Hänger beim Öffnen der Einführung**: Der Einrichtungsassistent rief `updateAccessibility()` mitten im lazy-Aufbau der `setupView` auf, wobei diese Methode `setupView` selbst referenziert → re-entranter Zugriff auf den unfertigen Lazy-Initializer = Endlos-Rekursion. Der redundante Aufruf wurde entfernt (Status wird nach dem Aufbau gesetzt). Durch erzwungenes Onboarding beim Start verifiziert: App bleibt stabil.
+- **macOS – Geräteliste schnitt „gekoppelt seit …" (deutsch) ab**: Die längeren deutschen Buttons „Umbenennen/Entfernen" drückten das Datum weg. Umbenennen/Entfernen sind jetzt platzsparende, sprachneutrale Icon-Buttons (Stift/Papierkorb, mit Tooltip + VoiceOver-Label); das Datum wird nicht mehr abgeschnitten.
+
 ## [0.13.0] – 2026-08-25 (nur macOS)
 
 ### Fixed

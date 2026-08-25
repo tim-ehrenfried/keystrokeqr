@@ -117,8 +117,11 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
             card.widthAnchor.constraint(equalToConstant: Self.contentWidth),
             pairHint.widthAnchor.constraint(lessThanOrEqualToConstant: Self.contentWidth)
         ])
-        // Erstmaligen Status setzen (poll-Referenzen existieren jetzt).
-        updateAccessibility(force: true)
+        // WICHTIG: hier NICHT updateAccessibility() aufrufen — wir sind mitten im
+        // lazy-Aufbau von `setupView`, und updateAccessibility referenziert
+        // `setupView` (resize-Zweig) → re-entranter Zugriff auf den noch nicht
+        // fertigen lazy-Initializer = Endlos-Rekursion/Absturz. Der Erststatus wird
+        // in present() bzw. windowDidBecomeKey gesetzt (nach dem Aufbau).
         return stack
     }
 
