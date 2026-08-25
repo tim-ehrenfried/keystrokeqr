@@ -1,5 +1,19 @@
 import SwiftUI
 import AVFoundation
+import UIKit
+
+/// App-Laufzeit-scoped Registry der bereits gesendeten Payloads.
+/// Bewusst nicht persistiert — leert sich bei jedem App-Neustart.
+/// Referenztyp, damit die Scanner-Callbacks nie auf veralteten Werten arbeiten.
+@MainActor
+final class SentRegistry: ObservableObject {
+    @Published private(set) var payloads: Set<String> = []
+
+    var isEmpty: Bool { payloads.isEmpty }
+    func contains(_ payload: String) -> Bool { payloads.contains(payload) }
+    func insert(_ payload: String) { payloads.insert(payload) }
+    func clear() { payloads.removeAll() }
+}
 
 struct ContentView: View {
     @StateObject private var connectionManager = ConnectionManager()
@@ -17,6 +31,16 @@ struct ContentView: View {
     /// True, sobald die AVCaptureSession tatsächlich Bilder liefert.
     @State private var isCameraRunning = false
 
+    /// Bereits gesendete Codes (nur App-Laufzeit, siehe `SentRegistry`).
+    @StateObject private var sentRegistry = SentRegistry()
+    /// Bereits gesendeter Code, der gerade im Sucher ist → Auslöser-Button.
+    @State private var repeatCandidate: String?
+    /// Blendet den Auslöser-Button nach Ablauf ohne erneute Erkennung aus.
+    @State private var repeatHideTask: Task<Void, Never>?
+    /// Kurzes visuelles Feedback + Sperre nach manuellem Senden (1-s-Cooldown).
+    @State private var resendCooldownActive = false
+    @State private var showClearConfirmation = false
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -26,7 +50,14 @@ struct ContentView: View {
                 ScannerView(
                     onScan: { text in
                         lastScannedText = text
+                        sentRegistry.insert(text)
                         connectionManager.send(text: text, autoEnter: autoEnter, autoTab: autoTab)
+                    },
+                    shouldAutoSend: { [sentRegistry] text in
+                        !sentRegistry.contains(text)
+                    },
+                    onRepeatDetection: { text in
+                        handleRepeatDetection(text)
                     },
                     isActive: scenePhase == .active,
                     resetToken: scanResetToken,
@@ -50,9 +81,14 @@ struct ContentView: View {
                     accessibilityWarning
                 }
                 Spacer()
+                if let repeatCandidate {
+                    resendButton(for: repeatCandidate)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
                 controlBar
             }
             .padding()
+            .animation(.spring(duration: 0.3), value: repeatCandidate)
         }
         .preferredColorScheme(.dark)
         .task {
@@ -170,6 +206,26 @@ struct ContentView: View {
                     .fixedSize()
                 Spacer()
                 Button {
+                    showClearConfirmation = true
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.title2)
+                }
+                .disabled(sentRegistry.isEmpty)
+                .accessibilityLabel("Verlauf leeren")
+                .confirmationDialog(
+                    "Scan-Verlauf leeren?",
+                    isPresented: $showClearConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Verlauf leeren", role: .destructive) {
+                        clearHistory()
+                    }
+                    Button("Abbrechen", role: .cancel) { }
+                } message: {
+                    Text("Danach werden alle Codes wieder automatisch gesendet.")
+                }
+                Button {
                     showHelp = true
                 } label: {
                     Image(systemName: "questionmark.circle")
@@ -182,6 +238,72 @@ struct ContentView: View {
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    // MARK: - Erneut senden (bereits übertragener Code)
+
+    /// Ein bereits gesendeter Code ist (weiterhin) im Sucher: Button anzeigen
+    /// bzw. dessen Ausblende-Timer verlängern (kommt entprellt, max. ~4x/s).
+    private func handleRepeatDetection(_ text: String) {
+        repeatCandidate = text
+        repeatHideTask?.cancel()
+        repeatHideTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2.5))
+            guard !Task.isCancelled else { return }
+            repeatCandidate = nil
+        }
+    }
+
+    /// Deutlicher Auslöser: sendet den bereits übertragenen Code bewusst erneut.
+    private func resendButton(for payload: String) -> some View {
+        Button {
+            resend(payload)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 34))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Erneut senden")
+                        .font(.headline)
+                    Text(payload)
+                        .font(.caption.monospaced())
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .opacity(0.8)
+                }
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(.yellow, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(resendCooldownActive ? 0.96 : 1.0)
+        .opacity(resendCooldownActive ? 0.6 : 1.0)
+        .disabled(resendCooldownActive)
+        .animation(.easeOut(duration: 0.15), value: resendCooldownActive)
+        .accessibilityHint("Sendet den bereits übertragenen Code noch einmal an den Mac.")
+    }
+
+    private func resend(_ payload: String) {
+        guard !resendCooldownActive else { return }
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        lastScannedText = payload
+        connectionManager.send(text: payload, autoEnter: autoEnter, autoTab: autoTab)
+
+        // Cooldown wie beim Scannen: 1 s keine erneute Auslösung.
+        resendCooldownActive = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            resendCooldownActive = false
+        }
+    }
+
+    private func clearHistory() {
+        sentRegistry.clear()
+        repeatHideTask?.cancel()
+        repeatCandidate = nil
     }
 
     // MARK: - Auswahl bei mehreren Macs

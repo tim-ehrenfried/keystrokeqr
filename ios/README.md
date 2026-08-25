@@ -46,6 +46,11 @@ xcodebuild -project QRKeyboardScanner.xcodeproj \
 - Unterstützte Symbologien: QR, EAN-8/13, Code 128/39/93, PDF417, DataMatrix,
   Aztec, Interleaved 2/5, ITF-14, UPC-E.
 - Bei Erkennung: haptisches Feedback, Sucher friert kurz ein, exakt 1 s Cooldown.
+- **Einmal-Übertragung:** Jeder Code wird nur einmal automatisch getippt. Beim
+  erneuten Scannen desselben Codes erscheint stattdessen ein gelber Auslöser
+  „Erneut senden“ zum bewussten Wiederholen (dezente Haptik, blendet ~2,5 s
+  nach der letzten Erkennung aus). „Verlauf leeren“ (⟲) setzt die Liste
+  zurück; bei App-Neustart wird sie automatisch geleert (keine Persistenz).
 - Beste Rückkamera als virtuelles Device (Triple → DualWide → Dual → Wide):
   automatischer Linsenwechsel inkl. Makro bei nahen Codes; kontinuierlicher
   Autofokus mit Nahbereichs-Präferenz, **Tap-to-Focus** (gelber Rahmen) und

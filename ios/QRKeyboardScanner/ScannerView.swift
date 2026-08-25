@@ -13,8 +13,16 @@ import UIKit
 ///   danach exakt 1 Sekunde Cooldown ohne weitere Scan-Verarbeitung.
 struct ScannerView: UIViewRepresentable {
 
-    /// Wird bei jeder (nicht im Cooldown befindlichen) Erkennung aufgerufen — auf dem MainActor.
+    /// Wird bei jeder (nicht im Cooldown befindlichen) Erkennung eines NEUEN
+    /// Codes aufgerufen — auf dem MainActor.
     var onScan: (String) -> Void
+    /// Entscheidet, ob ein erkannter Code automatisch gesendet wird.
+    /// Liefert false (Code wurde bereits gesendet) → keine Auto-Übertragung,
+    /// stattdessen `onRepeatDetection`.
+    var shouldAutoSend: (String) -> Bool = { _ in true }
+    /// Bereits gesendeter Code ist (weiterhin) im Bild — entprellt gemeldet
+    /// (max. ~4x/s), damit die UI ihren Auslöser-Button anzeigen/verlängern kann.
+    var onRepeatDetection: (String) -> Void = { _ in }
     /// Steuert Start/Stop der Capture-Session (App aktiv/inaktiv).
     var isActive: Bool
     /// Ändert sich der Wert, wird der Scan-Cooldown sofort zurückgesetzt
@@ -49,6 +57,8 @@ struct ScannerView: UIViewRepresentable {
 
     func updateUIView(_ uiView: PreviewView, context: Context) {
         context.coordinator.onScan = onScan
+        context.coordinator.shouldAutoSend = shouldAutoSend
+        context.coordinator.onRepeatDetection = onRepeatDetection
         context.coordinator.onRunningChanged = onRunningChanged
         context.coordinator.setActive(isActive)
         if context.coordinator.resetToken != resetToken {
@@ -76,6 +86,8 @@ struct ScannerView: UIViewRepresentable {
     final class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
 
         var onScan: (String) -> Void
+        var shouldAutoSend: (String) -> Bool = { _ in true }
+        var onRepeatDetection: (String) -> Void = { _ in }
         var onRunningChanged: ((Bool) -> Void)?
         /// Zuletzt verarbeiteter Reset-Token (siehe `ScannerView.resetToken`).
         var resetToken = 0
@@ -91,6 +103,17 @@ struct ScannerView: UIViewRepresentable {
         /// Bis zu diesem Zeitpunkt werden erkannte Codes ignoriert (1-s-Cooldown).
         private var cooldownUntil = Date.distantPast
         private let feedbackGenerator = UINotificationFeedbackGenerator()
+        private let repeatFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+
+        // Entprellung für bereits gesendete Codes (AVCaptureMetadataOutput
+        // feuert pro Frame): eine „Sichtung" läuft, solange derselbe Code ohne
+        // Lücke > `repeatSightingGap` erkannt wird. Haptik nur einmal pro
+        // Sichtung; UI-Benachrichtigungen auf max. ~4x/s gedrosselt.
+        private var currentRepeatPayload: String?
+        private var lastRepeatSeen = Date.distantPast
+        private var lastRepeatNotified = Date.distantPast
+        private let repeatSightingGap: TimeInterval = 2.5
+        private let repeatNotifyInterval: TimeInterval = 0.25
         /// Zoom-Faktor zu Beginn einer Pinch-Geste.
         private var pinchStartZoom: CGFloat = 1.0
 
@@ -353,14 +376,35 @@ struct ScannerView: UIViewRepresentable {
                 .first(where: { $0.stringValue?.isEmpty == false }),
                   let text = object.stringValue else { return }
 
-            // Exakt 1 Sekunde Cooldown: keine weitere Scan-Verarbeitung.
-            cooldownUntil = now.addingTimeInterval(1.0)
+            if shouldAutoSend(text) {
+                // Neuer Code: exakt 1 Sekunde Cooldown, keine weitere Verarbeitung.
+                cooldownUntil = now.addingTimeInterval(1.0)
 
-            // Haptisches Feedback + Sucher kurz visuell einfrieren.
-            feedbackGenerator.notificationOccurred(.success)
-            freezePreview(for: 1.0)
+                // Haptisches Feedback + Sucher kurz visuell einfrieren.
+                feedbackGenerator.notificationOccurred(.success)
+                freezePreview(for: 1.0)
 
-            onScan(text)
+                onScan(text)
+            } else {
+                handleRepeatDetection(text, at: now)
+            }
+        }
+
+        /// Bereits gesendeter Code im Bild: kein Auto-Send, dezente Haptik nur
+        /// einmal pro Sichtung, gedrosselte UI-Benachrichtigung (kein Spam).
+        private func handleRepeatDetection(_ text: String, at now: Date) {
+            let isNewSighting = text != currentRepeatPayload
+                || now.timeIntervalSince(lastRepeatSeen) > repeatSightingGap
+            if isNewSighting {
+                repeatFeedbackGenerator.impactOccurred()
+            }
+            currentRepeatPayload = text
+            lastRepeatSeen = now
+
+            if isNewSighting || now.timeIntervalSince(lastRepeatNotified) >= repeatNotifyInterval {
+                lastRepeatNotified = now
+                onRepeatDetection(text)
+            }
         }
 
         /// Friert das Vorschaubild ein, indem die Preview-Connection kurz

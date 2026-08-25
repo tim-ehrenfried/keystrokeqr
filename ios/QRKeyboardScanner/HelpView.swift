@@ -43,6 +43,8 @@ struct HelpView: View {
                         Text("• **Auto-Tab**: Nach dem Text wird zusätzlich die Tab-Taste gesendet (bei beiden: erst Tab, dann Enter).")
                         Text("• Der zuletzt gescannte Text wird unten angezeigt.")
                         Text("• **Tippen** auf den Sucher fokussiert auf die Stelle (gelber Rahmen), **Auf-/Zuziehen** mit zwei Fingern zoomt. Die Kamera wechselt bei nahen Codes automatisch die Linse (Makro auf neueren iPhones).")
+                        Text("• **Jeder Code wird nur einmal automatisch getippt.** Wird derselbe Code erneut gescannt, sendet die App nicht automatisch — stattdessen erscheint unten der gelbe Auslöser **„Erneut senden“**, der den Code bewusst noch einmal überträgt.")
+                        Text("• **Verlauf leeren** (⟲ in der Bedienleiste) vergisst alle bereits gesendeten Codes; beim App-Neustart passiert das automatisch.")
                     }
                     .font(.callout)
                 }

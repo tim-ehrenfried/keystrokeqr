@@ -3,6 +3,11 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.4.0] – 2026-08-25
+
+### Added
+- **iOS – Einmal-Übertragung**: Jeder Code wird pro App-Sitzung nur einmal automatisch gesendet. Wird ein bereits gesendeter Code erneut erkannt, erscheint stattdessen ein gelber Auslöser „Erneut senden" (nur solange der Code im Bild ist, blendet nach 2,5 s aus) — erst ein Druck sendet erneut. Dezente Wiederholungs-Haptik einmal pro Sichtung, framerate-entprellt. Dazu „Verlauf leeren"-Button (mit Bestätigung); das Sent-Set ist bewusst nicht persistiert und leert sich bei App-Neustart.
+
 ## [0.3.0] – 2026-08-25
 
 ### Added
