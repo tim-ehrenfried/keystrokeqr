@@ -24,7 +24,9 @@ Ein zweiteiliges Open-Source-System, das komplett **lokal im WLAN** funktioniert
 |---|---|---|
 | **macOS-Host** (Menüleisten-App) | [`macos/`](macos/) | Swift, Network.framework, CGEvent |
 | **iOS-Scanner** (Client) | [`ios/`](ios/) | SwiftUI, AVFoundation, Network.framework |
-| **Protokoll-Spezifikation** | [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | Bonjour `_keystrokeqr._tcp` + WebSocket/JSON |
+| **Protokoll-Spezifikation** | [`docs/PROTOCOL-v2.md`](docs/PROTOCOL-v2.md) | Bonjour `_keystrokeqr._tcp` + OTP-Pairing + verschlüsselte Sitzung |
+
+📖 **Alle Anleitungen und Referenzen: [docs/](docs/README.md)** (Installation, Setup, Protokoll, Sicherheit).
 
 ## So funktioniert es
 

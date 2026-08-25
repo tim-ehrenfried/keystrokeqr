@@ -52,8 +52,8 @@
 "panel.about.button" = "About";
 "panel.showIntro" = "Show introduction again";
 
-/* “✓ Typed” HUD */
-"hud.typed" = "✓ Typed";
+/* “✓ Typed” HUD (checkmark is rendered as a yellow symbol, not part of the text) */
+"hud.typed" = "Typed";
 
 /* Confirm-before-typing panel */
 "confirm.title" = "Type this scanned text?";

@@ -52,8 +52,8 @@
 "panel.about.button" = "Über";
 "panel.showIntro" = "Einführung erneut anzeigen";
 
-/* „✓ Getippt“-HUD */
-"hud.typed" = "✓ Getippt";
+/* „✓ Getippt“-HUD (das Häkchen wird als gelbes Symbol gerendert, nicht als Text) */
+"hud.typed" = "Getippt";
 
 /* Bestätigungs-Panel „Bestätigen vor dem Tippen“ */
 "confirm.title" = "Diesen gescannten Text tippen?";

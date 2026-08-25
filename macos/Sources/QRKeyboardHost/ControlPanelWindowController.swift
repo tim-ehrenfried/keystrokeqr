@@ -40,7 +40,15 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
 
     // Navigation
     private static let topBarHeight: CGFloat = 44
-    private static let homeWidth: CGFloat = 460
+    // Home ist seit v0.12.0 im Querformat: zwei Kartenspalten nebeneinander.
+    private static let homeColumnWidth: CGFloat = 360        // Kartenbreite je Spalte
+    private static let homeCardContentWidth: CGFloat = 328   // homeColumnWidth − 2×16 Innenabstand
+    private static let homeColumnSpacing: CGFloat = 18
+    private static let homeEdgeInset: CGFloat = 24
+    // Volle Home-Breite = 2 Spalten + Spaltenabstand + Außenränder (≈ 786 pt).
+    private static let homeWidth: CGFloat =
+        2 * homeColumnWidth + homeColumnSpacing + 2 * homeEdgeInset
+    // Hilfe/Über bleiben schmaler (einspaltig).
     private static let helpWidth: CGFloat = 460
     private static let aboutWidth: CGFloat = 440
 
@@ -219,28 +227,47 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
     private func makeHomeView() -> NSView {
         let header = HostUI.makeHeader()
 
-        let sections = NSStackView(views: [
-            header,
+        // Querformat: zwei Kartenspalten nebeneinander, ausgewogen gruppiert.
+        // Links: Verbindung, Bedienungshilfen, Bestätigen-vor-dem-Tippen.
+        // Rechts: Geräte, Tippgeschwindigkeit, Beim Login starten.
+        let leftColumn = makeColumn([
             makeConnectionCard(),
             makeAccessibilityCard(),
+            makeConfirmTypingCard()
+        ])
+        let rightColumn = makeColumn([
             makeDevicesCard(),
             makeTypingSpeedCard(),
-            makeConfirmTypingCard(),
-            makeStartAtLoginCard(),
-            makeHomeFooter()
+            makeStartAtLoginCard()
         ])
+
+        let columns = NSStackView(views: [leftColumn, rightColumn])
+        columns.orientation = .horizontal
+        columns.alignment = .top
+        columns.spacing = Self.homeColumnSpacing
+
+        let sections = NSStackView(views: [header, columns, makeHomeFooter()])
         sections.orientation = .vertical
         sections.alignment = .leading
-        sections.spacing = 18
+        sections.spacing = 20
         sections.setCustomSpacing(20, after: header)
-        sections.edgeInsets = NSEdgeInsets(top: 20, left: 24, bottom: 24, right: 24)
+        sections.edgeInsets = NSEdgeInsets(
+            top: 20, left: Self.homeEdgeInset, bottom: Self.homeEdgeInset, right: Self.homeEdgeInset)
         sections.translatesAutoresizingMaskIntoConstraints = false
-        sections.widthAnchor.constraint(equalToConstant: Self.homeWidth).isActive = true
         return sections
     }
 
-    /// Karte mit Abschnittsüberschrift und beliebigem Inhalt, feste Breite (412),
-    /// damit Fließtext umbricht und alle Karten bündig sind.
+    /// Vertikale Kartenspalte fester Breite fürs Querformat-Home.
+    private func makeColumn(_ cards: [NSView]) -> NSStackView {
+        let column = NSStackView(views: cards)
+        column.orientation = .vertical
+        column.alignment = .leading
+        column.spacing = 18
+        return column
+    }
+
+    /// Karte mit Abschnittsüberschrift und beliebigem Inhalt, feste Spaltenbreite,
+    /// damit Fließtext umbricht und alle Karten einer Spalte bündig sind.
     private func makeCard(title: String, content inner: NSView) -> NSView {
         let card = HostUI.makeCard()
         let titleLabel = HostUI.makeSectionTitle(title)
@@ -256,7 +283,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
             stack.topAnchor.constraint(equalTo: card.topAnchor),
             stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
-            card.widthAnchor.constraint(equalToConstant: 412)
+            card.widthAnchor.constraint(equalToConstant: Self.homeColumnWidth)
         ])
         return card
     }
@@ -291,7 +318,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         axDetailLabel.isEditable = false
         axDetailLabel.isSelectable = false
         axDetailLabel.drawsBackground = false
-        axDetailLabel.preferredMaxLayoutWidth = 380
+        axDetailLabel.preferredMaxLayoutWidth = Self.homeCardContentWidth
 
         axIcon.setAccessibilityElement(true)
         axIcon.setAccessibilityRole(.image)
@@ -306,7 +333,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         inner.alignment = .leading
         inner.spacing = 10
         NSLayoutConstraint.activate([
-            axDetailLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+            axDetailLabel.widthAnchor.constraint(lessThanOrEqualToConstant: Self.homeCardContentWidth)
         ])
         updateAccessibility(force: true)
         return makeCard(title: L("panel.section.accessibility"), content: inner)
@@ -346,14 +373,14 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         speedControl.setAccessibilityLabel(L("panel.section.typingSpeed"))
 
         let hint = HostUI.makeBodyLabel(L("menu.typingSpeed.tooltip"))
-        hint.preferredMaxLayoutWidth = 380
+        hint.preferredMaxLayoutWidth = Self.homeCardContentWidth
 
         let inner = NSStackView(views: [speedControl, hint])
         inner.orientation = .vertical
         inner.alignment = .leading
         inner.spacing = 10
         NSLayoutConstraint.activate([
-            hint.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+            hint.widthAnchor.constraint(lessThanOrEqualToConstant: Self.homeCardContentWidth)
         ])
         return makeCard(title: L("panel.section.typingSpeed"), content: inner)
     }
@@ -376,17 +403,17 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         row.alignment = .centerY
         row.spacing = 12
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+        row.widthAnchor.constraint(equalToConstant: Self.homeCardContentWidth).isActive = true
 
         let detail = HostUI.makeBodyLabel(L("panel.confirmTyping.detail"))
-        detail.preferredMaxLayoutWidth = 380
+        detail.preferredMaxLayoutWidth = Self.homeCardContentWidth
 
         let inner = NSStackView(views: [row, detail])
         inner.orientation = .vertical
         inner.alignment = .leading
         inner.spacing = 8
         NSLayoutConstraint.activate([
-            detail.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+            detail.widthAnchor.constraint(lessThanOrEqualToConstant: Self.homeCardContentWidth)
         ])
         return makeCard(title: L("panel.section.confirmTyping"), content: inner)
     }
@@ -409,21 +436,21 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         row.alignment = .centerY
         row.spacing = 12
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+        row.widthAnchor.constraint(equalToConstant: Self.homeCardContentWidth).isActive = true
 
         loginDetailLabel.font = .systemFont(ofSize: 12)
         loginDetailLabel.textColor = .secondaryLabelColor
         loginDetailLabel.isEditable = false
         loginDetailLabel.isSelectable = false
         loginDetailLabel.drawsBackground = false
-        loginDetailLabel.preferredMaxLayoutWidth = 380
+        loginDetailLabel.preferredMaxLayoutWidth = Self.homeCardContentWidth
 
         let inner = NSStackView(views: [row, loginDetailLabel])
         inner.orientation = .vertical
         inner.alignment = .leading
         inner.spacing = 8
         NSLayoutConstraint.activate([
-            loginDetailLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+            loginDetailLabel.widthAnchor.constraint(lessThanOrEqualToConstant: Self.homeCardContentWidth)
         ])
         syncStartAtLogin()
         return makeCard(title: L("panel.section.startAtLogin"), content: inner)
@@ -751,7 +778,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         row.alignment = .centerY
         row.spacing = 10
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+        row.widthAnchor.constraint(equalToConstant: Self.homeCardContentWidth).isActive = true
         row.setAccessibilityElement(true)
         row.setAccessibilityLabel(String(
             format: L("a11y.device.row"), device.name,

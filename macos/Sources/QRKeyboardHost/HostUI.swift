@@ -15,6 +15,13 @@ enum HostUI {
     static let cardStroke       = NSColor(white: 1, alpha: 0.12)
     static let accent           = NSColor.controlAccentColor
 
+    /// Marken-Gelb (#FFD60A) — passend zum iOS-Icon (Scan-Linie).
+    static let brandYellow      = NSColor(calibratedRed: 1.0, green: 0.839, blue: 0.039, alpha: 1)
+
+    /// Solider, kontrastreicher dunkler Grund für das „✓ Getippt“-HUD (kein Blur).
+    static let hudBackground    = NSColor(calibratedRed: 0.13, green: 0.13, blue: 0.145, alpha: 1)
+    static let hudStroke        = NSColor(white: 1, alpha: 0.14)
+
     /// App-Kopf: SF-Symbol + Wortmarke „KeystrokeQR Host“.
     static func makeHeader() -> NSView {
         let icon = NSImageView()

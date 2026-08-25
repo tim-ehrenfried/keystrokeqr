@@ -30,6 +30,12 @@ struct ContentView: View {
     @State private var showHelp = false
     /// Manuell geöffnete „gefundene Macs“-Liste (Wechsel des verbundenen Macs).
     @State private var showMacSwitcher = false
+    /// In der Mac-Auswahlliste angetippter Mac, dessen Auswahl (`switchTo`) ERST
+    /// nach dem vollständigen Schließen der Liste ausgeführt wird. Verhindert das
+    /// Konkurrieren zweier Sheet-Übergänge (Liste ↔ Pairing) im selben Update-
+    /// Zyklus — sonst würde der frisch präsentierte Pairing-Screen sofort wieder
+    /// abgebaut. Siehe `macListSheet.onDisappear`.
+    @State private var pendingMacSelection: ConnectionManager.DiscoveredService?
     /// Wird erhöht, wenn der Scanner (Deep-Link/App Intent) sofort scharf sein
     /// soll — setzt in der ScannerView den Cooldown zurück.
     @State private var scanResetToken = 0
@@ -470,19 +476,17 @@ struct ContentView: View {
                 Section {
                     ForEach(connectionManager.services) { service in
                         Button {
-                            // Erst die Auswahlliste schließen, dann (im nächsten
-                            // Runloop) den Wechsel/das Pairing anstoßen. Sonst
-                            // konkurrieren zwei Sheet-Übergänge im selben Update und
-                            // der Pairing-Screen würde u. U. gar nicht präsentiert
-                            // („Tippen tut nichts“). switchTo räumt eine frühere
-                            // Ablehnung dieses Macs und öffnet für ungekoppelte
-                            // Macs den Pairing-Screen.
+                            // Auswahl NICHT sofort ausführen: erst die Liste
+                            // vollständig schließen, dann in deren `onDisappear`
+                            // den Wechsel/das Pairing anstoßen (deterministisch,
+                            // sequenziell). Würden wir `switchTo` hier direkt (oder
+                            // in einem Task) aufrufen, konkurrierten zwei Sheet-
+                            // Übergänge (Liste dismiss ↔ Pairing present) im selben
+                            // Zyklus: der Pairing-Screen erschiene kurz und würde
+                            // sofort wieder abgebaut („öffnet, schließt sofort").
+                            pendingMacSelection = service
                             connectionManager.showServicePicker = false
                             showMacSwitcher = false
-                            let target = service
-                            Task { @MainActor in
-                                connectionManager.switchTo(target)
-                            }
                         } label: {
                             HStack {
                                 Label(service.name, systemImage: "desktopcomputer")
@@ -519,6 +523,17 @@ struct ContentView: View {
             }
         }
         .presentationDetents([.medium])
+        .onDisappear {
+            // Die Liste ist jetzt vollständig geschlossen. Erst JETZT den zuvor
+            // angetippten Mac verarbeiten — so ist kein zweites Sheet mehr aktiv,
+            // und ein daraufhin präsentierter Pairing-Screen bleibt zuverlässig
+            // offen (kein Sheet-Wettlauf). `switchTo` verbindet gekoppelte Macs
+            // bzw. öffnet für ungekoppelte den Pairing-Screen und hebt eine
+            // frühere Ablehnung dieses Macs auf.
+            guard let target = pendingMacSelection else { return }
+            pendingMacSelection = nil
+            connectionManager.switchTo(target)
+        }
     }
 
     @ViewBuilder

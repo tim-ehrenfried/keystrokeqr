@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.11.0
+- **Version:** 0.12.0
 
 ## Voraussetzungen
 
@@ -126,7 +126,15 @@ und „Über" werden als Unterseiten in denselben Rahmen geschoben (kein Scroll 
 das Fenster öffnet für jede Seite genau so groß wie ihr Inhalt und passt seine
 Größe beim Navigieren animiert an). Oben links ein **Zurück-Button** (nur auf den
 Unterseiten), oben rechts auf gleicher Höhe ein dezenter grauer
-**„Einführung"-Button**. Abschnitte der Home-Ansicht:
+**„Einführung"-Button**.
+
+Seit **v0.12.0** ist die Home-Ansicht im **Querformat**: zwei Kartenspalten
+nebeneinander (deutlich breiter als hoch, ~786 pt breit) statt einer hohen
+schmalen Spalte. Links: Verbindung, Bedienungshilfen, Bestätigen vor dem Tippen.
+Rechts: Gekoppelte Geräte, Tippgeschwindigkeit, Beim Login starten. Header und
+Fußzeile (Hilfe/Über) spannen über beide Spalten. Das „so groß wie nötig, kein
+Scroll"-Prinzip bleibt; Hilfe/Über sind weiterhin schmaler (einspaltig).
+Abschnitte der Home-Ansicht:
 
 - **Verbindung** — Bonjour-Dienstname, Port und „N gekoppelt · M verbunden".
 - **Bedienungshilfen** — großes grünes ✓ „Aktiviert" bzw. rotes ✗ „Nicht
@@ -193,16 +201,23 @@ Die Änderung greift sofort für den nächsten Scan.
 
 ## „✓ Getippt"-HUD
 
-Nach jeder **erfolgreichen** Keystroke-Injektion blendet die App kurz (~0,8 s)
-oben mittig — knapp unter der Menüleiste — ein dezentes, sich selbst
-ausblendendes HUD „✓ Getippt" ein. Es dient nur als Rückmeldung und ist so
-gebaut, dass es **niemals den Tastaturfokus stiehlt** (sonst bräche die Eingabe
-ins Zielfenster ab): ein randloses, **nicht-aktivierendes** `NSPanel`
-(`.nonactivatingPanel`, `isFloatingPanel`, `level = .statusBar`,
-`ignoresMouseEvents`, `hidesOnDeactivate = false`), das ausschließlich per
-`orderFrontRegardless()` gezeigt wird — nie `makeKey`/`activate`. Bei schnellen
-Folge-Scans wird dasselbe Panel wiederverwendet und nur der Ausblend-Timer neu
-gesetzt (kein Stapeln).
+Nach jeder **erfolgreichen** Keystroke-Injektion blendet die App kurz (~0,9 s)
+ein dezentes, sich selbst ausblendendes HUD „✓ Getippt" ein. Seit **v0.12.0**
+erscheint es **unten mittig** — ca. 20 % der sichtbaren Bildschirmhöhe über der
+Unterkante (`NSScreen.main.visibleFrame`), nicht mehr oben. Der Look ist modern
+und klar zum dunklen KeystrokeQR-Design passend: eine **solide dunkle,
+abgerundete Karte** mit dezentem Rahmen und weichem Schatten (kein
+verwaschener Blur/`NSVisualEffectView` mehr), scharfer heller Text und ein
+Häkchen im **Marken-Gelb (#FFD60A)** als gerendertes SF-Symbol. Weiche
+Ein-/Ausblendung.
+
+Es dient nur als Rückmeldung und ist so gebaut, dass es **niemals den
+Tastaturfokus stiehlt** (sonst bräche die Eingabe ins Zielfenster ab): ein
+randloses, **nicht-aktivierendes** `NSPanel` (`.nonactivatingPanel`,
+`isFloatingPanel`, `level = .statusBar`, `ignoresMouseEvents`,
+`hidesOnDeactivate = false`), das ausschließlich per `orderFrontRegardless()`
+gezeigt wird — nie `makeKey`/`activate`. Bei schnellen Folge-Scans wird dasselbe
+Panel wiederverwendet und nur der Ausblend-Timer neu gesetzt (kein Stapeln).
 
 ## Bestätigen vor dem Tippen
 

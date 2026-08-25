@@ -3,6 +3,19 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.12.0] – 2026-08-25
+
+### Changed
+- **macOS – „Getippt"-HUD neu**: sitzt jetzt unten mittig (~20 % der Bildschirmhöhe von unten) und ist modern/klar gestaltet (solide dunkle Karte statt verwaschenem Blur, gelbes Häkchen-Symbol, scharfer Text) — weiterhin fokus-neutral.
+- **macOS – Kontrollpanel im Querformat**: Home-Ansicht zweispaltig (~786 pt breit) statt einer hohen Einzelspalte; Single-Window-Navigation und Auto-Größe ohne Scroll bleiben.
+- **iOS – App-Icon an macOS angeglichen**: gemeinsames Motiv (QR-Viewfinder + Tastenkappe/Caret + gelbe Scan-Linie), iOS vollflächig aus demselben Motiv wie das macOS-Icon (`ios/make-icon.sh`).
+
+### Fixed
+- **iOS – Pairing-Dialog schloss nach Tap in der Mac-Auswahlliste sofort wieder**: Sheet-Wettlauf zwischen Auswahlliste und Pairing-Screen; die Auswahl wird jetzt erst nach vollständigem Schließen der Liste ausgeführt, und der Auto-Decline unterscheidet echtes Wegwischen vom programmatischen Sheet-Wechsel.
+
+### Docs
+- **docs/README.md**: Navigations-Index der Dokumentation (Installation, Setup, Protokoll, Sicherheit) für einen sauberen Einstieg; aus dem Root-README verlinkt.
+
 ## [0.11.0] – 2026-08-25
 
 ### Added

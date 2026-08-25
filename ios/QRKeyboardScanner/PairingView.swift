@@ -115,10 +115,19 @@ struct PairingView: View {
         // versehentliches Wegwischen.
         .interactiveDismissDisabled(isPairing || didPair)
         .onDisappear {
-            // Auffangnetz für ALLE Schließ-Wege (Cancel-Button, Wegwischen): war
-            // es kein Erfolg, gilt der Mac als abgelehnt, damit die automatische
+            // Auffangnetz für ein bewusstes Nutzer-Wegwischen: dann hat SwiftUI die
+            // `.sheet(item:)`-Bindung bereits geleert (oder auf einen anderen Mac
+            // gesetzt), der Mac gilt als abgelehnt — damit die automatische
             // Discovery ihn nicht sofort wieder aufpoppt. Idempotent zu cancel().
-            if !didPair {
+            //
+            // NICHT ablehnen, wenn `pendingPairingService` weiterhin auf GENAU
+            // diesen Mac zeigt: dann verschwand der Screen nur programmatisch
+            // (transienter Sheet-Wechsel Liste→Pairing), obwohl der Nutzer das
+            // Pairing gerade bewusst geöffnet hat. Würden wir hier ablehnen, würde
+            // `declinePairing` `pendingPairingService` nil setzen und den gerade
+            // absichtlich geöffneten Screen sofort wieder zuschlagen. Da die Bindung
+            // noch steht, präsentiert SwiftUI den Screen ohnehin erneut.
+            if !didPair, connectionManager.pendingPairingService?.id != service.id {
                 connectionManager.declinePairing(for: service)
             }
         }

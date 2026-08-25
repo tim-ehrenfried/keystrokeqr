@@ -1,6 +1,14 @@
 import AppKit
 
-/// Dezentes „✓ Getippt"-HUD nach erfolgreicher Keystroke-Injektion.
+/// Modernes „✓ Getippt"-HUD nach erfolgreicher Keystroke-Injektion.
+///
+/// **Look (seit v0.12.0):** eine solide, dunkle, abgerundete Karte im
+/// KeystrokeQR-Stil (kein „verwaschener" `NSVisualEffectView`/Blur mehr),
+/// dezenter Rahmen + weicher Schatten, scharfer heller Text und ein Häkchen im
+/// Marken-Gelb (#FFD60A). Weiche Ein-/Ausblendung.
+///
+/// **Position:** unten mittig, ca. 20 % der sichtbaren Bildschirmhöhe über der
+/// Unterkante (`NSScreen.main.visibleFrame`) — nicht mehr oben.
 ///
 /// **Kritisch (Fokus):** Das HUD darf NIEMALS den Tastaturfokus stehlen, sonst
 /// bräche die Eingabe ins Zielfenster. Deshalb ein randloses, nicht-aktivierendes
@@ -17,8 +25,13 @@ final class TypedHUDController {
     static let shared = TypedHUDController()
 
     /// Sichtdauer, danach automatisch ausblenden.
-    private static let visibleDuration: TimeInterval = 0.8
-    private static let fadeDuration: TimeInterval = 0.18
+    private static let visibleDuration: TimeInterval = 0.9
+    private static let fadeInDuration: TimeInterval = 0.16
+    private static let fadeOutDuration: TimeInterval = 0.22
+
+    /// Anteil der sichtbaren Bildschirmhöhe, um den das HUD über der Unterkante
+    /// schwebt (~20 %).
+    private static let bottomFraction: CGFloat = 0.20
 
     private var panel: NSPanel?
     private var label: NSTextField?
@@ -33,7 +46,7 @@ final class TypedHUDController {
         label?.stringValue = text
         panel.setAccessibilityLabel(text)
 
-        positionTopCenter(panel)
+        positionBottomCenter(panel)
 
         // Ohne Fokus-/Aktivierungswechsel einblenden.
         hideTimer?.invalidate()
@@ -41,7 +54,7 @@ final class TypedHUDController {
             panel.alphaValue = 0
             panel.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = Self.fadeDuration
+                ctx.duration = Self.fadeInDuration
                 panel.animator().alphaValue = 1
             }
         } else {
@@ -61,7 +74,7 @@ final class TypedHUDController {
     private func dismiss() {
         guard let panel, panel.isVisible else { return }
         NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = Self.fadeDuration
+            ctx.duration = Self.fadeOutDuration
             panel.animator().alphaValue = 0
         }, completionHandler: { [weak panel] in
             panel?.orderOut(nil)
@@ -72,7 +85,7 @@ final class TypedHUDController {
         if let panel { return panel }
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 160, height: 44),
+            contentRect: NSRect(x: 0, y: 0, width: 180, height: 48),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -88,35 +101,51 @@ final class TypedHUDController {
         panel.appearance = HostUI.appearance
         panel.setAccessibilityRole(.staticText)
 
-        let container = NSVisualEffectView()
-        container.material = .hudWindow
-        container.blendingMode = .behindWindow
-        container.state = .active
-        container.wantsLayer = true
-        container.layer?.cornerRadius = 12
-        container.layer?.masksToBounds = true
-        container.translatesAutoresizingMaskIntoConstraints = false
+        // Solide, kontrastreiche dunkle Karte (kein Blur) mit dezentem Rahmen.
+        let card = NSView()
+        card.wantsLayer = true
+        card.layer?.backgroundColor = HostUI.hudBackground.cgColor
+        card.layer?.borderColor = HostUI.hudStroke.cgColor
+        card.layer?.borderWidth = 1
+        card.layer?.cornerRadius = 14
+        card.layer?.cornerCurve = .continuous
+        card.translatesAutoresizingMaskIntoConstraints = false
+
+        // Häkchen im Marken-Gelb.
+        let check = NSImageView()
+        let checkConfig = NSImage.SymbolConfiguration(pointSize: 17, weight: .bold)
+        check.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(checkConfig)
+        check.contentTintColor = HostUI.brandYellow
+        check.setContentHuggingPriority(.required, for: .horizontal)
+        check.translatesAutoresizingMaskIntoConstraints = false
 
         let text = NSTextField(labelWithString: L("hud.typed"))
-        text.font = .systemFont(ofSize: 14, weight: .semibold)
+        text.font = .systemFont(ofSize: 15, weight: .semibold)
         text.textColor = .labelColor
         text.alignment = .center
         text.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(text)
+
+        let row = NSStackView(views: [check, text])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 8
+        row.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(row)
 
         let content = NSView()
-        content.addSubview(container)
+        content.addSubview(card)
         panel.contentView = content
 
         NSLayoutConstraint.activate([
-            container.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            container.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            container.topAnchor.constraint(equalTo: content.topAnchor),
-            container.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            text.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 22),
-            text.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -22),
-            text.topAnchor.constraint(equalTo: container.topAnchor, constant: 11),
-            text.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -11)
+            card.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            card.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            card.topAnchor.constraint(equalTo: content.topAnchor),
+            card.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+            row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+            row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+            row.topAnchor.constraint(equalTo: card.topAnchor, constant: 13),
+            row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -13)
         ])
 
         self.panel = panel
@@ -124,15 +153,16 @@ final class TypedHUDController {
         return panel
     }
 
-    /// Positioniert das HUD dezent oben mittig, knapp unter der Menüleiste.
-    private func positionTopCenter(_ panel: NSPanel) {
+    /// Positioniert das HUD unten mittig, ca. 20 % der sichtbaren Bildschirmhöhe
+    /// über der Unterkante.
+    private func positionBottomCenter(_ panel: NSPanel) {
         panel.layoutIfNeeded()
-        panel.setContentSize(panel.contentView?.fittingSize ?? NSSize(width: 160, height: 44))
+        panel.setContentSize(panel.contentView?.fittingSize ?? NSSize(width: 180, height: 48))
         guard let screen = NSScreen.main else { return }
         let visible = screen.visibleFrame
         let size = panel.frame.size
         let x = visible.midX - size.width / 2
-        let y = visible.maxY - size.height - 12
+        let y = visible.minY + visible.height * Self.bottomFraction
         panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 }
