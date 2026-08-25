@@ -1,83 +1,87 @@
-# Installation für Endnutzer (ohne Xcode)
+# Installation for End Users (no Xcode)
 
-Diese Anleitung richtet sich an Nutzer, die die fertige macOS-App einfach nur
-**herunterladen und verwenden** möchten. Wer selbst bauen will (oder die iOS-App
-aufs iPhone bringen möchte), findet alles in [SETUP.md](SETUP.md).
+This guide is for users who simply want to **download and use** the ready-made
+macOS app. If you want to build it yourself (or get the iOS app onto your
+iPhone), everything is in [SETUP.md](SETUP.md).
 
-## 1. macOS-App herunterladen
+## 1. Download the macOS app
 
-1. Neueste Version laden:
+1. Get the latest version:
    **[github.com/tim-ehrenfried/keystrokeqr/releases/latest](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)**
-   → unter *Assets* die Datei **`KeystrokeQR-Host-macOS.dmg`** anklicken.
-2. Die geladene **`KeystrokeQR-Host-macOS.dmg`** doppelklicken → ein Fenster öffnet
-   sich mit **„KeystrokeQR Host.app"** und einem **Programme**-Ordner daneben.
-3. Die App per Drag & Drop auf den **Programme**-Ordner im selben Fenster ziehen.
-   Danach das DMG auswerfen (im Finder auf ⏏ neben dem Volume).
+   → under *Assets*, click the file **`KeystrokeQR-Host-macOS.dmg`**.
+2. Double-click the downloaded **`KeystrokeQR-Host-macOS.dmg`** → a window
+   opens with **"KeystrokeQR Host.app"** and an **Applications** folder next to it.
+3. Drag the app onto the **Applications** folder in the same window.
+   Then eject the DMG (click ⏏ next to the volume in Finder).
 
-Voraussetzung: **macOS 13 (Ventura) oder neuer**.
+Requirement: **macOS 13 (Ventura) or newer**.
 
-## 2. Gatekeeper: „App kann nicht geöffnet werden"
+## 2. Gatekeeper: "App can't be opened"
 
-Die App ist **ad-hoc-signiert und nicht notarisiert** (Open-Source-Projekt ohne
-bezahltes Apple-Developer-Zertifikat). Beim ersten Start blockiert macOS sie
-deshalb mit einer Warnung. Zwei Wege, das einmalig freizugeben:
+The app is **ad-hoc signed and not notarized** (an open-source project without
+a paid Apple Developer certificate). macOS therefore blocks it with a warning
+on first launch. Two ways to approve it once:
 
-**Weg A — Rechtsklick:**
+**Option A — right-click:**
 
-1. Im Ordner *Programme* mit **Rechtsklick** (bzw. ctrl-Klick) auf
-   „KeystrokeQR Host" → **Öffnen**.
-2. Im Dialog erneut **Öffnen** bestätigen.
-   (Ab macOS 15 Sequoia ggf. zusätzlich: *Systemeinstellungen → Datenschutz &
-   Sicherheit* → ganz unten bei der blockierten App **„Dennoch öffnen"**.)
+1. In the *Applications* folder, **right-click** (or ctrl-click)
+   "KeystrokeQR Host" → **Open**.
+2. Confirm **Open** again in the dialog.
+   (From macOS 15 Sequoia, possibly also: *System Settings → Privacy &
+   Security* → at the very bottom, next to the blocked app, **"Open Anyway"**.)
 
-**Weg B — Terminal (Quarantäne-Attribut entfernen):**
+**Option B — Terminal (remove the quarantine attribute):**
 
 ```bash
 xattr -d com.apple.quarantine "/Applications/KeystrokeQR Host.app"
 ```
 
-Danach startet die App normal per Doppelklick.
+After that, the app launches normally with a double-click.
 
-> Wer der heruntergeladenen Binary nicht vertrauen möchte, kann die App in wenigen
-> Minuten selbst aus dem Quellcode bauen: `cd macos && make app`
-> (siehe [../macos/README.md](../macos/README.md)).
+> If you'd rather not trust the downloaded binary, you can build the app
+> yourself from source in a few minutes: `cd macos && make app`
+> (see [../macos/README.md](../macos/README.md)).
 
-## 3. Bedienungshilfen freischalten (zwingend)
+## 3. Grant Accessibility access (required)
 
-Damit die App den gescannten Text **tippen** darf, braucht sie die
-macOS-Berechtigung **Bedienungshilfen**:
+For the app to be allowed to **type** the scanned text, it needs the macOS
+**Accessibility** permission:
 
-1. App starten → in der Menüleiste erscheint ein QR-Symbol.
-2. *Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen* →
-   Schalter bei **„KeystrokeQR Host"** aktivieren.
-   (Fehlt der Eintrag: unten **+** → im Ordner Programme „KeystrokeQR Host.app"
-   auswählen. Der Menüpunkt **„Bedienungshilfen öffnen…"** in der App führt
-   direkt dorthin.)
-3. App einmal beenden und neu starten — im Menü steht dann
-   **„Bedienungshilfen: ✓ erteilt"**.
+1. Launch the app → a QR icon appears in the menu bar.
+2. *System Settings → Privacy & Security → Accessibility* →
+   enable the toggle for **"KeystrokeQR Host"**.
+   (If the entry is missing: click **+** at the bottom → select
+   "KeystrokeQR Host.app" in the Applications folder. The app's menu item
+   **"Open Accessibility…"** takes you straight there.)
+3. Quit the app once and relaunch it — the menu then shows
+   **"Accessibility: ✓ granted"**.
 
-Außerdem, falls macOS danach fragt bzw. die Firewall aktiv ist:
+Additionally, if macOS asks or the firewall is active:
 
-- **Lokales Netzwerk** für die App erlauben (Abfrage ab macOS 15).
-- *Systemeinstellungen → Netzwerk → Firewall → Optionen* → eingehende
-  Verbindungen für „KeystrokeQR Host" erlauben.
+- Allow **local network** access for the app (prompt from macOS 15).
+- *System Settings → Network → Firewall → Options* → allow incoming
+  connections for "KeystrokeQR Host".
 
-Ausführliche Schritte mit Troubleshooting: [SETUP.md](SETUP.md).
+Detailed steps with troubleshooting: [SETUP.md](SETUP.md).
 
-## 4. iOS-App (Scanner) installieren
+## 4. Install the iOS app (scanner)
 
-Die iPhone-App ist **derzeit nicht im App Store**. Sie wird mit Xcode und einem
-eigenen (auch kostenlosen) Apple-Developer-Account auf das iPhone installiert —
-die Schritt-für-Schritt-Anleitung dazu steht in [SETUP.md](SETUP.md), Abschnitt
-„iOS-App aufs iPhone bringen".
+The iPhone app is **currently not on the App Store**. It is installed onto the
+iPhone with Xcode and your own (even free) Apple Developer account —
+the step-by-step guide is in [SETUP.md](SETUP.md), section
+"Getting the iOS app onto your iPhone".
 
-## 5. Loslegen
+## 5. Get going
 
-1. Mac und iPhone ins **selbe WLAN**.
-2. iOS-App öffnen → sie findet den Mac automatisch („Verbunden mit …").
-3. Am Mac den Cursor in ein Textfeld setzen, Code scannen → der Text wird sofort
-   getippt.
+1. Put the Mac and iPhone on the **same Wi-Fi**.
+2. Open the iOS app → it finds the Mac automatically.
+3. **Pair once:** on the Mac choose "Pair device…" in the menu bar app and
+   enter the 6-digit code on the iPhone. Afterwards the app reconnects
+   automatically ("Connected to …").
+4. On the Mac, put the cursor in a text field, scan a code → the text is
+   typed instantly.
 
-**Wichtig:** Die Verbindung ist bewusst unverschlüsselt und ohne Anmeldung —
-die App nur in vertrauenswürdigen Netzen betreiben und beenden, wenn sie nicht
-gebraucht wird. Details: [SECURITY.md](../SECURITY.md).
+**Note:** The connection is end-to-end encrypted and only works between
+devices you explicitly paired with a one-time code. Still, prefer trusted
+networks and quit the app when you're not using it.
+Details: [SECURITY.md](../SECURITY.md).

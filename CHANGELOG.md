@@ -1,170 +1,176 @@
 # Changelog
 
-Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
-Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
+All notable changes to this project are documented here.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer](https://semver.org/).
 
-## [0.13.2] – 2026-08-25 (nur macOS)
-
-### Fixed
-- **macOS – Einführungsfenster klebte links/rechts bündig an den Kanten**: Derselbe Effekt wie zuvor im Kontrollpanel — der Seiten-Stack (`.centerX`) hatte keine explizite Breite, sodass die Fensterbreite auf die Kartenbreite schrumpfte und die Ränder wegfielen. Beide Onboarding-Seiten haben jetzt eine feste Breite inkl. beider 28-pt-Ränder.
-
-## [0.13.1] – 2026-08-25 (nur macOS)
-
-### Fixed
-- **macOS – Absturz/Hänger beim Öffnen der Einführung**: Der Einrichtungsassistent rief `updateAccessibility()` mitten im lazy-Aufbau der `setupView` auf, wobei diese Methode `setupView` selbst referenziert → re-entranter Zugriff auf den unfertigen Lazy-Initializer = Endlos-Rekursion. Der redundante Aufruf wurde entfernt (Status wird nach dem Aufbau gesetzt). Durch erzwungenes Onboarding beim Start verifiziert: App bleibt stabil.
-- **macOS – Geräteliste schnitt „gekoppelt seit …" (deutsch) ab**: Die längeren deutschen Buttons „Umbenennen/Entfernen" drückten das Datum weg. Umbenennen/Entfernen sind jetzt platzsparende, sprachneutrale Icon-Buttons (Stift/Papierkorb, mit Tooltip + VoiceOver-Label); das Datum wird nicht mehr abgeschnitten.
-
-## [0.13.0] – 2026-08-25 (nur macOS)
-
-### Fixed
-- **macOS – Panel schnitt rechts ab**: Die Home-Ansicht hatte keinen rechten Rand (Karte lag bündig an der Fensterkante). Jetzt feste, symmetrische Innenränder (links = rechts = oben = unten), Fensterbreite inkl. rechtem Rand berechnet.
+## [0.14.0] – 2026-08-25
 
 ### Changed
-- **macOS – Einrichtungsassistent gestrafft**:
-  - Der Bedienungshilfen-Status wird jetzt **live geprüft** (Timer + beim Zurückkehren ins Fenster) und wird bei Erteilung grün („Bedienungshilfen aktiviert ✓") — ohne Neustart.
-  - Ist die Berechtigung erteilt, verschwindet der „Bedienungshilfen öffnen…"-Button; die Abschluss-Aktion ist statt „Los geht's" direkt **„Gerät koppeln"** (bis zur Erteilung deaktiviert, mit Hinweis).
-  - Nach erfolgreichem Koppeln zeigt der Assistent kurz **„Erfolgreich gekoppelt!"** mit **„Los geht's"** und springt dann ins Kontrollpanel. Koppeln außerhalb des Assistenten verhält sich unverändert (nur Auto-Close, kein Sprung).
+- **New brand icon set**: the 3D-rendered QR tile with the white "K" (`branding/logo-master.png`) is now the single source of truth for all icons — iOS/App Store (full-bleed 1024), macOS `.icns` (Apple margin, rounded mask, soft shadow), the DMG window background (logo + arrow), the DMG **volume icon**, monochrome UI variants (white/black on transparent), and the landing page. Both `make-icon.sh` scripts derive everything from the shared master (see the icon table in [docs/BRANDING.md](docs/BRANDING.md)).
+- **Documentation fully in English**: README, SECURITY, CHANGELOG (all historical entries), and all docs/ guides plus the platform READMEs were translated for the public release; stale claims fixed along the way (the connection has been end-to-end encrypted and pairing-gated since v0.6.0; version references brought up to date).
+
+## [0.13.2] – 2026-08-25 (macOS only)
+
+### Fixed
+- **macOS – Intro window hugged the left/right edges**: Same effect as previously in the control panel — the page stack (`.centerX`) had no explicit width, so the window width shrank to the card width and the margins disappeared. Both onboarding pages now have a fixed width including both 28 pt margins.
+
+## [0.13.1] – 2026-08-25 (macOS only)
+
+### Fixed
+- **macOS – Crash/hang when opening the introduction**: The setup assistant called `updateAccessibility()` in the middle of the lazy construction of `setupView`, and that method references `setupView` itself → re-entrant access to the unfinished lazy initializer = infinite recursion. The redundant call was removed (the status is set after construction). Verified via forced onboarding at launch: the app stays stable.
+- **macOS – Device list truncated "paired since …" (German)**: The longer German "Umbenennen/Entfernen" buttons pushed the date out of view. Rename/Remove are now compact, language-neutral icon buttons (pencil/trash, with tooltip + VoiceOver label); the date is no longer truncated.
+
+## [0.13.0] – 2026-08-25 (macOS only)
+
+### Fixed
+- **macOS – Panel was cut off on the right**: The home view had no right margin (the card sat flush against the window edge). Now fixed, symmetric insets (left = right = top = bottom), with the window width calculated including the right margin.
+
+### Changed
+- **macOS – Setup assistant streamlined**:
+  - The Accessibility status is now **checked live** (timer + on window focus) and turns green ("Accessibility enabled ✓") once granted — without a restart.
+  - Once the permission is granted, the "Open Accessibility…" button disappears; the final action is **"Pair device"** instead of "Get started" (disabled until the permission is granted, with an explanatory hint).
+  - After successful pairing, the assistant briefly shows **"Successfully paired!"** with **"Get started"** and then jumps to the control panel. Pairing outside the assistant behaves unchanged (auto-close only, no jump).
 
 ## [0.12.0] – 2026-08-25
 
 ### Changed
-- **macOS – „Getippt"-HUD neu**: sitzt jetzt unten mittig (~20 % der Bildschirmhöhe von unten) und ist modern/klar gestaltet (solide dunkle Karte statt verwaschenem Blur, gelbes Häkchen-Symbol, scharfer Text) — weiterhin fokus-neutral.
-- **macOS – Kontrollpanel im Querformat**: Home-Ansicht zweispaltig (~786 pt breit) statt einer hohen Einzelspalte; Single-Window-Navigation und Auto-Größe ohne Scroll bleiben.
-- **iOS – App-Icon an macOS angeglichen**: gemeinsames Motiv (QR-Viewfinder + Tastenkappe/Caret + gelbe Scan-Linie), iOS vollflächig aus demselben Motiv wie das macOS-Icon (`ios/make-icon.sh`).
+- **macOS – "Typed" HUD redesigned**: now sits bottom-center (~20% of screen height from the bottom) and has a modern, clean look (solid dark card instead of washed-out blur, yellow checkmark symbol, crisp text) — still focus-neutral.
+- **macOS – Control panel in landscape**: home view is now two columns (~786 pt wide) instead of one tall single column; single-window navigation and auto-sizing without scrolling remain.
+- **iOS – App icon aligned with macOS**: shared motif (QR viewfinder + keycap/caret + yellow scan line), the iOS icon rendered full-bleed from the same motif as the macOS icon (`ios/make-icon.sh`).
 
 ### Fixed
-- **iOS – Pairing-Dialog schloss nach Tap in der Mac-Auswahlliste sofort wieder**: Sheet-Wettlauf zwischen Auswahlliste und Pairing-Screen; die Auswahl wird jetzt erst nach vollständigem Schließen der Liste ausgeführt, und der Auto-Decline unterscheidet echtes Wegwischen vom programmatischen Sheet-Wechsel.
+- **iOS – Pairing dialog closed again immediately after tapping in the Mac picker list**: sheet race between the picker list and the pairing screen; the selection is now applied only after the list has fully dismissed, and the auto-decline distinguishes a real swipe-dismiss from a programmatic sheet switch.
 
 ### Docs
-- **docs/README.md**: Navigations-Index der Dokumentation (Installation, Setup, Protokoll, Sicherheit) für einen sauberen Einstieg; aus dem Root-README verlinkt.
+- **docs/README.md**: navigation index for the documentation (installation, setup, protocol, security) for a clean entry point; linked from the root README.
 
 ## [0.11.0] – 2026-08-25
 
 ### Added
-- **macOS – Beim Login starten**: Schalter im Panel (`SMAppService`), startet den Host automatisch bei der Anmeldung.
-- **macOS – „✓ Getippt"-HUD**: dezente, fokus-neutrale Bestätigung nach jeder Keystroke-Injektion (nicht-aktivierendes Panel, stiehlt nie den Fokus).
-- **macOS – Geräte umbenennen** in der gekoppelten-Geräte-Liste.
-- **macOS – „Bestätigen vor dem Tippen"-Modus** (Standard aus): hält eingehende Scans zurück und tippt erst nach Bestätigung; reaktiviert davor die ursprünglich fokussierte App, damit der Text im richtigen Feld landet.
-- **Export-Compliance**: `ITSAppUsesNonExemptEncryption = NO` in der iOS-App (nur Standard-Krypto) — keine Rückfrage mehr bei TestFlight-/Store-Uploads.
-- **Barrierefreiheit**: VoiceOver-Labels/-Hints und Dynamic-Type-Feinschliff (iOS) bzw. Accessibility-Labels + Empty-States (macOS-Panel).
-- **Automatisierte Tests + CI**: Krypto-/Protokoll-Test-Suiten (macOS SwiftPM 45 Tests, iOS XCTest 27 Tests — HKDF-Ableitungen, Pairing-HMAC, ChaChaPoly-Frames/Nonce/Replay, Codable-Wire-Format); der CI-Workflow führt beide bei jedem Push/PR aus.
+- **macOS – Start at login**: toggle in the panel (`SMAppService`), launches the host automatically on login.
+- **macOS – "✓ Typed" HUD**: subtle, focus-neutral confirmation after every keystroke injection (non-activating panel, never steals focus).
+- **macOS – Rename devices** in the paired-devices list.
+- **macOS – "Confirm before typing" mode** (off by default): holds incoming scans and types only after confirmation; reactivates the originally focused app beforehand so the text lands in the right field.
+- **Export compliance**: `ITSAppUsesNonExemptEncryption = NO` in the iOS app (standard crypto only) — no more compliance prompt on TestFlight/App Store uploads.
+- **Accessibility**: VoiceOver labels/hints and Dynamic Type polish (iOS), plus accessibility labels + empty states (macOS panel).
+- **Automated tests + CI**: crypto/protocol test suites (macOS SwiftPM 45 tests, iOS XCTest 27 tests — HKDF derivations, pairing HMAC, ChaChaPoly frames/nonce/replay, Codable wire format); the CI workflow runs both on every push/PR.
 
 ## [0.10.0] – 2026-08-25
 
 ### Changed
-- **macOS – ein Fenster statt drei**: Kontrollpanel, Hilfe und Über sind jetzt ein Fenster mit interner Navigation (Zurück-Button); das Fenster öffnet exakt in Inhaltsgröße (kein Scrollen). „Einführung anzeigen" ist ein dezenter grauer Button oben rechts (kein blauer Link mehr); die Links in Über/Hilfe sind Icon-Buttons (GitHub/E-Mail/Doku) wie in der iOS-App.
-- **macOS – Pairing**: bei Ablauf des Codes wird automatisch ein neuer erzeugt (kein „Neuen Code"-Button mehr), Countdown zurückgesetzt, Hinweis „Code abgelaufen – neuer Code erzeugt".
+- **macOS – one window instead of three**: control panel, Help, and About are now a single window with internal navigation (back button); the window opens exactly at content size (no scrolling). "Show introduction" is a subtle gray button at the top right (no longer a blue link); the links in About/Help are icon buttons (GitHub/email/docs), as in the iOS app.
+- **macOS – Pairing**: when the code expires, a new one is generated automatically (no more "New code" button), the countdown is reset, and a hint "Code expired – a new code was generated." is shown.
 
 ### Fixed
-- **iOS – Pairing-Screen war nach dem Schließen nur per App-Neustart wieder erreichbar**: Der Screen poppte durch die laufende Discovery in einer Schleife auf; der einzige Ausweg war Neustart. Jetzt merkt sich die App eine bewusste Ablehnung (kein automatisches Wieder-Aufpoppen) UND bietet einen jederzeit sichtbaren Weg zurück — ein „Mac koppeln"-Button in der Scanner-Ansicht (sobald ein Mac gefunden, aber nicht verbunden) sowie die Mac-Auswahlliste öffnen den Pairing-Screen erneut.
+- **iOS – Pairing screen was unreachable after dismissal without restarting the app**: The screen kept popping up in a loop driven by the running discovery; the only way out was a restart. The app now remembers a deliberate decline (no automatic re-popup) AND offers an always-visible way back — a "Pair Mac" button in the scanner view (as soon as a Mac is found but not connected) and the Mac picker list both reopen the pairing screen.
 
 ## [0.9.0] – 2026-08-25
 
 ### Added
-- **macOS – KeystrokeQR-Panel (Kontrollzentrum)**: Ein gestyltes Fenster bündelt die bisherigen Menüpunkte — Verbindungsstatus, **live sichtbarer Bedienungshilfen-Status** (grünes ✓ „Aktiviert" / rotes ✗, aktualisiert sich ohne Neustart nach dem Erteilen), gekoppelte Geräte (mit „Entfernen"), Kopplung, Tippgeschwindigkeit, Hilfe, Über, Einführung. Das Menüleisten-Menü ist dadurch schlank (inkl. ✓/✗-Kurzstatus).
-- **macOS – In-App-Hilfe** (Kurzanleitung + Troubleshooting + Repo/Docs-Links) und **Über/About** (Version dynamisch, © 2026 Tim Ehrenfried, mail@tim-ehrenfried.de, GitHub, MIT).
-- **iOS – Mehrere Macs & Mac-Wechsel**: Liste aller gefundenen Macs mit Status-Badges (Verbunden/Gekoppelt/Neu/Aktualisieren), jederzeit über einen Button erreichbar; aktiver Wechsel trennt sauber die aktuelle Verbindung (kein Session-Key-Leak zwischen Macs) und verbindet/koppelt zum gewählten Mac.
+- **macOS – KeystrokeQR panel (control center)**: A styled window bundles the former menu items — connection status, **live Accessibility status** (green ✓ "Enabled" / red ✗, updates without a restart once granted), paired devices (with "Remove"), pairing, typing speed, Help, About, introduction. The menu bar menu is now slim as a result (including a ✓/✗ short status).
+- **macOS – in-app Help** (quick start + troubleshooting + repo/docs links) and **About** (dynamic version, © 2026 Tim Ehrenfried, mail@tim-ehrenfried.de, GitHub, MIT).
+- **iOS – multiple Macs & Mac switching**: list of all discovered Macs with status badges (Connected/Paired/New/Update), reachable at any time via a button; actively switching cleanly disconnects the current connection (no session-key leak between Macs) and connects/pairs to the chosen Mac.
 
 ### Fixed
-- **Nach „Gerät entfernen" am Mac war keine (erneute) Verbindung möglich**: Das `session_error`/`not_paired`-Frame ging durch das sofortige Schließen der Verbindung verloren, sodass das iPhone in einer stillen Endlos-Reconnect-Schleife hing statt Neu-Pairing anzubieten.
-  - **macOS**: `not_paired`/`bad_session` werden jetzt erst **nach bestätigtem Absenden** geschlossen (`closeAfterSend`), erreichen den Client also zuverlässig; „Gerät entfernen" trennt zudem sofort die aktive Sitzung.
-  - **iOS**: unterscheidet host-seitiges Entkoppeln von transientem Netzabriss (Handshake-Fenster-Heuristik als Fallback) → löscht bei `not_paired` den veralteten PSK und bietet direkt Neu-Pairing an, statt endlos zu suchen.
+- **After "Remove device" on the Mac, no (re)connection was possible**: The `session_error`/`not_paired` frame was lost due to the immediate connection close, leaving the iPhone stuck in a silent endless reconnect loop instead of offering re-pairing.
+  - **macOS**: `not_paired`/`bad_session` are now closed only **after confirmed send** (`closeAfterSend`), so they reliably reach the client; "Remove device" also disconnects the active session immediately.
+  - **iOS**: distinguishes host-side unpairing from a transient network drop (handshake-window heuristic as a fallback) → on `not_paired`, deletes the stale PSK and offers re-pairing directly instead of searching endlessly.
 
 ## [0.8.0] – 2026-08-25
 
 ### Added
-- **macOS – einstellbare Tippgeschwindigkeit**: Menü „Tippgeschwindigkeit" (Schnell / Normal / Langsam) steuert Chunk-Größe und Pause im KeyInjector, damit sich bei viel Text im Zielfeld nichts verschluckt; Wahl persistent, greift sofort.
-- **macOS – Erst-Start-Onboarding**: gestyltes Willkommensfenster beim ersten Start (Funktionsweise, Bedienungshilfen-Button, „Gerät koppeln…"), erneut über „Einführung anzeigen" aufrufbar.
+- **macOS – adjustable typing speed**: "Typing Speed" menu (Fast / Normal / Slow) controls chunk size and pause in the KeyInjector so nothing gets dropped in the target field with lots of text; the choice is persistent and takes effect immediately.
+- **macOS – first-launch onboarding**: styled welcome window on first launch (how it works, Accessibility button, "Pair device…"), reopenable via "Show Introduction".
 
 ### Changed
-- **Pairing-Fenster (macOS) neu gestaltet**: dunkler Onboarding-Look, Code in Ziffernkästchen, Countdown-Balken, Wortmarke; schließt bei Erfolg automatisch nach ~1,5 s.
-- **iOS – Pairing-Screen** schließt bei Erfolg automatisch; klare Status-/Fehlerzeile mit Spinner.
+- **Pairing window (macOS) redesigned**: dark onboarding look, code in digit boxes, countdown bar, wordmark; closes automatically ~1.5 s after success.
+- **iOS – Pairing screen** closes automatically on success; clear status/error line with a spinner.
 
 ### Fixed
-- **Falscher Kopplungscode führte zu Timeout / kryptischem Fehler**: Der Host verwarf den OTP, erzeugte aber keinen neuen; der Client lief in einen Timeout, weil das `pair_error`-Frame beim sofortigen Verbindungsabbruch verloren ging.
-  - **macOS**: bei falschem Code wird sofort automatisch ein **neuer OTP** erzeugt (Fenster bleibt offen, freundlicher Hinweis, Countdown zurückgesetzt); `pair_ok`/`pair_error` werden erst **nach bestätigtem Absenden** geschlossen (kein verworfenes Frame mehr), inkl. „Neuen Code erzeugen" bei Ablauf.
-  - **iOS**: reagiert sofort auf `pair_error` (klarer „Falscher Code"-Hinweis, Feld-Reset, Reconnect gegen den neuen Code) mit Grace-Period, sodass der Fehler den Verbindungsabbruch immer schlägt; echter Timeout nur noch als letzter Ausweg.
+- **A wrong pairing code led to a timeout / cryptic error**: The host discarded the OTP but didn't generate a new one; the client ran into a timeout because the `pair_error` frame was lost when the connection was closed immediately.
+  - **macOS**: on a wrong code, a **new OTP** is now generated automatically right away (window stays open, friendly hint, countdown reset); `pair_ok`/`pair_error` are closed only **after confirmed send** (no more discarded frames), including generating a new code on expiry.
+  - **iOS**: reacts to `pair_error` immediately (clear "Wrong code" hint, field reset, reconnect against the new code) with a grace period so the error always beats the connection drop; a real timeout remains only as the last resort.
 
 ## [0.7.0] – 2026-08-25
 
 ### Changed
-- **Rebrand auf „KeystrokeQR"**: iOS-App → **KeystrokeQR**, macOS-Menüleisten-App → **KeystrokeQR Host**. Bundle-IDs neu: `de.timehrenfried.keystrokeqr` (App), `.widgets` (Widget), `.host` (Mac). Bonjour-Service-Typ `_qr-keyboard._tcp` → `_keystrokeqr._tcp`, URL-Scheme `qrkeyboard://` → `keystrokeqr://`, Keychain-Services angepasst. GitHub-Repo + lokaler Ordner → `keystrokeqr`. Verbindliche Namensspec: [docs/BRANDING.md](docs/BRANDING.md).
-  - **Breaking**: wegen geänderter Service-Typen/Bundle-IDs müssen bestehende v0.6.x-Kopplungen einmal neu durchgeführt und die Apps gemeinsam aktualisiert werden.
+- **Rebrand to "KeystrokeQR"**: iOS app → **KeystrokeQR**, macOS menu bar app → **KeystrokeQR Host**. New bundle IDs: `de.timehrenfried.keystrokeqr` (app), `.widgets` (widget), `.host` (Mac). Bonjour service type `_qr-keyboard._tcp` → `_keystrokeqr._tcp`, URL scheme `qrkeyboard://` → `keystrokeqr://`, keychain services adjusted. GitHub repo + local folder → `keystrokeqr`. Authoritative naming spec: [docs/BRANDING.md](docs/BRANDING.md).
+  - **Breaking**: because of the changed service types/bundle IDs, existing v0.6.x pairings must be redone once and both apps must be updated together.
 
 ### Added
-- **Internationalisierung (i18n)**: Englisch als Basissprache, Deutsch zusätzlich — beide Apps vollständig lokalisiert (iOS via String Catalog `Localizable.xcstrings`/`InfoPlist.xcstrings`, 103 Keys; macOS via `en.lproj`/`de.lproj`).
-- **iOS – First-Run-Onboarding**: vierseitiger Einführungsflow (Willkommen / Funktionsweise / Berechtigungen mit kontextuellem Kamera-Prompt / Kopplung), einmalig beim ersten Start, erneut aufrufbar über die Hilfe.
-- **macOS – gestylter DMG-Installer**: `make dmg` erzeugt `KeystrokeQR-Host.dmg` (Fenster-Hintergrundbild, App + /Applications-Symlink); der Release-Workflow lädt `KeystrokeQR-Host-macOS.dmg` als Asset hoch (löst das ZIP ab).
-- **Neue App-Icons** (iOS + macOS) im KeystrokeQR-Motiv (QR-Viewfinder + Keystroke-/Tasten-Akzent, gelbe Scan-Linie), stilistisch konsistent über beide Plattformen.
+- **Internationalization (i18n)**: English as the base language, German in addition — both apps fully localized (iOS via string catalogs `Localizable.xcstrings`/`InfoPlist.xcstrings`, 103 keys; macOS via `en.lproj`/`de.lproj`).
+- **iOS – first-run onboarding**: four-page intro flow (welcome / how it works / permissions with contextual camera prompt / pairing), shown once on first launch, reopenable from Help.
+- **macOS – styled DMG installer**: `make dmg` produces `KeystrokeQR-Host.dmg` (window background image, app + /Applications symlink); the release workflow uploads `KeystrokeQR-Host-macOS.dmg` as an asset (replacing the ZIP).
+- **New app icons** (iOS + macOS) in the KeystrokeQR motif (QR viewfinder + keystroke/key accent, yellow scan line), stylistically consistent across both platforms.
 
 ## [0.6.1] – 2026-08-25
 
 ### Fixed
-- **iOS – „Mac-App veraltet" trotz v0.6.0-Host**: `NWBrowser` liefert den Bonjour-TXT-Record in Browse-Ergebnissen nicht zuverlässig mit (oft `.none`), wodurch der Client jeden Mac fälschlich als v1 einstufte und den Pairing-Screen unterdrückte. Ein Host gilt jetzt nur noch als veraltet, wenn er sich **explizit** als `v=1` meldet; fehlender Record oder `v=2` → als v2 behandelt (die Version wird beim Handshake final geprüft). Damit erscheint der Kopplungs-Dialog korrekt.
+- **iOS – "Mac app outdated" despite a v0.6.0 host**: `NWBrowser` does not reliably deliver the Bonjour TXT record in browse results (often `.none`), so the client wrongly classified every Mac as v1 and suppressed the pairing screen. A host is now only considered outdated if it **explicitly** announces `v=1`; a missing record or `v=2` → treated as v2 (the version is checked conclusively during the handshake). The pairing dialog now appears correctly.
 
 ## [0.6.0] – 2026-08-25
 
 ### Added
-- **Ende-zu-Ende-Verschlüsselung + Geräte-Pairing (Protokoll v2)**: Jede Verbindung ist jetzt verschlüsselt und beidseitig authentifiziert. Ein iPhone muss einmalig gekoppelt werden — der Mac zeigt im Menü unter „Gerät koppeln…" einen 6-stelligen OTP (90 s), den das iPhone einmalig einträgt. Dahinter: Curve25519-Schlüsselaustausch mit OTP-HMAC-Bestätigung → langlebiger PSK (beidseitig im Keychain, nie über das Netz), pro Sitzung ein frischer HKDF-Sessionkey, alle Scan-/Ack-Frames als ChaChaPoly-AEAD mit Replay-Schutz (CryptoKit). Spezifikation: [docs/PROTOCOL-v2.md](docs/PROTOCOL-v2.md).
-- **Mac – Geräteverwaltung**: Menü listet gekoppelte iPhones (mit Pairing-Datum) samt „Entfernen" (widerruft PSK sofort, trennt laufende Sitzung); Status „N gekoppelt · M verbunden".
-- **iOS – Pairing-UI**: Setup-/Pairing-Screen (Mac wählen, OTP eingeben) und „Gekoppelte Macs verwalten"; Hinweis-Banner, wenn ein gefundener Mac noch v1 (< 0.6.0) läuft.
+- **End-to-end encryption + device pairing (protocol v2)**: Every connection is now encrypted and mutually authenticated. An iPhone has to be paired once — the Mac shows a 6-digit OTP (90 s) in the menu under "Pair device…", which the iPhone enters once. Under the hood: Curve25519 key exchange with OTP-HMAC confirmation → long-lived PSK (in both keychains, never sent over the network), a fresh HKDF session key per session, all scan/ack frames as ChaChaPoly AEAD with replay protection (CryptoKit). Specification: [docs/PROTOCOL-v2.md](docs/PROTOCOL-v2.md).
+- **Mac – device management**: the menu lists paired iPhones (with pairing date) plus "Remove" (revokes the PSK immediately, terminates the running session); status "N paired · M connected".
+- **iOS – pairing UI**: setup/pairing screen (choose Mac, enter OTP) and "Manage paired Macs"; notice banner when a discovered Mac is still running v1 (< 0.6.0).
 
 ### Changed
-- **Breaking**: Protokoll v2 löst v1 ab (Bonjour-TXT `v=2`); ein v2-Host akzeptiert nur v2-Clients und umgekehrt. Mac- und iOS-App gemeinsam aktualisieren.
+- **Breaking**: Protocol v2 replaces v1 (Bonjour TXT `v=2`); a v2 host accepts only v2 clients and vice versa. Update the Mac and iOS apps together.
 
 ### Security
-- Schließt die offenen SECURITY.md-Findings **LAN-Keystroke-Injection**, **Klartext-Sniffing** und **Host-Spoofing** (nur gekoppelte, per PSK authentifizierte Geräte kommen durch). Restrisiko der OTP-Entropie (~20 bit, ein Versuch pro 90-s-Fenster) dokumentiert.
+- Closes the open SECURITY.md findings **LAN keystroke injection**, **plaintext sniffing**, and **host spoofing** (only paired, PSK-authenticated devices get through). The residual risk of OTP entropy (~20 bits, one attempt per 90-second window) is documented.
 
 ## [0.5.1] – 2026-08-25
 
 ### Fixed
-- **iOS – Overlay-Randabstand endgültig**: Die Bedienleisten-Zeile lief wegen der nicht schrumpfbaren Toggles (`.fixedSize()`) über die Bildschirmbreite hinaus und zog Auslöser-Kapsel und Leiste randlos — Toggles jetzt als Chip mit skalier-/kürzbarem Label, Zeilen-Spacing reduziert. Im Simulator pixelgenau verifiziert (16 pt Seitenränder, 12 pt über dem Home-Indicator).
-- Versehentliche Ordner-Umbenennung von `ios/Shared/` rückgängig gemacht (die App hatte einen Scan-Payload in ein fokussiertes Xcode-Umbenennen-Feld getippt — Praxisbeleg für das in SECURITY.md beschriebene Injection-Risiko und den Pairing-Plan).
+- **iOS – overlay edge spacing, final fix**: The control-bar row overflowed the screen width because of the non-shrinkable toggles (`.fixedSize()`), pulling the shutter capsule and bar flush to the edge — toggles are now chips with scalable/truncatable labels, and the row spacing is reduced. Verified pixel-perfect in the simulator (16 pt side margins, 12 pt above the home indicator).
+- Reverted an accidental folder rename of `ios/Shared/` (the app had typed a scan payload into a focused Xcode rename field — a real-world demonstration of the injection risk described in SECURITY.md and of the pairing plan).
 
 ### Added
-- `docs/PLAN-SECURITY-DISTRIBUTION.md`: Plan für TLS-PSK-Verschlüsselung + einmaliges OTP-Pairing sowie CI/CD-Distribution (App Store/TestFlight + notarisiertes DMG). Nur Planung, keine Umsetzung.
+- `docs/PLAN-SECURITY-DISTRIBUTION.md`: plan for TLS-PSK encryption + one-time OTP pairing, plus CI/CD distribution (App Store/TestFlight + notarized DMG). Planning only, no implementation.
 
 ## [0.5.0] – 2026-08-25
 
 ### Added
-- **iOS – Code-Outlines**: gelbe, sanft nachgeführte Rahmen um alle aktuell erkannten Codes (CAShapeLayer auf dem Preview, perspektivische Ecken via `transformedMetadataObject`, Fade-out beim Verlassen des Bilds) — wie beim System-QR-Scanner.
-- **iOS – Hilfe „Über"-Abschnitt**: App-Version/Build dynamisch, © 2026 Tim Ehrenfried, Kontakt mail@tim-ehrenfried.de, GitHub-Link.
-- **App-Icons** für iOS (Asset Catalog, 1024er Single-Size) und macOS (AppIcon.icns im Bundle): dunkler Verlauf, weißes QR-Viewfinder-Motiv, gelbe Scan-Linie.
-- **GitHub-Infrastruktur**: CI-Workflow (macOS-Host-Build + iOS-Simulator-Build) und Release-Workflow (Tag `v*` → `QR-Keyboard-Host-macOS.zip` als GitHub-Release), `SECURITY.md` (Threat Model, Empfehlungen, Responsible Disclosure), `docs/INSTALL.md` (Endnutzer-Installation inkl. Gatekeeper).
+- **iOS – code outlines**: yellow, smoothly tracking frames around all currently detected codes (CAShapeLayer on the preview, perspective-correct corners via `transformedMetadataObject`, fade-out when leaving the frame) — like the system QR scanner.
+- **iOS – Help "About" section**: app version/build shown dynamically, © 2026 Tim Ehrenfried, contact mail@tim-ehrenfried.de, GitHub link.
+- **App icons** for iOS (asset catalog, 1024-pt single size) and macOS (AppIcon.icns in the bundle): dark gradient, white QR viewfinder motif, yellow scan line.
+- **GitHub infrastructure**: CI workflow (macOS host build + iOS simulator build) and release workflow (tag `v*` → `QR-Keyboard-Host-macOS.zip` as a GitHub release), `SECURITY.md` (threat model, recommendations, responsible disclosure), `docs/INSTALL.md` (end-user installation including Gatekeeper).
 
 ### Fixed
-- **iOS – Layout**: Overlays (Status, Auslöser, Bedienleiste) klebten randlos an den Bildschirmkanten; jetzt durchgängige 16-pt-Margins, Bedienleiste als abgerundete Karte, Safe-Area/Home-Indicator respektiert.
+- **iOS – layout**: overlays (status, shutter, control bar) sat flush against the screen edges; now consistent 16 pt margins, the control bar is a rounded card, and the safe area/home indicator are respected.
 
 ### Security
-- **macOS – DoS-Schutz**: WebSocket-Frames auf 64 KiB und `text` auf 8192 UTF-16-Einheiten begrenzt; Überschreitung → neues Ack `payload_too_large` statt minutenlangem „Volltippen" (PROTOCOL.md ergänzt).
+- **macOS – DoS protection**: WebSocket frames capped at 64 KiB and `text` at 8192 UTF-16 code units; exceeding the limit → new ack `payload_too_large` instead of minutes of "typing it all out" (PROTOCOL.md updated).
 
 ## [0.4.0] – 2026-08-25
 
 ### Added
-- **iOS – Einmal-Übertragung**: Jeder Code wird pro App-Sitzung nur einmal automatisch gesendet. Wird ein bereits gesendeter Code erneut erkannt, erscheint stattdessen ein gelber Auslöser „Erneut senden" (nur solange der Code im Bild ist, blendet nach 2,5 s aus) — erst ein Druck sendet erneut. Dezente Wiederholungs-Haptik einmal pro Sichtung, framerate-entprellt. Dazu „Verlauf leeren"-Button (mit Bestätigung); das Sent-Set ist bewusst nicht persistiert und leert sich bei App-Neustart.
+- **iOS – send-once**: Each code is sent automatically only once per app session. If an already-sent code is detected again, a yellow "Send again" trigger appears instead (only while the code is in frame, fades out after 2.5 s) — only pressing it sends again. Subtle repeat haptic once per sighting, framerate-debounced. Plus a "Clear history" button (with confirmation); the sent set is intentionally not persisted and clears on app restart.
 
 ## [0.3.0] – 2026-08-25
 
 ### Added
-- **iOS – Kamera**: virtuelle Kamera mit automatischem Linsen-/Makro-Wechsel (Triple → DualWide → Dual → Weitwinkel-Fallback), korrekter Start-Zoom (kein Ultraweitwinkel-Start), Continuous-Autofocus mit Nah-Restriktion + Auto-Belichtung + Subject-Area-Reset, **Tap-to-Focus** mit Fokus-Rahmen und **Pinch-to-Zoom** (bis 10x).
-- **iOS – Dunkler Launch-/Ladezustand**: schwarzer Launch Screen (UILaunchScreen + Asset-Farbe), schwarzes „Kamera wird gestartet…"-Overlay bis die Session läuft, dunkler Kamera-verweigert-Screen.
+- **iOS – camera**: virtual camera with automatic lens/macro switching (Triple → DualWide → Dual → wide-angle fallback), correct initial zoom (no ultra-wide start), continuous autofocus with near-range restriction + auto exposure + subject-area reset, **tap-to-focus** with a focus frame, and **pinch-to-zoom** (up to 10x).
+- **iOS – dark launch/loading state**: black launch screen (UILaunchScreen + asset color), black "Starting camera…" overlay until the session is running, dark camera-denied screen.
 
 ### Fixed
-- **iOS-18-Sperrbildschirm-Steuerung öffnete nichts**: Control-Intent wird vom System im App-Prozess ausgeführt, existierte aber nur in der Widget-Extension → `StartScanIntent` liegt jetzt in `Shared/` mit Membership in App **und** Extension; fehleranfällige `OpenURLIntent`-Variante (iOS-18.0-Bug) entfernt. ControlWidget, Action Button, Shortcuts und Siri laufen über denselben Intent.
+- **iOS 18 Lock Screen control opened nothing**: The control intent is executed by the system in the app process, but only existed in the widget extension → `StartScanIntent` now lives in `Shared/` with membership in both the app **and** the extension; the error-prone `OpenURLIntent` variant (iOS 18.0 bug) was removed. ControlWidget, Action Button, Shortcuts, and Siri all run through the same intent.
 
 ## [0.2.0] – 2026-08-25
 
 ### Added
-- **iOS – Schnellstart vom Sperrbildschirm**: Widget-Extension `QRKeyboardScannerWidgets` mit Lock-Screen-Widget (accessoryCircular/-Rectangular, systemSmall) via Deep-Link `qrkeyboard://scan`; iOS-18-ControlWidget für Sperrbildschirm-Schnelltasten und Kontrollzentrum; App Intent „QR-Code scannen" + App Shortcuts (Siri, Spotlight, Kurzbefehle-App, Action Button); URL-Scheme `qrkeyboard` mit robustem `.onOpenURL`-Handler inkl. Cooldown-Reset.
-- **Doku**: `docs/SETUP.md` — Schritt-für-Schritt vom Apple-Developer-Account bis zum laufenden System (Signing, Entwicklermodus, Berechtigungen, Sperrbildschirm-Einrichtung, Troubleshooting); In-App-Hilfe und READMEs entsprechend erweitert.
+- **iOS – quick start from the Lock Screen**: widget extension `QRKeyboardScannerWidgets` with a Lock Screen widget (accessoryCircular/-Rectangular, systemSmall) via deep link `qrkeyboard://scan`; iOS 18 ControlWidget for Lock Screen quick controls and Control Center; App Intent "Scan QR Code" + App Shortcuts (Siri, Spotlight, Shortcuts app, Action Button); URL scheme `qrkeyboard` with a robust `.onOpenURL` handler including cooldown reset.
+- **Docs**: `docs/SETUP.md` — step by step from the Apple Developer account to a running system (signing, Developer Mode, permissions, Lock Screen setup, troubleshooting); in-app help and READMEs extended accordingly.
 
 ### Changed
-- **macOS – Makefile**: neue Variable `SIGN_IDENTITY` (Standard ad-hoc) für stabile Signatur mit Developer-Zertifikat; Signierung mit Hardened Runtime (`--options runtime`).
+- **macOS – Makefile**: new variable `SIGN_IDENTITY` (default ad-hoc) for a stable signature with a developer certificate; signing with Hardened Runtime (`--options runtime`).
 
 ## [0.1.0] – 2026-08-25
 
 ### Added
-- **macOS-Host** (`macos/`): Menüleisten-App mit lokalem WebSocket-Server (Network.framework, Port 8080 mit Fallback), Bonjour-Advertising `_qr-keyboard._tcp`, Key-Injection via CGEvent (Unicode-sicher, layout-unabhängig), optional Tab/Enter nach dem Text, Accessibility-Statusanzeige inkl. Direktlink in die Systemeinstellungen, Makefile-Build zum `.app`-Bundle.
-- **iOS-Scanner** (`ios/`): SwiftUI-App mit Vollbild-Kamera-Sucher (AVFoundation, QR + gängige Barcode-Typen), automatischer Mac-Suche via Bonjour (keine IP-Eingabe), WebSocket-Versand, haptischem Feedback, 1-s-Scan-Cooldown, Auto-Enter-/Auto-Tab-Schaltern (persistent), automatischem Reconnect und In-App-Hilfe.
-- **Protokoll-Spezifikation** `docs/PROTOCOL.md` (Bonjour + WebSocket + JSON, Ack mit Fehlercodes).
-- Dokumentation: Root-README, Komponenten-READMEs mit Accessibility-Anleitung, MIT-Lizenz.
+- **macOS host** (`macos/`): menu bar app with a local WebSocket server (Network.framework, port 8080 with fallback), Bonjour advertising `_qr-keyboard._tcp`, key injection via CGEvent (Unicode-safe, layout-independent), optional Tab/Enter after the text, Accessibility status display including a direct link to System Settings, Makefile build to a `.app` bundle.
+- **iOS scanner** (`ios/`): SwiftUI app with a full-screen camera viewfinder (AVFoundation, QR + common barcode types), automatic Mac discovery via Bonjour (no IP entry), WebSocket delivery, haptic feedback, 1 s scan cooldown, Auto-Enter/Auto-Tab toggles (persistent), automatic reconnect, and in-app help.
+- **Protocol specification** `docs/PROTOCOL.md` (Bonjour + WebSocket + JSON, ack with error codes).
+- Documentation: root README, component READMEs with Accessibility guide, MIT license.

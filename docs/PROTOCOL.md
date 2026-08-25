@@ -1,46 +1,45 @@
-# KeystrokeQR – Netzwerkprotokoll (v1)
+# KeystrokeQR – Network Protocol (v1)
 
-> **Historisch — seit v0.6.0 abgelöst durch [PROTOCOL-v2.md](PROTOCOL-v2.md)**
-> (Pairing + Ende-zu-Ende-Verschlüsselung, harter Schnitt: v1-Hosts/-Clients
-> sind mit v2-Gegenstellen nicht kompatibel). Dieses Dokument bleibt als
-> Referenz für die (unverschlüsselte) Nutzlast erhalten — Abschnitt
-> „Nachrichten“ unten (`scan`/`ack`) gilt inhaltlich unverändert als Klartext
-> **innerhalb** der v2-`enc`-Frames.
+> **Historical — superseded since v0.6.0 by [PROTOCOL-v2.md](PROTOCOL-v2.md)**
+> (pairing + end-to-end encryption, hard cut: v1 hosts/clients are
+> incompatible with v2 peers). This document remains as a reference for the
+> (unencrypted) payload — the "Messages" section below (`scan`/`ack`) still
+> applies unchanged as the plaintext **inside** the v2 `enc` frames.
 
-Verbindliche Spezifikation für beide Komponenten (macOS-Host & iOS-Client).
+Authoritative specification for both components (macOS host & iOS client).
 
 ## Discovery (Bonjour/mDNS)
 
-- **Service-Typ:** `_keystrokeqr._tcp`
+- **Service type:** `_keystrokeqr._tcp`
 - **Domain:** `local.`
-- **Service-Name:** Hostname des Macs (z. B. „Tims MacBook Pro")
-- **Port:** `8080` (fest; fällt der Port aus, wählt der Host automatisch einen freien Port — der Client nutzt IMMER den via Bonjour aufgelösten Port, niemals hartkodiert 8080)
-- **TXT-Record:** `v=1` (Protokollversion)
+- **Service name:** the Mac's hostname (e.g. "Tim's MacBook Pro")
+- **Port:** `8080` (fixed; if the port is unavailable, the host automatically picks a free one — the client ALWAYS uses the port resolved via Bonjour, never a hardcoded 8080)
+- **TXT record:** `v=1` (protocol version)
 
 ## Transport
 
-- **WebSocket** über TCP via `Network.framework` (`NWProtocolWebSocket`).
-  - Host: `NWListener` mit WebSocket-Options (Server-Modus, `autoReplyPing = true`).
-  - Client: `NWConnection` mit WebSocket-Options auf das via Bonjour gefundene Endpoint.
-- Keine TLS-Schicht (rein lokales Netz, Peer-to-Peer). Kein Cloud-Relay.
+- **WebSocket** over TCP via `Network.framework` (`NWProtocolWebSocket`).
+  - Host: `NWListener` with WebSocket options (server mode, `autoReplyPing = true`).
+  - Client: `NWConnection` with WebSocket options to the endpoint discovered via Bonjour.
+- No TLS layer (purely local network, peer-to-peer). No cloud relay.
 
-## Nachrichten (JSON, Text-Frames, UTF-8)
+## Messages (JSON, text frames, UTF-8)
 
 ### Client → Host: Scan
 
 ```json
 {
   "type": "scan",
-  "text": "<gescannter String>",
+  "text": "<scanned string>",
   "autoEnter": false,
   "autoTab": false
 }
 ```
 
-- `text`: Roh-Payload des QR-/Barcodes (beliebiges Unicode).
-- `autoEnter`: Host sendet nach dem Text zusätzlich die Return-Taste.
-- `autoTab`: Host sendet nach dem Text zusätzlich die Tab-Taste.
-- Sind beide gesetzt, gilt die Reihenfolge: Text → Tab → Enter.
+- `text`: raw payload of the QR/barcode (arbitrary Unicode).
+- `autoEnter`: the host additionally sends the Return key after the text.
+- `autoTab`: the host additionally sends the Tab key after the text.
+- If both are set, the order is: text → Tab → Enter.
 
 ### Host → Client: Acknowledgement
 
@@ -48,28 +47,28 @@ Verbindliche Spezifikation für beide Komponenten (macOS-Host & iOS-Client).
 { "type": "ack", "ok": true }
 ```
 
-Bei Fehler (z. B. Accessibility-Berechtigung fehlt):
+On error (e.g. missing Accessibility permission):
 
 ```json
 { "type": "ack", "ok": false, "error": "accessibility_denied" }
 ```
 
-Fehlercodes: `accessibility_denied`, `invalid_message`, `payload_too_large`.
+Error codes: `accessibility_denied`, `invalid_message`, `payload_too_large`.
 
-### Limits (DoS-Schutz, ab Host v0.5.0)
+### Limits (DoS protection, since host v0.5.0)
 
-- **WebSocket-Frame:** max. **64 KiB** (größere Frames verwirft die Transportschicht des Hosts).
-- **`text`:** max. **8192 UTF-16-Einheiten** — deckt jede reale QR-/Barcode-Kapazität ab.
-  Überschreitung → `{ "type": "ack", "ok": false, "error": "payload_too_large" }`, es wird nichts getippt.
-- Clients müssen unbekannte Fehlercodes tolerant ignorieren.
+- **WebSocket frame:** max. **64 KiB** (larger frames are dropped by the host's transport layer).
+- **`text`:** max. **8192 UTF-16 code units** — covers every real-world QR/barcode capacity.
+  Exceeding it → `{ "type": "ack", "ok": false, "error": "payload_too_large" }`, nothing is typed.
+- Clients must tolerantly ignore unknown error codes.
 
 ### Keepalive
 
-WebSocket-Ping/Pong der Protokollschicht (autoReplyPing). Keine eigenen Nachrichten nötig.
+WebSocket protocol-level ping/pong (autoReplyPing). No custom messages needed.
 
-## Verhalten
+## Behavior
 
-- Host tippt `text` als echte Keystrokes via `CGEvent` (Unicode-Injection, layout-unabhängig) in das aktuell fokussierte Fenster; danach ggf. Tab/Enter als Keycode-Events.
-- Client friert nach erkennungsauslösendem Scan 1 s ein (Cooldown), haptisches Feedback bei Erkennung.
-- Verbindungsabriss: Client startet Bonjour-Browse neu und verbindet automatisch wieder.
-- Mehrere Clients gleichzeitig sind erlaubt; der Host verarbeitet Scans sequenziell.
+- The host types `text` as real keystrokes via `CGEvent` (Unicode injection, layout-independent) into the currently focused window; afterwards Tab/Enter as keycode events if requested.
+- The client freezes for 1 s after a detection-triggering scan (cooldown), with haptic feedback on detection.
+- Connection loss: the client restarts the Bonjour browse and reconnects automatically.
+- Multiple simultaneous clients are allowed; the host processes scans sequentially.

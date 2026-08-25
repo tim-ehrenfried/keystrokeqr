@@ -1,62 +1,62 @@
-# Plan: Verschlüsselung + Geräte-Pairing (OTP) und Distribution (Store + DMG)
+# Plan: Encryption + Device Pairing (OTP) and Distribution (Store + DMG)
 
-Status: **Geplant, nicht umgesetzt** (Stand 2026-08-25, nach v0.5.x).
-Beide Vorhaben schließen die offenen Punkte aus [SECURITY.md](../SECURITY.md) bzw. machen die Installation Xcode-frei.
+Status: **Planned, not implemented** (as of 2026-08-25, after v0.5.x).
+The two efforts close the open items from [SECURITY.md](../SECURITY.md) and make installation Xcode-free, respectively.
 
 ---
 
-## Teil A — Security: TLS-Verschlüsselung + einmaliges Pairing mit OTP
+## Part A — Security: TLS encryption + one-time pairing with OTP
 
-**Ziel:** Keine offenen Sicherheitsfragen mehr. Nur explizit gekoppelte iPhones dürfen senden (Authentizität), alles ist verschlüsselt (Vertraulichkeit), Host-Spoofing läuft ins Leere (der Client authentifiziert auch den Mac).
+**Goal:** No open security questions left. Only explicitly paired iPhones may send (authenticity), everything is encrypted (confidentiality), host spoofing leads nowhere (the client authenticates the Mac too).
 
-### Konzept
+### Concept
 
-1. **Pairing (einmalig, OTP vom Mac):**
-   - Mac-Menü: neuer Punkt **„Gerät koppeln…"** → zeigt 6-stelligen Einmalcode (OTP, 60 s gültig) in einem Popover.
-   - iOS: Setup-Screen beim ersten Start (und unter „Neues Gerät koppeln"): Mac aus Bonjour-Liste wählen → OTP eintippen.
-   - Technisch: Der OTP authentifiziert einen einmaligen Schlüsselaustausch (ECDH mit Curve25519 via CryptoKit; der OTP fließt als HMAC in die Bestätigung ein → Man-in-the-Middle beim Pairing ausgeschlossen). Ergebnis: ein langlebiges, gerätespezifisches **32-Byte-PSK (Pre-Shared Key)**.
-   - Speicherung: Mac-Keychain (Liste gekoppelter Geräte: Name, Public-Key-Hash, PSK), iOS-Keychain (pro Mac ein PSK).
-2. **Laufende Verbindungen: TLS-PSK**
-   - `Network.framework` beidseitig mit `NWProtocolTLS` + `sec_protocol_options_add_pre_shared_key` (TLS 1.2 PSK-Cipher; kein Zertifikats-Theater nötig, PSK authentifiziert beide Seiten gleichzeitig).
-   - Nicht gekoppelte Clients: TLS-Handshake schlägt fehl → können weder senden noch mitlesen. Damit sind Finding 1 (LAN-Injection), 3 (Sniffing) und 4 (Host-Spoofing) aus SECURITY.md geschlossen.
-3. **Geräteverwaltung (Mac-Menü):** Liste gekoppelter iPhones mit „Entfernen" (widerruft PSK sofort). Admin-Grundregel: Pairing-UI nur am Mac, nie remote auslösbar.
-4. **Protokoll v2:** TXT-Record `v=2`; Pairing-Nachrichten (`pair_request`/`pair_confirm`) laufen über einen separaten, unverschlüsselten, streng limitierten Endpunkt NUR solange das Pairing-Popover offen ist. Harter Schnitt statt Abwärtskompatibilität (beide Apps kommen aus einem Repo; alte Clients zeigen „Bitte App aktualisieren und koppeln").
+1. **Pairing (one-time, OTP from the Mac):**
+   - Mac menu: new item **"Pair device…"** → shows a 6-digit one-time code (OTP, valid 60 s) in a popover.
+   - iOS: setup screen on first launch (and under "Pair a new device"): pick a Mac from the Bonjour list → type in the OTP.
+   - Technically: the OTP authenticates a one-time key exchange (ECDH with Curve25519 via CryptoKit; the OTP enters the confirmation as an HMAC → man-in-the-middle during pairing ruled out). Result: a long-lived, device-specific **32-byte PSK (pre-shared key)**.
+   - Storage: Mac keychain (list of paired devices: name, public key hash, PSK), iOS keychain (one PSK per Mac).
+2. **Ongoing connections: TLS-PSK**
+   - `Network.framework` on both sides with `NWProtocolTLS` + `sec_protocol_options_add_pre_shared_key` (TLS 1.2 PSK ciphers; no certificate theater needed, the PSK authenticates both sides at once).
+   - Unpaired clients: the TLS handshake fails → they can neither send nor eavesdrop. That closes findings 1 (LAN injection), 3 (sniffing), and 4 (host spoofing) from SECURITY.md.
+3. **Device management (Mac menu):** list of paired iPhones with "Remove" (revokes the PSK immediately). Admin ground rule: pairing UI only on the Mac, never triggerable remotely.
+4. **Protocol v2:** TXT record `v=2`; pairing messages (`pair_request`/`pair_confirm`) run over a separate, unencrypted, strictly limited endpoint ONLY while the pairing popover is open. Hard cut instead of backwards compatibility (both apps come from one repo; old clients show "Please update the app and pair").
 
-### Arbeitspakete & Aufwand
+### Work packages & effort
 
-| # | Paket | Aufwand |
+| # | Package | Effort |
 |---|---|---|
-| A1 | PROTOCOL.md v2 (Pairing-Flow, TLS-PSK, Fehlercodes `not_paired`, `pairing_expired`) | klein |
-| A2 | Mac: Pairing-UI (Popover + OTP-Generator), Keychain-Store, Geräteliste im Menü | mittel |
-| A3 | Mac: Listener auf TLS-PSK umstellen (PSK-Lookup per Client-Hint) | mittel |
-| A4 | iOS: Setup-/Pairing-Screen, Keychain, Connection auf TLS-PSK | mittel |
-| A5 | SECURITY.md aktualisieren (Findings 1/3/4 → geschlossen), Doku/Hilfe | klein |
+| A1 | PROTOCOL.md v2 (pairing flow, TLS-PSK, error codes `not_paired`, `pairing_expired`) | small |
+| A2 | Mac: pairing UI (popover + OTP generator), keychain store, device list in the menu | medium |
+| A3 | Mac: switch the listener to TLS-PSK (PSK lookup via client hint) | medium |
+| A4 | iOS: setup/pairing screen, keychain, connection on TLS-PSK | medium |
+| A5 | Update SECURITY.md (findings 1/3/4 → closed), docs/help | small |
 
-Risiko: TLS-PSK-API von Network.framework ist schlecht dokumentiert (DispatchData-Handling) — ggf. 1 Iteration mehr einplanen. Gesamt: ~1 fokussierter Entwicklungstag mit Agents, gut in 2 Releases teilbar (erst Pairing+PSK, dann Feinschliff).
+Risk: the TLS-PSK API of Network.framework is poorly documented (DispatchData handling) — plan for possibly 1 extra iteration. Total: ~1 focused development day with agents, easily splittable into 2 releases (pairing+PSK first, then polish).
 
 ---
 
-## Teil B — Distribution & CI/CD: App Store + notarisiertes DMG
+## Part B — Distribution & CI/CD: App Store + notarized DMG
 
-**Ziel-Nutzererlebnis:** iOS-App aus dem **App Store** laden → Mac-Server als **DMG** von GitHub laden (notarisiert, kein Gatekeeper-Gefrickel) → koppeln → fertig. Kein Xcode für Endnutzer.
+**Target user experience:** get the iOS app from the **App Store** → get the Mac server as a **DMG** from GitHub (notarized, no Gatekeeper fiddling) → pair → done. No Xcode for end users.
 
-### B1 — macOS: signiertes + notarisiertes DMG (unabhängig vom Store, zuerst umsetzen)
+### B1 — macOS: signed + notarized DMG (independent of the Store, do this first)
 
-1. **Voraussetzungen (einmalig, manuell):** Im Dev-Account ein **Developer ID Application**-Zertifikat erzeugen; App Store Connect **API-Key** (.p8, Key-ID, Issuer-ID) für die Notarisierung anlegen.
-2. **GitHub-Secrets:** Zertifikat als base64-.p12 + Passwort, ASC-API-Key (3 Secrets).
-3. **Release-Workflow erweitern:** `make app SIGN_IDENTITY="Developer ID Application: …"` → DMG bauen (`create-dmg` oder `hdiutil`, mit /Applications-Symlink und Hintergrundbild) → `xcrun notarytool submit --wait` → `xcrun stapler staple` → DMG als Release-Asset (ersetzt das Zip).
-4. **Effekt:** Download öffnet ohne Warnung; Accessibility-Berechtigung bleibt dank stabiler Signatur dauerhaft. INSTALL.md schrumpft auf „laden, ziehen, Berechtigung erteilen".
-5. Optional später: **Sparkle** für Auto-Updates aus den GitHub-Releases.
+1. **Prerequisites (one-time, manual):** create a **Developer ID Application** certificate in the dev account; create an App Store Connect **API key** (.p8, key ID, issuer ID) for notarization.
+2. **GitHub secrets:** certificate as base64 .p12 + password, ASC API key (3 secrets).
+3. **Extend the release workflow:** `make app SIGN_IDENTITY="Developer ID Application: …"` → build the DMG (`create-dmg` or `hdiutil`, with an /Applications symlink and background image) → `xcrun notarytool submit --wait` → `xcrun stapler staple` → DMG as a release asset (replaces the zip).
+4. **Effect:** the download opens without a warning; the Accessibility permission sticks thanks to a stable signature. INSTALL.md shrinks to "download, drag, grant permission".
+5. Optional later: **Sparkle** for auto-updates from the GitHub releases.
 
 ### B2 — iOS: TestFlight → App Store
 
-1. **Einmalig in App Store Connect:** Bundle-IDs registrieren (App + Widget-Extension), App-Eintrag anlegen, Datenschutz-Angaben („Privacy Nutrition Label": keine Datenerhebung), Screenshots (iPhone 6,7"/6,1"), Beschreibung; Review-Notiz, dass die App ein lokales Mac-Gegenstück braucht (Link + Testvideo beilegen — wichtig, sonst Ablehnungsrisiko „App wirkt funktionslos").
-2. **CI:** GitHub Actions mit **Fastlane** (`build_app` + `upload_to_testflight` / `deliver`), Signing via ASC-API-Key (cloud-managed certificates, kein match-Repo nötig). Trigger: Tag `v*` → TestFlight-Build; manueller Workflow-Dispatch → „Zur Review einreichen".
-3. **Versionierung:** MARKETING_VERSION aus Git-Tag ableiten, Build-Nummer = GitHub-Run-Number.
-4. **Phasen:** (1) TestFlight intern (sofort nutzbar, auch für Kollegen), (2) App-Store-Review. Realistisch 1–3 Review-Runden; das Pairing aus Teil A sollte VORHER drin sein (Reviewer im fremden Netz + unauthentifizierter Keystroke-Server wäre auch inhaltlich heikel).
+1. **One-time in App Store Connect:** register the bundle IDs (app + widget extension), create the app record, privacy declarations ("Privacy Nutrition Label": no data collection), screenshots (iPhone 6.7"/6.1"), description; review note that the app needs a local Mac counterpart (include a link + test video — important, otherwise there's a rejection risk of "app appears non-functional").
+2. **CI:** GitHub Actions with **Fastlane** (`build_app` + `upload_to_testflight` / `deliver`), signing via the ASC API key (cloud-managed certificates, no match repo needed). Trigger: tag `v*` → TestFlight build; manual workflow dispatch → "Submit for review".
+3. **Versioning:** derive MARKETING_VERSION from the git tag, build number = GitHub run number.
+4. **Phases:** (1) TestFlight internal (usable immediately, also for colleagues), (2) App Store review. Realistically 1–3 review rounds; the pairing from part A should be in BEFORE that (a reviewer on a foreign network + an unauthenticated keystroke server would be substantively problematic too).
 
-### Reihenfolge-Empfehlung
+### Recommended order
 
-1. **A (Security/Pairing)** — schließt die Sicherheitslücken und ist Voraussetzung für einen sauberen Store-Auftritt.
-2. **B1 (DMG notarisiert)** — kleiner, sofortiger Gewinn für die Verteilung des Servers.
-3. **B2 (TestFlight → App Store)** — der längste Teil wegen Review/Metadaten.
+1. **A (security/pairing)** — closes the security gaps and is a prerequisite for a clean Store presence.
+2. **B1 (notarized DMG)** — a small, immediate win for distributing the server.
+3. **B2 (TestFlight → App Store)** — the longest part due to review/metadata.

@@ -10,6 +10,9 @@ set -euo pipefail
 
 OUT="${1:?Ausgabepfad fehlt}"
 YELLOW="#FFD60A"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+# Marken-Logo (vollflächige Kachel) aus dem Branding-Master.
+LOGO_SRC="$HERE/../../branding/appstore-1024.png"
 
 # Passende Schrift auf macOS suchen (fällt auf IM-Default zurück).
 FONT_ARGS=()
@@ -20,10 +23,17 @@ for f in \
   if [ -f "$f" ]; then FONT_ARGS=(-font "$f"); break; fi
 done
 
+# Logo klein und mit abgerundeten Ecken für den Kopfbereich vorbereiten.
+LOGO_TMP="$(mktemp -u).png"
+magick "$LOGO_SRC" -resize 56x56 \
+  \( -size 56x56 xc:none -fill white -draw "roundrectangle 0,0 55,55 12,12" \) \
+  -alpha off -compose CopyOpacity -composite "$LOGO_TMP"
+
 magick -size 600x400 gradient:'#1c1c22'-'#0b0b0d' \
+  "$LOGO_TMP" -gravity North -geometry +0+16 -compose over -composite \
   "${FONT_ARGS[@]}" \
-  -fill '#FFFFFF' -gravity North -pointsize 30 -annotate +0+42 'KeystrokeQR Host' \
-  -fill '#9A9AA2' -gravity North -pointsize 15 -annotate +0+88 'Zum Installieren das Symbol in „Programme" ziehen' \
+  -fill '#FFFFFF' -gravity North -pointsize 28 -annotate +0+86 'KeystrokeQR Host' \
+  -fill '#9A9AA2' -gravity North -pointsize 14 -annotate +0+126 'Zum Installieren das Symbol in „Programme" ziehen' \
   -fill "$YELLOW" -stroke "$YELLOW" -strokewidth 6 \
     -draw "stroke-linecap round line 250,208 348,208" \
   -stroke none -fill "$YELLOW" \

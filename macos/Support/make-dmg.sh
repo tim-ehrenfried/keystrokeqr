@@ -20,6 +20,8 @@ VOLNAME="${2:?Volume-Name fehlt}"
 OUT_DMG="${3:?Ausgabe-DMG fehlt}"
 BG_PNG="${4:?Hintergrundbild fehlt}"
 SIGN_IDENTITY="${5:--}"
+# Optional: Volume-Icon (.icns) — macht Volume & DMG-Datei zum Marken-Icon.
+VOL_ICNS="${6:-}"
 
 APP_BASENAME="$(basename "$APP_BUNDLE")"
 WIN_W=600; WIN_H=400
@@ -32,9 +34,12 @@ rm -f "$OUT_DMG"
 # ---- Bevorzugt: create-dmg ------------------------------------------------
 if command -v create-dmg >/dev/null 2>&1; then
   echo "make-dmg: nutze create-dmg"
+  VOLICON_ARGS=()
+  [ -n "$VOL_ICNS" ] && [ -f "$VOL_ICNS" ] && VOLICON_ARGS=(--volicon "$VOL_ICNS")
   create-dmg \
     --volname "$VOLNAME" \
     --background "$BG_PNG" \
+    "${VOLICON_ARGS[@]}" \
     --window-pos 200 120 \
     --window-size "$WIN_W" "$WIN_H" \
     --icon-size "$ICON_SIZE" \
@@ -66,6 +71,10 @@ cp -R "$APP_BUNDLE" "$STAGE/$APP_BASENAME"
 ln -s /Applications "$STAGE/Applications"
 mkdir "$STAGE/.background"
 cp "$BG_PNG" "$STAGE/.background/background.png"
+# Volume-Icon (best-effort): .VolumeIcon.icns + Custom-Icon-Attribut aufs Volume.
+if [ -n "$VOL_ICNS" ] && [ -f "$VOL_ICNS" ]; then
+  cp "$VOL_ICNS" "$STAGE/.VolumeIcon.icns"
+fi
 
 # Beschreibbares DMG erzeugen (etwas Puffer über der Nutzgröße)
 hdiutil create -srcfolder "$STAGE" -volname "$VOLNAME" \
@@ -101,6 +110,16 @@ then
   sync
 else
   echo "make-dmg: Finder-Styling nicht möglich (Headless/CI) – DMG enthält App, /Applications-Symlink und Hintergrundbild, aber keine vorgesetzten Icon-Positionen."
+fi
+
+# Custom-Icon-Flag fürs Volume setzen (SetFile kommt mit den Xcode-Tools;
+# ohne das Flag ignoriert der Finder .VolumeIcon.icns). Best-effort.
+if [ -n "$VOL_ICNS" ] && [ -f "$MOUNT_DIR/.VolumeIcon.icns" ]; then
+  if command -v SetFile >/dev/null 2>&1; then
+    SetFile -a C "$MOUNT_DIR" 2>/dev/null && echo "make-dmg: Volume-Icon gesetzt" || true
+  else
+    echo "make-dmg: SetFile nicht verfügbar – Volume-Icon-Flag übersprungen"
+  fi
 fi
 
 hdiutil detach "$MOUNT_DIR" -quiet

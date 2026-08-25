@@ -1,67 +1,84 @@
-# Branding- & Naming-Spec (verbindlich)
+# Branding & Naming Spec (authoritative)
 
-Ab v0.7.0 heißt das Produkt **KeystrokeQR**. Diese Datei ist die **einzige Quelle der
-Wahrheit** für alle Namen, IDs und Bezeichner — macOS-Host und iOS-Client müssen exakt
-übereinstimmen (Bonjour-Service-Typ, Bundle-Präfix etc.), sonst finden/koppeln sie nicht.
+As of v0.7.0 the product is called **KeystrokeQR**. This file is the **single
+source of truth** for all names, IDs, and identifiers — the macOS host and iOS
+client must match exactly (Bonjour service type, bundle prefix, etc.),
+otherwise they won't discover/pair.
 
-## Produktnamen (Anzeige)
+## Product names (display)
 
-| Kontext | Name |
+| Context | Name |
 |---|---|
-| Marke / Repo / Dachbegriff | **KeystrokeQR** |
-| iOS-App (Home-Screen-Name, Store-Titel) | **KeystrokeQR** |
-| macOS-Menüleisten-App | **KeystrokeQR Host** |
+| Brand / repo / umbrella term | **KeystrokeQR** |
+| iOS app (Home Screen name, store title) | **KeystrokeQR** |
+| macOS menu bar app | **KeystrokeQR Host** |
 
-Altnamen, die vollständig ersetzt werden: „QR-Keyboard", „QR Keyboard Scanner",
-„QR Keyboard Host", „qr-keyboard".
+Legacy names being fully replaced: "QR-Keyboard", "QR Keyboard Scanner",
+"QR Keyboard Host", "qr-keyboard".
 
-## Bundle-Identifier
+## Bundle identifiers
 
-| Target | Bundle-ID |
+| Target | Bundle ID |
 |---|---|
-| iOS-App | `de.timehrenfried.keystrokeqr` |
-| iOS-Widget-Extension | `de.timehrenfried.keystrokeqr.widgets` |
-| macOS-Host | `de.timehrenfried.keystrokeqr.host` |
+| iOS app | `de.timehrenfried.keystrokeqr` |
+| iOS widget extension | `de.timehrenfried.keystrokeqr.widgets` |
+| macOS host | `de.timehrenfried.keystrokeqr.host` |
 
-## Weitere Bezeichner (MÜSSEN Host & Client gleich sein)
+## Other identifiers (MUST be identical on host & client)
 
-| Zweck | Wert (alt → neu) |
+| Purpose | Value (old → new) |
 |---|---|
-| Bonjour-Service-Typ | `_qr-keyboard._tcp` → **`_keystrokeqr._tcp`** |
-| URL-Scheme (iOS Deep-Link) | `qrkeyboard://` → **`keystrokeqr://`** (Scan-Link: `keystrokeqr://scan`) |
-| Keychain-Service iOS | `de.timehrenfried.qr-keyboard-scanner` → **`de.timehrenfried.keystrokeqr`** |
-| Keychain-Service macOS | `de.timehrenfried.qr-keyboard-host` → **`de.timehrenfried.keystrokeqr.host`** |
-| Bonjour-TXT-Version | bleibt `v=2` (Protokoll unverändert) |
+| Bonjour service type | `_qr-keyboard._tcp` → **`_keystrokeqr._tcp`** |
+| URL scheme (iOS deep link) | `qrkeyboard://` → **`keystrokeqr://`** (scan link: `keystrokeqr://scan`) |
+| Keychain service iOS | `de.timehrenfried.qr-keyboard-scanner` → **`de.timehrenfried.keystrokeqr`** |
+| Keychain service macOS | `de.timehrenfried.qr-keyboard-host` → **`de.timehrenfried.keystrokeqr.host`** |
+| Bonjour TXT version | stays `v=2` (protocol unchanged) |
 
-> Hinweis: Service-Typ, Bundle-IDs und Keychain-Services ändern sich — bestehende
-> Kopplungen aus v0.6.x müssen **einmal neu** durchgeführt werden. Das ist bei einem
-> Rebrand akzeptiert (beide Apps werden gemeinsam ausgeliefert).
+> Note: the service type, bundle IDs, and keychain services change — existing
+> pairings from v0.6.x must be redone **once**. That's acceptable for a
+> rebrand (both apps ship together).
 
-## Repository / Pfade
+## Repository / paths
 
-- GitHub: `github.com/tim-ehrenfried/keystrokeqr` (bereits umbenannt)
-- Lokal: `/Users/timehrenfried/DEV/TOOLS/keystrokeqr` (bereits umbenannt)
-- Alle README-/Badge-/Doku-Links auf den neuen Repo-Namen.
+- GitHub: `github.com/tim-ehrenfried/keystrokeqr` (already renamed)
+- Local: `/Users/timehrenfried/DEV/TOOLS/keystrokeqr` (already renamed)
+- All README/badge/docs links point to the new repo name.
 
-## Interne Swift-Symbole (empfohlen, nicht zwingend gleichlautend)
+## Internal Swift symbols (recommended, not strictly required to match)
 
-Xcode-Target-Namen und Ordner dürfen bleiben (`QRKeyboardScanner`, `QRKeyboardHost`),
-um die pbxproj-/SPM-Struktur nicht unnötig umzubauen — **nur** wenn eine Umbenennung
-sauber und build-verifiziert möglich ist, darf sie erfolgen. Priorität hat, dass die
-**nutzersichtbaren** Namen und die **IDs** oben stimmen. Product-Name (Anzeige) wird über
-`PRODUCT_NAME`/`INFOPLIST_KEY_CFBundleDisplayName` bzw. `CFBundleName` gesetzt, nicht über
-den Target-Namen.
+Xcode target names and folders may stay as they are (`QRKeyboardScanner`,
+`QRKeyboardHost`) to avoid unnecessarily restructuring the pbxproj/SPM setup —
+a rename may **only** happen if it can be done cleanly and build-verified.
+The priority is that the **user-visible** names and the **IDs** above are
+correct. The product name (display) is set via
+`PRODUCT_NAME`/`INFOPLIST_KEY_CFBundleDisplayName` or `CFBundleName`, not via
+the target name.
 
-## Internationalisierung (i18n)
+## Internationalization (i18n)
 
-- **Development/Basissprache: Englisch (`en`).** Zusätzliche Lokalisierung: Deutsch (`de`).
-- iOS: String Catalog (`Localizable.xcstrings`) + lokalisierte Info.plist-Keys
-  (`InfoPlist.xcstrings` für Usage-Descriptions/Display-Name). Alle nutzersichtbaren
-  SwiftUI-Strings über `String(localized:)`/Catalog.
-- macOS: `Localizable.strings`/String-Catalog für Menü-, Pairing- und Statustexte; base = en.
-- Neuer nutzersichtbarer Text wird zweisprachig gepflegt (en zuerst, de gleichwertig).
+- **Development/base language: English (`en`).** Additional localization: German (`de`).
+- iOS: string catalog (`Localizable.xcstrings`) + localized Info.plist keys
+  (`InfoPlist.xcstrings` for usage descriptions/display name). All user-visible
+  SwiftUI strings via `String(localized:)`/catalog.
+- macOS: `Localizable.strings`/string catalog for menu, pairing, and status texts; base = en.
+- New user-visible text is maintained bilingually (en first, de as an equal).
+
+## App icon (since v0.14.0)
+
+The single source of truth for the app icon is **`branding/logo-master.png`**
+(3D-rendered QR tile with a white "K", on a pure-black canvas). All variants
+are derived from it — never edit a derived file directly:
+
+| Variant | File | Built by |
+|---|---|---|
+| iOS / App Store (full-bleed 1024, no alpha) | `ios/…/AppIcon.appiconset/AppIcon-1024.png`, `branding/appstore-1024.png` | `ios/make-icon.sh` |
+| macOS (`.icns`, Apple margin + shadow, transparent corners) | `macos/Support/AppIcon.icns` | `macos/Support/make-icon.sh` |
+| DMG window background (logo + arrow) | `macos/Support/dmg-background.png` | `macos/Support/make-dmg-background.sh` (`make dmg-bg`) |
+| DMG volume icon | uses the macOS `.icns` | `macos/Support/make-dmg.sh` |
+| Monochrome UI variants (luminance → alpha) | `branding/logo-mono-white-1024.png`, `logo-mono-black-1024.png` | one-off from master |
+| Website (landing page) | `assets/icon.png` on the `gh-pages` branch | copy of `appstore-1024.png` |
 
 ## Version
 
-Dieser Rebrand-Sammelschritt wird **v0.7.0** (in beiden Targets: `MARKETING_VERSION`
-bzw. `CFBundleShortVersionString`).
+This rebrand batch step is released as **v0.7.0** (in both targets:
+`MARKETING_VERSION` and `CFBundleShortVersionString`).

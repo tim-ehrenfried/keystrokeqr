@@ -1,71 +1,71 @@
-# KeystrokeQR – Netzwerkprotokoll v2 (Pairing + Verschlüsselung)
+# KeystrokeQR – Network Protocol v2 (Pairing + Encryption)
 
-Verbindliche Spezifikation für die verschlüsselte, gekoppelte Variante. Löst v1 ab
-(harter Schnitt, siehe [PROTOCOL.md](PROTOCOL.md) für v1). Ziel: nur explizit
-gekoppelte iPhones können senden, aller Verkehr ist verschlüsselt und beidseitig
-authentifiziert, Host-Spoofing läuft ins Leere.
+Authoritative specification for the encrypted, paired variant. Replaces v1
+(hard cut, see [PROTOCOL.md](PROTOCOL.md) for v1). Goal: only explicitly
+paired iPhones can send, all traffic is encrypted and mutually
+authenticated, and host spoofing leads nowhere.
 
-**Implementiert seit v0.6.0** — macOS-Host (`macos/Sources/QRKeyboardHost/CryptoManager.swift`,
+**Implemented since v0.6.0** — macOS host (`macos/Sources/QRKeyboardHost/CryptoManager.swift`,
 `PairingCoordinator.swift`, `PairingWindowController.swift`, `ScanServer.swift`)
-und iOS-Client (`ios/QRKeyboardScanner/CryptoManager.swift`, `ConnectionManager.swift`,
-`PairingView.swift`, `PairedMacsView.swift`). Beide Implementierungen stammen
-aus demselben Repo und wurden konsistent gehalten (identische Salt-/Info-Strings,
-identisches Nonce-Schema — siehe unten).
+and iOS client (`ios/QRKeyboardScanner/CryptoManager.swift`, `ConnectionManager.swift`,
+`PairingView.swift`, `PairedMacsView.swift`). Both implementations come from
+the same repo and are kept consistent (identical salt/info strings,
+identical nonce scheme — see below).
 
-## Krypto-Baukasten (CryptoKit)
+## Crypto building blocks (CryptoKit)
 
-- **Schlüsselaustausch:** Curve25519 Key Agreement (`Curve25519.KeyAgreement`).
+- **Key exchange:** Curve25519 key agreement (`Curve25519.KeyAgreement`).
 - **KDF:** HKDF-SHA256.
-- **AEAD:** ChaChaPoly (`ChaChaPoly.seal/open`) für alle Nutz-Frames.
-- **MAC (Pairing-Bestätigung):** HMAC-SHA256.
-- **OTP:** 6 Ziffern, kryptografisch zufällig (`SystemRandomNumberGenerator`), 90 s gültig.
-- Alle Binärwerte in JSON sind **Base64** (Standard-Alphabet).
+- **AEAD:** ChaChaPoly (`ChaChaPoly.seal/open`) for all payload frames.
+- **MAC (pairing confirmation):** HMAC-SHA256.
+- **OTP:** 6 digits, cryptographically random (`SystemRandomNumberGenerator`), valid for 90 s.
+- All binary values in JSON are **Base64** (standard alphabet).
 
 ## Discovery
 
-- Service-Typ `_keystrokeqr._tcp`, Port wie v1 (Bonjour-aufgelöst).
-- **TXT-Record:** `v=2`. Ein Client, der nur `v=1` sieht, meldet „Bitte Mac-App aktualisieren".
-  Ein v2-Host akzeptiert ausschließlich v2-Clients.
+- Service type `_keystrokeqr._tcp`, port as in v1 (resolved via Bonjour).
+- **TXT record:** `v=2`. A client that only sees `v=1` reports "Please update the Mac app".
+  A v2 host accepts v2 clients exclusively.
 
 ## Transport
 
-- WebSocket über `Network.framework` wie v1 (Text-Frames, UTF-8-JSON), **plus** eine
-  Anwendungs-Verschlüsselungsschicht (unten). Kein NWProtocolTLS nötig — die AEAD-Schicht
-  liefert Vertraulichkeit + Authentizität. (Bewusste Entscheidung: application-layer AEAD
-  mit CryptoKit ist robuster umzusetzen als NWProtocolTLS-PSK und an das Pairing gebunden.)
+- WebSocket over `Network.framework` as in v1 (text frames, UTF-8 JSON), **plus** an
+  application-layer encryption layer (below). No NWProtocolTLS needed — the AEAD layer
+  provides confidentiality + authenticity. (Deliberate decision: application-layer AEAD
+  with CryptoKit is more robust to implement than NWProtocolTLS-PSK and is tied to pairing.)
 
 ---
 
-## Persistenter Zustand
+## Persistent state
 
-**Mac (Keychain, Service `de.timehrenfried.keystrokeqr.host`):**
-- Eigenes langlebiges Identitäts-Keypair (Curve25519), einmalig erzeugt.
-- Pro gekoppeltem Gerät: `deviceID` (UUID), Anzeigename, dessen Public Key, abgeleitetes
-  **PSK** (32 Byte), Pairing-Datum.
+**Mac (keychain, service `de.timehrenfried.keystrokeqr.host`):**
+- Its own long-lived identity keypair (Curve25519), generated once.
+- Per paired device: `deviceID` (UUID), display name, its public key, derived
+  **PSK** (32 bytes), pairing date.
 
-**iOS (Keychain):**
-- Eigenes langlebiges Identitäts-Keypair.
-- Pro gekoppeltem Mac: Mac-Name, Mac-Public-Key, `deviceID` (die der Mac uns gab), **PSK**.
+**iOS (keychain):**
+- Its own long-lived identity keypair.
+- Per paired Mac: Mac name, Mac public key, `deviceID` (the one the Mac gave us), **PSK**.
 
-Das PSK ist der langlebige gemeinsame Geheimschlüssel; er wird beim Pairing einmalig
-etabliert und danach nie über das Netz übertragen.
+The PSK is the long-lived shared secret; it is established once during pairing
+and never transmitted over the network afterwards.
 
 ---
 
-## Phase 1 – Pairing (einmalig)
+## Phase 1 – Pairing (one-time)
 
-Ausgelöst am **Mac**: Menü „Gerät koppeln…" → Popover generiert OTP (6 Ziffern, 90 s),
-öffnet ein **Pairing-Fenster**. Nur während dieses Fensters akzeptiert der Host
-`pair_hello`. Pro OTP genau **ein** erfolgreicher Versuch; bei falschem MAC wird das
-OTP sofort verworfen (kein Brute-Force über mehrere Versuche).
+Initiated on the **Mac**: menu "Pair device…" → the popover generates an OTP (6 digits, 90 s)
+and opens a **pairing window**. Only while this window is open does the host accept
+`pair_hello`. Exactly **one** successful attempt per OTP; on a wrong MAC the
+OTP is discarded immediately (no brute force across multiple attempts).
 
-iOS zeigt Setup-Screen: Mac aus Bonjour-Liste wählen, OTP eintippen, verbinden.
+iOS shows a setup screen: pick a Mac from the Bonjour list, type in the OTP, connect.
 
-Nachrichten (Klartext-JSON, nur im Pairing-Fenster gültig):
+Messages (plaintext JSON, valid only while the pairing window is open):
 
 ### 1. Client → Host `pair_hello`
 ```json
-{ "type": "pair_hello", "clientPub": "<base64 X25519 pub>", "deviceName": "Tims iPhone" }
+{ "type": "pair_hello", "clientPub": "<base64 X25519 pub>", "deviceName": "Tim's iPhone" }
 ```
 
 ### 2. Host → Client `pair_challenge`
@@ -73,121 +73,121 @@ Nachrichten (Klartext-JSON, nur im Pairing-Fenster gültig):
 { "type": "pair_challenge", "hostPub": "<base64 X25519 pub>" }
 ```
 
-Beide Seiten berechnen jetzt:
-- `shared = X25519(eigenerPriv, gegenPub)`
+Both sides now compute:
+- `shared = X25519(ownPriv, peerPub)`
 - `PSK = HKDF-SHA256(ikm: shared, salt: "qrkb-pair-v2", info: clientPub‖hostPub, len: 32)`
 - `confirmKey = HKDF-SHA256(ikm: shared, salt: "qrkb-confirm-v2", info: clientPub‖hostPub, len: 32)`
 - `expectedMAC = HMAC-SHA256(key: confirmKey, message: UTF8(OTP))`
 
-Der OTP fließt so nur als MAC-Nachweis ein und geht nie im Klartext über die Leitung;
-ein MITM, der die Public Keys austauscht, kann `expectedMAC` ohne den (nur am Bildschirm
-sichtbaren) OTP nicht erzeugen.
+The OTP thus only enters as a MAC proof and never crosses the wire in plaintext;
+a MITM who swaps the public keys cannot produce `expectedMAC` without the OTP
+(visible only on the screen).
 
 ### 3. Client → Host `pair_confirm`
 ```json
 { "type": "pair_confirm", "mac": "<base64 HMAC(confirmKey, OTP)>" }
 ```
 
-Host prüft `mac == expectedMAC` (konstante Zeit, `HMAC.isValidAuthenticationCode`).
-- **Gültig:** Host speichert Gerät (neue `deviceID`), antwortet:
+The host checks `mac == expectedMAC` (constant time, `HMAC.isValidAuthenticationCode`).
+- **Valid:** the host stores the device (new `deviceID`) and replies:
   ```json
-  { "type": "pair_ok", "deviceID": "<uuid>", "hostName": "Tims MacBook Pro" }
+  { "type": "pair_ok", "deviceID": "<uuid>", "hostName": "Tim's MacBook Pro" }
   ```
-  Client speichert PSK + Mac-Infos + deviceID. Pairing-Fenster schließt. Der
-  Host **schließt danach die Pairing-Verbindung** (Implementierungsdetail,
-  nicht Teil der Nachricht selbst); der Client verbindet sich für Phase 2
-  regulär neu (`session_hello`) — mit dem frisch gespeicherten PSK.
-- **Ungültig / Fenster zu / OTP abgelaufen:**
+  The client stores the PSK + Mac info + deviceID. The pairing window closes. The
+  host **then closes the pairing connection** (an implementation detail, not
+  part of the message itself); the client reconnects normally for phase 2
+  (`session_hello`) — using the freshly stored PSK.
+- **Invalid / window closed / OTP expired:**
   ```json
   { "type": "pair_error", "error": "bad_otp" }
   ```
-  (weitere `error`: `pairing_closed`, `pairing_expired`) → OTP verworfen, Verbindung getrennt.
+  (other `error` values: `pairing_closed`, `pairing_expired`) → OTP discarded, connection closed.
 
-### Fehlerbehandlung & Wiederholung (verbindlich, ab v0.8.0)
+### Error handling & retry (mandatory, since v0.8.0)
 
-Der bisherige Ablauf (iOS läuft in einen Timeout, Mac zeigt kryptische Meldung und
-erzeugt keinen neuen Code) ist zu vermeiden. Stattdessen:
+The previous behavior (iOS runs into a timeout, the Mac shows a cryptic message and
+doesn't generate a new code) is to be avoided. Instead:
 
-- **Falscher Code (`bad_otp`):**
-  - **Host:** verwirft den alten OTP, **erzeugt sofort automatisch einen neuen OTP** und
-    setzt den 90-s-Timer zurück, lässt das Pairing-Fenster offen und zeigt einen
-    freundlichen, lokalisierten Hinweis („Falscher Code – ein neuer Code wurde erzeugt.").
-    Keine technischen Roh-/Crash-Meldungen im UI.
-  - **Client:** MUSS auf ein empfangenes `pair_error` **sofort** reagieren (nicht in den
-    Timeout laufen): klaren Hinweis „Falscher Code" zeigen, Eingabefeld leeren, auf dem
-    Pairing-Screen bleiben und für den nächsten Versuch die Pairing-Verbindung neu aufbauen
-    (`pair_hello`), damit gegen den **neuen** OTP gehandshaked wird.
-- **Abgelaufener Code (`pairing_expired`):** Solange das Pairing-Fenster offen ist, erzeugt
-  der Host bei Ablauf **automatisch einen neuen OTP** (kein „Neuen Code"-Button nötig) und
-  setzt den Countdown zurück. Client zeigt bei `pairing_expired` einen klaren Hinweis und
-  kann direkt gegen den neuen Code weiterversuchen. Kein stiller Timeout ohne Rückmeldung.
-- **Erfolg (`pair_ok`):** Client speichert und **schließt den Pairing-Screen automatisch**,
-  verbindet zur Sitzung. Host zeigt kurz „Gerät gekoppelt ✓" und **schließt das
-  Pairing-Fenster automatisch** (nach ~1,5 s).
-- **Client-Timeout** ist nur der letzte Ausweg, wenn gar keine Antwort kommt — mit klarer
-  Meldung und „Erneut versuchen", nie als Ersatz für die obigen expliziten Fehler.
+- **Wrong code (`bad_otp`):**
+  - **Host:** discards the old OTP, **immediately generates a new OTP automatically**,
+    resets the 90 s timer, keeps the pairing window open, and shows a friendly,
+    localized hint ("Wrong code – a new code was generated. Please enter it again.").
+    No raw technical/crash messages in the UI.
+  - **Client:** MUST react to a received `pair_error` **immediately** (not run into the
+    timeout): show a clear "Wrong code" hint, clear the input field, stay on the
+    pairing screen, and rebuild the pairing connection for the next attempt
+    (`pair_hello`) so the handshake runs against the **new** OTP.
+- **Expired code (`pairing_expired`):** As long as the pairing window is open, the host
+  **automatically generates a new OTP** on expiry (no "New code" button needed) and
+  resets the countdown. On `pairing_expired` the client shows a clear hint and can
+  retry directly against the new code. No silent timeout without feedback.
+- **Success (`pair_ok`):** The client stores the data and **closes the pairing screen
+  automatically**, then connects to the session. The host briefly shows "Device paired ✓"
+  and **closes the pairing window automatically** (after ~1.5 s).
+- **A client timeout** is only the last resort when no response arrives at all — with a
+  clear message and a "Try again", never as a substitute for the explicit errors above.
 
 ---
 
-## Phase 2 – Gesicherte Sitzung (jede normale Verbindung)
+## Phase 2 – Secured session (every normal connection)
 
-Nach Bonjour-Connect führen **gekoppelte** Geräte einen kurzen Handshake, der aus dem PSK
-einen frischen Sitzungsschlüssel ableitet (Forward Secrecy pro Sitzung über Nonces):
+After the Bonjour connect, **paired** devices perform a short handshake that derives a
+fresh session key from the PSK (forward secrecy per session via nonces):
 
 ### 1. Client → Host `session_hello`
 ```json
 { "type": "session_hello", "deviceID": "<uuid>", "nonce": "<base64 16B>" }
 ```
-Kennt der Host die `deviceID` nicht → `{ "type": "session_error", "error": "not_paired" }`,
-Verbindung zu. (Client löscht dann seinen PSK-Eintrag und bietet Neu-Pairing an.)
+If the host doesn't know the `deviceID` → `{ "type": "session_error", "error": "not_paired" }`,
+connection closed. (The client then deletes its PSK entry and offers re-pairing.)
 
 ### 2. Host → Client `session_ready`
 ```json
 { "type": "session_ready", "nonce": "<base64 16B>" }
 ```
 
-Beide leiten ab:
+Both derive:
 - `sessionKey = HKDF-SHA256(ikm: PSK, salt: clientNonce‖hostNonce, info: "qrkb-session-v2", len: 32)`
-- Ein 96-bit-Nonce-Zähler je Richtung, beginnend bei 0, monoton steigend (niemals wiederverwenden).
+- A 96-bit nonce counter per direction, starting at 0, monotonically increasing (never reuse).
 
-### 3. Verschlüsselte Frames (beide Richtungen)
+### 3. Encrypted frames (both directions)
 ```json
 { "type": "enc", "seq": 0, "ct": "<base64 ChaChaPoly ciphertext‖tag>" }
 ```
-- **Implementierungspräzisierung (Abweichung von einer früheren Formulierung
-  dieses Dokuments):** `ct` = Base64 von `ciphertext ‖ tag` (16-Byte-Tag am
-  Ende) — **ohne** den 12-Byte-Nonce. CryptoKits `ChaChaPoly.SealedBox.combined`
-  hängt den Nonce IMMER voran; das widerspräche dem Sinn von „nonce implizit
-  via seq“ (den Nonce gerade NICHT zu übertragen, da beide Seiten ihn ohnehin
-  deterministisch rekonstruieren). Host und Client dieses Repos implementieren
-  beide `ciphertext‖tag` — ein Client, der stattdessen `combined` (mit Nonce)
-  sendet, ist mit diesem Host NICHT kompatibel.
-- `nonce` = 12 Byte = `richtungsPräfix(4B)‖bigEndian(seq)(8B)` (Client- und Host-Richtung
-  haben unterschiedliche 4-Byte-Präfixe → keine Nonce-Kollision). Die
-  Präfixe sind Implementierungsdetail (siehe `FrameDirection` in beiden
-  `CryptoManager.swift`), müssen aber auf Host und Client exakt übereinstimmen.
-- Klartext ist das jeweilige v1-JSON (`scan` bzw. `ack`), UTF-8.
-- `seq` muss pro Richtung streng monoton steigen; ein Frame mit seq ≤ letztem wird verworfen
-  (Replay-Schutz). AEAD-Öffnen-Fehler → Frame verwerfen, Sitzung beenden.
+- **Implementation clarification (deviation from an earlier wording of this
+  document):** `ct` = Base64 of `ciphertext ‖ tag` (16-byte tag at the
+  end) — **without** the 12-byte nonce. CryptoKit's `ChaChaPoly.SealedBox.combined`
+  ALWAYS prepends the nonce; that would contradict the point of "nonce implicit
+  via seq" (namely NOT transmitting the nonce, since both sides reconstruct it
+  deterministically anyway). Host and client in this repo both implement
+  `ciphertext‖tag` — a client that sends `combined` (with nonce) instead is
+  NOT compatible with this host.
+- `nonce` = 12 bytes = `directionPrefix(4B)‖bigEndian(seq)(8B)` (the client and host
+  directions have different 4-byte prefixes → no nonce collision). The
+  prefixes are an implementation detail (see `FrameDirection` in both
+  `CryptoManager.swift` files), but must match exactly on host and client.
+- The plaintext is the respective v1 JSON (`scan` or `ack`), UTF-8.
+- `seq` must be strictly monotonically increasing per direction; a frame with seq ≤ the last
+  one is discarded (replay protection). AEAD open failure → discard the frame, end the session.
 
-### Nutzlast (entschlüsselt) – unverändert gegenüber v1
+### Payload (decrypted) – unchanged from v1
 - Client→Host: `{ "type":"scan", "text":…, "autoEnter":…, "autoTab":… }`
 - Host→Client: `{ "type":"ack", "ok":…, "error"?:… }`
-- Limits aus v1 gelten weiter (Frame ≤ 64 KiB, `text` ≤ 8192 UTF-16 → `payload_too_large`).
+- The v1 limits still apply (frame ≤ 64 KiB, `text` ≤ 8192 UTF-16 → `payload_too_large`).
 
 ---
 
-## Fehlercodes (gesamt)
+## Error codes (complete)
 `bad_otp`, `pairing_closed`, `pairing_expired`, `not_paired`, `bad_session`,
 `accessibility_denied`, `invalid_message`, `payload_too_large`.
-Clients ignorieren unbekannte Fehlercodes tolerant.
+Clients tolerantly ignore unknown error codes.
 
-## Geräteverwaltung (nur am Mac)
-Mac-Menü listet gekoppelte Geräte (Name + Pairing-Datum) mit „Entfernen" → PSK sofort aus
-Keychain gelöscht, laufende Sitzung des Geräts wird beendet. Pairing/Entfernen ist NUR lokal
-am Mac möglich, nie über das Netz auslösbar.
+## Device management (Mac only)
+The Mac menu lists paired devices (name + pairing date) with "Remove" → the PSK is
+deleted from the keychain immediately and the device's running session is terminated.
+Pairing/removal is ONLY possible locally at the Mac, never triggerable over the network.
 
-## Restrisiko (dokumentiert)
-Der 6-stellige OTP hat ~20 bit; ein aktiver MITM im selben LAN hätte während des 90-s-Fensters
-**einen** Rateversuch (1:1.000.000), danach ist das OTP verbrannt. Für ein LAN-Werkzeug
-akzeptiert; wer höhere Sicherheit will, koppelt in einem vertrauenswürdigen Netz.
+## Residual risk (documented)
+The 6-digit OTP has ~20 bits; an active MITM on the same LAN would get **one** guess
+during the 90 s window (1:1,000,000), after which the OTP is burned. Accepted for a
+LAN tool; if you want more security, pair on a trusted network.

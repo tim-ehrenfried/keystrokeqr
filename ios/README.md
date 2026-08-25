@@ -1,40 +1,40 @@
 # KeystrokeQR (iOS)
 
-SwiftUI-App für iPhone (iOS 17+, Portrait), die QR- und Barcodes scannt und den
-Inhalt per WebSocket an die KeystrokeQR-Mac-App im lokalen Netzwerk sendet. Der
-Mac wird automatisch via Bonjour (`_keystrokeqr._tcp`) gefunden; der Port kommt
-immer aus der Bonjour-Auflösung. Die Verbindung ist Ende-zu-Ende verschlüsselt
-und erfordert ein einmaliges Pairing (OTP-Code am Mac) — siehe
-[`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md) (Protokoll v1:
-[`../docs/PROTOCOL.md`](../docs/PROTOCOL.md)). Alle Namen/IDs sind in
-[`../docs/BRANDING.md`](../docs/BRANDING.md) festgelegt.
+SwiftUI app for iPhone (iOS 17+, portrait) that scans QR and barcodes and sends
+their contents via WebSocket to the KeystrokeQR Mac app on the local network.
+The Mac is discovered automatically via Bonjour (`_keystrokeqr._tcp`); the port
+always comes from the Bonjour resolution. The connection is end-to-end
+encrypted and requires a one-time pairing (OTP code on the Mac) — see
+[`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md) (protocol v1:
+[`../docs/PROTOCOL.md`](../docs/PROTOCOL.md)). All names/IDs are defined in
+[`../docs/BRANDING.md`](../docs/BRANDING.md).
 
-> Der Xcode-Target-/Ordnername bleibt aus Kompatibilitätsgründen
-> `QRKeyboardScanner`; nutzersichtbarer Anzeigename und alle Bundle-IDs lauten
-> jedoch **KeystrokeQR** (siehe BRANDING.md).
+> The Xcode target/folder name remains `QRKeyboardScanner` for compatibility
+> reasons; the user-visible display name and all bundle IDs, however, are
+> **KeystrokeQR** (see BRANDING.md).
 
 ## Build & Run
 
 ### Xcode
 
-1. `QRKeyboardScanner.xcodeproj` in Xcode (16 oder neuer) öffnen.
-2. Scheme **QRKeyboardScanner** ist als shared Scheme enthalten und wird
-   automatisch angeboten.
-3. Ziel wählen (Simulator oder iPhone) und **Run** (⌘R).
+1. Open `QRKeyboardScanner.xcodeproj` in Xcode (16 or newer).
+2. The scheme **QRKeyboardScanner** is included as a shared scheme and offered
+   automatically.
+3. Choose a destination (simulator or iPhone) and **Run** (⌘R).
 
-> **Hinweis Simulator:** Der Simulator hat keine Kamera — Scannen funktioniert
-> nur auf einem echten iPhone. Bonjour/WebSocket funktionieren im Simulator.
+> **Simulator note:** The simulator has no camera — scanning only works on a
+> real iPhone. Bonjour/WebSocket do work in the simulator.
 
-### Echtes iPhone (Signing)
+### Real iPhone (signing)
 
-Für den Lauf auf einem echten Gerät muss in Xcode ein Signing-Team gewählt
-werden: Target **QRKeyboardScanner** → Tab **Signing & Capabilities** →
-**Team** auswählen (persönliches Apple-ID-Team genügt für die Entwicklung).
-Das Projekt liegt bewusst **ohne** `DEVELOPMENT_TEAM` im Repository; die
-Bundle-IDs sind `de.timehrenfried.keystrokeqr` (App) bzw.
-`de.timehrenfried.keystrokeqr.widgets` (Widget-Extension).
+To run on a real device, a signing team must be selected in Xcode: target
+**QRKeyboardScanner** → tab **Signing & Capabilities** → choose a
+**Team** (a personal Apple ID team is enough for development).
+The project deliberately ships **without** `DEVELOPMENT_TEAM` in the
+repository; the bundle IDs are `de.timehrenfried.keystrokeqr` (app) and
+`de.timehrenfried.keystrokeqr.widgets` (widget extension).
 
-### Kommandozeile (ohne Signing, Simulator)
+### Command line (no signing, simulator)
 
 ```sh
 xcodebuild -project QRKeyboardScanner.xcodeproj \
@@ -44,130 +44,132 @@ xcodebuild -project QRKeyboardScanner.xcodeproj \
   build CODE_SIGNING_ALLOWED=NO
 ```
 
-## Sprache & Lokalisierung (i18n)
+## Language & localization (i18n)
 
-- **Basissprache: Englisch (`en`)**, zusätzlich **Deutsch (`de`)**.
-- Alle nutzersichtbaren SwiftUI-Strings laufen über den String Catalog
-  [`Shared/Localizable.xcstrings`](Shared/Localizable.xcstrings) (Mitglied von
-  App- und Widget-Target). Berechtigungs-/Anzeigename-Texte der Info.plist
-  liegen in [`QRKeyboardScanner/InfoPlist.xcstrings`](QRKeyboardScanner/InfoPlist.xcstrings).
-- `developmentRegion = en`, `knownRegions = en, de`. Neue Texte werden
-  zweisprachig gepflegt (Englisch zuerst, Deutsch gleichwertig).
+- **Base language: English (`en`)**, with **German (`de`)** in addition.
+- All user-visible SwiftUI strings go through the string catalog
+  [`Shared/Localizable.xcstrings`](Shared/Localizable.xcstrings) (member of
+  both the app and widget targets). Permission/display-name texts of the
+  Info.plist live in [`QRKeyboardScanner/InfoPlist.xcstrings`](QRKeyboardScanner/InfoPlist.xcstrings).
+- `developmentRegion = en`, `knownRegions = en, de`. New texts are maintained
+  bilingually (English first, German as an equal).
 
-## Erstes Onboarding (First-Run)
+## First-run onboarding
 
-Beim allerersten Start erscheint einmalig ein mehrstufiger Onboarding-Flow
+On the very first launch, a multi-step onboarding flow appears once
 ([`QRKeyboardScanner/OnboardingView.swift`](QRKeyboardScanner/OnboardingView.swift))
-im dunklen App-Design: Willkommen → Funktionsweise (lokal, verschlüsselt, kein
-Cloud) → Berechtigungen (Kamera-Prompt wird hier kontextuell ausgelöst, lokales
-Netzwerk angekündigt) → Kopplung. Persistenz über `@AppStorage`
-(`didCompleteOnboarding`); Kamera-Zugriff und Bonjour-Discovery starten erst
-nach Abschluss. Der Flow ist jederzeit über die Hilfe erneut aufrufbar
-(„Einführung erneut anzeigen“).
+in the dark app design: welcome → how it works (local, encrypted, no
+cloud) → permissions (the camera prompt is triggered contextually here, local
+network is announced) → pairing. Persisted via `@AppStorage`
+(`didCompleteOnboarding`); camera access and Bonjour discovery start only
+after completion. The flow can be reopened at any time from Help
+("Show the intro again").
 
-## Benötigte Berechtigungen
+## Required permissions
 
-| Berechtigung | Zweck |
+| Permission | Purpose |
 | --- | --- |
-| **Kamera** (`NSCameraUsageDescription`) | Scannen der QR-/Barcodes. Bei Ablehnung zeigt die App einen Hinweis mit Link in die Einstellungen. |
-| **Lokales Netzwerk** (`NSLocalNetworkUsageDescription` + `NSBonjourServices = _keystrokeqr._tcp`) | Bonjour-Suche nach dem Mac und direkte WebSocket-Verbindung. iOS fragt beim ersten Scan-Start; bei Ablehnung wird kein Mac gefunden (nachträglich änderbar unter Einstellungen → Apps → KeystrokeQR → Lokales Netzwerk). |
+| **Camera** (`NSCameraUsageDescription`) | Scanning QR/barcodes. If denied, the app shows a hint with a link to Settings. |
+| **Local network** (`NSLocalNetworkUsageDescription` + `NSBonjourServices = _keystrokeqr._tcp`) | Bonjour discovery of the Mac and the direct WebSocket connection. iOS asks on the first scan start; if denied, no Mac is found (can be changed later under Settings → Apps → KeystrokeQR → Local Network). |
 
-## Funktionen
+## Features
 
-- Bildschirmfüllender Sucher, Status-Kapsel (Suche / Verbinde / Verbunden / Getrennt).
-- Unterstützte Symbologien: QR, EAN-8/13, Code 128/39/93, PDF417, DataMatrix,
+- Full-screen viewfinder, status capsule (Searching / Connecting / Connected / Disconnected).
+- Supported symbologies: QR, EAN-8/13, Code 128/39/93, PDF417, DataMatrix,
   Aztec, Interleaved 2/5, ITF-14, UPC-E.
-- Bei Erkennung: haptisches Feedback, Sucher friert kurz ein, exakt 1 s Cooldown.
-- Gelbe Outlines um alle aktuell erkannten Codes im Sucher (wie der
-  System-Scanner), sanft nachgeführt, kurzes Fade-out beim Verlassen des Bilds.
-- **Einmal-Übertragung:** Jeder Code wird nur einmal automatisch getippt. Beim
-  erneuten Scannen desselben Codes erscheint stattdessen ein gelber Auslöser
-  „Erneut senden“ zum bewussten Wiederholen. „Verlauf leeren“ (⟲) setzt die
-  Liste zurück; bei App-Neustart wird sie automatisch geleert (keine Persistenz).
-- Beste Rückkamera als virtuelles Device (Triple → DualWide → Dual → Wide):
-  automatischer Linsenwechsel inkl. Makro bei nahen Codes; kontinuierlicher
-  Autofokus mit Nahbereichs-Präferenz, **Tap-to-Focus** (gelber Rahmen) und
-  **Pinch-to-Zoom** (bis 10x).
-- Durchgehend dunkles Design inkl. dunklem Launch Screen und dunklem
-  Lade-Zustand, bis die Kamera Bilder liefert.
-- Toggles **Auto-Enter** / **Auto-Tab** (persistiert), Anzeige des zuletzt
-  gescannten Texts, In-App-Hilfe.
-- Automatischer Reconnect bei Verbindungsabriss; Auswahl-Liste, wenn mehrere
-  Macs gefunden werden.
-- Meldet der Mac `accessibility_denied`, zeigt die App einen deutlichen Hinweis.
-- **Pairing:** Wird ein neuer, verschlüsselter Mac (`v=2`) gefunden, erscheint
-  automatisch ein Pairing-Screen (6-stelliger OTP vom Mac-Menü „Gerät
-  koppeln…“). Nach Erfolg verbindet sich die App automatisch und Ende-zu-Ende
-  verschlüsselt; „Gekoppelte Macs verwalten“ (Hilfe) erlaubt das Entkoppeln.
-  Reine v1-Hosts zeigen den Hinweis „Mac-App aktualisieren“.
+- On detection: haptic feedback, the viewfinder freezes briefly, exactly 1 s cooldown.
+- Yellow outlines around all currently detected codes in the viewfinder (like
+  the system scanner), smoothly tracking, with a short fade-out when they leave
+  the frame.
+- **Send-once:** Each code is typed automatically only once. When the same code
+  is scanned again, a yellow **"Send again"** trigger appears instead, for
+  deliberate repetition. "Clear history" (⟲) resets the list; on app restart
+  it is cleared automatically (no persistence).
+- Best rear camera as a virtual device (Triple → DualWide → Dual → Wide):
+  automatic lens switching including macro for close codes; continuous
+  autofocus with a near-range preference, **tap-to-focus** (yellow frame), and
+  **pinch-to-zoom** (up to 10x).
+- Consistently dark design including a dark launch screen and dark loading
+  state until the camera delivers frames.
+- **Auto-Enter** / **Auto-Tab** toggles (persisted), display of the last
+  scanned text, in-app help.
+- Automatic reconnect on connection loss; a picker list when multiple Macs
+  are found.
+- If the Mac reports `accessibility_denied`, the app shows a clear notice.
+- **Pairing:** When a new, encrypted Mac (`v=2`) is found, a pairing screen
+  appears automatically (6-digit OTP from the Mac menu "Pair device…"). After
+  success, the app connects automatically and end-to-end encrypted;
+  "Manage paired Macs" (Help) allows unpairing. Pure v1 hosts show the
+  "Please update the Mac app" notice.
 
-## Schnellstart vom Sperrbildschirm
+## Quick start from the Lock Screen
 
-Die App bringt eine Widget-Extension (`QRKeyboardScannerWidgets`) und App
-Intents mit; alle Wege öffnen die App direkt im Scanner (Deep-Link
+The app ships a widget extension (`QRKeyboardScannerWidgets`) and App
+Intents; all paths open the app directly in the scanner (deep link
 `keystrokeqr://scan`):
 
-- **Sperrbildschirm-Widget (iOS 17+):** Sperrbildschirm gedrückt halten →
-  *Anpassen* → Sperrbildschirm → Widget-Bereich antippen → **KeystrokeQR**
-  hinzufügen (rund oder rechteckig). Zusätzlich gibt es ein kleines
-  Homescreen-Widget.
-- **Sperrbildschirm-Schnelltasten / Kontrollzentrum (iOS 18+):** Beim
-  Anpassen des Sperrbildschirms eine der unteren Schnelltasten
-  (Taschenlampe/Kamera) durch die Steuerung **„QR-Code scannen“** ersetzen —
-  oder die Steuerung ins Kontrollzentrum legen (Control Widget).
-- **Action Button (iPhone 15 Pro+):** Einstellungen → *Action Button* →
-  *Kurzbefehl* → **„QR-Code scannen“**.
-- **Siri/Spotlight/Shortcuts:** Der App Intent „QR-Code scannen“ steht in der
-  Shortcuts-App bereit; Siri-Phrase z. B. „Scan QR Code with KeystrokeQR“.
+- **Lock Screen widget (iOS 17+):** press and hold the Lock Screen →
+  *Customize* → Lock Screen → tap the widget area → add **KeystrokeQR**
+  (circular or rectangular). There is also a small Home Screen widget.
+- **Lock Screen quick controls / Control Center (iOS 18+):** while
+  customizing the Lock Screen, replace one of the bottom quick controls
+  (flashlight/camera) with the **"Scan QR Code"** control — or place the
+  control in Control Center (control widget).
+- **Action Button (iPhone 15 Pro+):** Settings → *Action Button* →
+  *Shortcut* → **"Scan QR Code"**.
+- **Siri/Spotlight/Shortcuts:** The "Scan QR Code" App Intent is available in
+  the Shortcuts app; Siri phrase e.g. "Scan QR Code with KeystrokeQR".
 
-Technik: URL-Scheme `keystrokeqr` (`keystrokeqr://scan`), `StartScanIntent`
-(AppIntent, `openAppWhenRun`) + `AppShortcutsProvider` im App-Target, Widget-
-Extension mit Lock-Screen-/Homescreen-Widget (`.widgetURL`) und iOS-18-
-ControlWidget (Bundle-ID `de.timehrenfried.keystrokeqr.widgets`, Deployment
-iOS 17, ControlWidget `@available(iOS 18)`-gated).
+Under the hood: URL scheme `keystrokeqr` (`keystrokeqr://scan`),
+`StartScanIntent` (AppIntent, `openAppWhenRun`) + `AppShortcutsProvider` in
+the app target, widget extension with Lock Screen/Home Screen widgets
+(`.widgetURL`) and an iOS 18 ControlWidget (bundle ID
+`de.timehrenfried.keystrokeqr.widgets`, deployment iOS 17, ControlWidget
+`@available(iOS 18)`-gated).
 
-## Export-Compliance (App Store / TestFlight)
+## Export compliance (App Store / TestFlight)
 
-Die App-Info.plist setzt `ITSAppUsesNonExemptEncryption` = `NO`. Es kommt
-ausschließlich Standard-Kryptografie aus Apples **CryptoKit** zum Einsatz
-(HKDF-SHA256, HMAC-SHA256, ChaChaPoly, Curve25519) — nur zur Absicherung der
-lokalen Kopplung/Sitzung (siehe [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)).
-Das fällt unter die Ausnahme der US-Exportbestimmungen, sodass bei jedem
-TestFlight-/Store-Upload die Export-Compliance-Rückfrage entfällt. Die
-Widget-Extension nutzt keine eigene Krypto und braucht das Flag daher nicht.
+The app's Info.plist sets `ITSAppUsesNonExemptEncryption` = `NO`. Only
+standard cryptography from Apple's **CryptoKit** is used
+(HKDF-SHA256, HMAC-SHA256, ChaChaPoly, Curve25519) — solely to secure the
+local pairing/session (see [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)).
+This falls under the exemption in the US export regulations, so the export
+compliance prompt is skipped on every TestFlight/App Store upload. The widget
+extension uses no crypto of its own and therefore doesn't need the flag.
 
-## Barrierefreiheit & Dynamic Type
+## Accessibility & Dynamic Type
 
-- Nutzersichtbare Controls tragen VoiceOver-Labels/-Hints/-Traits: Statuskapsel
-  (als ein Element „Verbindungsstatus: …", dekorativer Punkt ausgeblendet,
-  `updatesFrequently`), „Erneut senden", „Verlauf leeren", „Mac koppeln",
-  „Mac auswählen", Hilfe, die Auto-Enter/Auto-Tab-Toggles sowie die
-  Onboarding-/Pairing-Navigation. Dekorative Symbole sind
-  `accessibilityHidden`, Überschriften als `.isHeader` markiert.
-- Texte verwenden semantische Fonts (skalieren mit Dynamic Type); wo der Platz
-  knapp ist, greifen `lineLimit`/`minimumScaleFactor` bzw.
-  `fixedSize(horizontal:false, vertical:true)`, damit das Layout bei großen
-  Textgrößen nicht bricht.
-- Empty-/Fehlerzustände: die Mac-Auswahl zeigt bei leerer Liste einen Hinweis
-  („Kein Mac gefunden … gleiches WLAN? Mac-App gestartet?"); der
-  Kamera-verweigert-Screen ist barrierefrei ausgezeichnet.
+- User-visible controls carry VoiceOver labels/hints/traits: the status
+  capsule (as one element "Connection status: …", decorative dot hidden,
+  `updatesFrequently`), "Send again", "Clear history", "Pair Mac",
+  "Choose Mac", Help, the Auto-Enter/Auto-Tab toggles, and the
+  onboarding/pairing navigation. Decorative symbols are
+  `accessibilityHidden`, headings are marked as `.isHeader`.
+- Texts use semantic fonts (scaling with Dynamic Type); where space is tight,
+  `lineLimit`/`minimumScaleFactor` or
+  `fixedSize(horizontal:false, vertical:true)` keep the layout from breaking
+  at large text sizes.
+- Empty/error states: with an empty list, the Mac picker shows a hint
+  ("No Mac found yet. Are the iPhone and Mac on the same Wi-Fi, and is the
+  KeystrokeQR Mac app running?"); the camera-denied screen is fully
+  accessible.
 
 ## Tests
 
-Ein Unit-Test-Target **`QRKeyboardScannerTests`** (im selben handgeschriebenen
-`project.pbxproj`-Stil, `objectVersion 77`, eigene
-`FileSystemSynchronizedRootGroup`) deckt die Krypto-/Protokoll-Kernlogik ab und
-ist in die Test-Action des shared Scheme eingehängt:
+A unit test target **`QRKeyboardScannerTests`** (in the same hand-written
+`project.pbxproj` style, `objectVersion 77`, its own
+`FileSystemSynchronizedRootGroup`) covers the crypto/protocol core logic and
+is hooked into the test action of the shared scheme:
 
-- `CryptoManagerTests` — HKDF-Ableitungen mit den exakten Salt/Info-Strings
-  (`qrkb-pair-v2`, `qrkb-confirm-v2`, `qrkb-session-v2`), Curve25519-PSK-
-  Übereinstimmung beider Seiten, Pairing-HMAC, das 12-Byte-Nonce-Schema
-  (Richtungspräfix ‖ big-endian `seq`) und ChaChaPoly-Frame-Roundtrips inkl.
-  Manipulations-/Replay-/Richtungs-Fehlern.
-- `MessagesCodableTests` — Wire-Format der Protokoll-Nachrichten (`scan`, `ack`,
+- `CryptoManagerTests` — HKDF derivations with the exact salt/info strings
+  (`qrkb-pair-v2`, `qrkb-confirm-v2`, `qrkb-session-v2`), Curve25519 PSK
+  agreement on both sides, pairing HMAC, the 12-byte nonce scheme
+  (direction prefix ‖ big-endian `seq`), and ChaChaPoly frame round trips
+  including tampering/replay/direction failures.
+- `MessagesCodableTests` — wire format of the protocol messages (`scan`, `ack`,
   `enc`, `pair_*`, `session_*`).
 
-Ausführen:
+Run them:
 
 ```sh
 xcodebuild test -project QRKeyboardScanner.xcodeproj \
@@ -175,9 +177,9 @@ xcodebuild test -project QRKeyboardScanner.xcodeproj \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-(27 Tests, grün; `iPhone 17 Pro` bei Bedarf durch einen via
-`xcrun simctl list devices available` vorhandenen Simulator ersetzen.)
+(27 tests, green; replace `iPhone 17 Pro` with a simulator available via
+`xcrun simctl list devices available` if needed.)
 
 ## Version
 
-`0.11.0` (`MARKETING_VERSION` in App- und Widget-Target, Debug + Release).
+`0.14.0` (`MARKETING_VERSION` in the app and widget targets, Debug + Release).

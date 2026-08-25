@@ -48,7 +48,7 @@ dmg-bg:
 ## Gestyltes DMG „KeystrokeQR-Host.dmg" bauen (App links, /Applications rechts).
 ## Nutzt das eingecheckte $(DMG_BG) — kein ImageMagick zur Build-Zeit nötig.
 dmg: app
-	bash ./Support/make-dmg.sh "$(BUNDLE)" "$(APP_NAME)" "$(DMG)" "$(DMG_BG)" "$(SIGN_IDENTITY)"
+	bash ./Support/make-dmg.sh "$(BUNDLE)" "$(APP_NAME)" "$(DMG)" "$(DMG_BG)" "$(SIGN_IDENTITY)" "Support/AppIcon.icns"
 	@echo "DMG erstellt: $(DMG)"
 
 ## App-Bundle bauen und starten

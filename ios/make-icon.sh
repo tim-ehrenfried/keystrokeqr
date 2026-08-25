@@ -1,37 +1,25 @@
 #!/usr/bin/env bash
 #
-# Erzeugt das KeystrokeQR-iOS-App-Icon (Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png).
+# Builds the KeystrokeQR iOS app icon
+# (Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png) from the shared brand
+# master `branding/logo-master.png` (3D QR tile with the "K").
 #
-# Dasselbe Motiv wie das macOS-Icon (macos/Support/make-icon.sh) — dunkler
-# Anthrazit-Verlauf, weißer QR-Viewfinder-Rahmen, gelbe Scan-Linie (#FFD60A),
-# Tastenkappe + Caret — aber VOLLFLÄCHIG (kein Rand, keine abgerundeten Ecken,
-# kein Alpha), da iOS die Maske/Rundung selbst anwendet. macOS ist die Referenz;
-# hier wird iOS daran angeglichen.
+# iOS wants a FULL-BLEED square (no margin, no rounded corners, no alpha —
+# the system applies its own mask). We crop the tile out of the master and
+# scale it to 1024. The tile's own rounded corners leave black pixels in the
+# extreme corners; iOS masks with a nearly identical radius, so nothing of
+# that survives visually (and the tile is near-black anyway).
 #
-# Benötigt: ImageMagick 7 (`magick`).  Aufruf: ./make-icon.sh   (aus ios/ heraus)
+# Requires: ImageMagick 7 (`magick`).  Run: ./make-icon.sh   (from ios/)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+MASTER="$HERE/../branding/logo-master.png"
 OUT="$HERE/QRKeyboardScanner/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
-YELLOW="#FFD60A"
 
-# Vollflächiger Verlauf (Anthrazit -> fast schwarz), identische Farben wie macOS
-magick -size 1024x1024 gradient:'#212128'-'#0a0a0c' \
-  -fill none \
-  -stroke 'rgba(255,214,10,0.28)' -strokewidth 48 \
-    -draw "stroke-linecap round line 336,486 688,486" \
-  -stroke "$YELLOW" -strokewidth 26 \
-    -draw "stroke-linecap round line 336,486 688,486" \
-  -stroke '#FFFFFF' -strokewidth 38 \
-    -draw "stroke-linecap round stroke-linejoin round polyline 288,420 288,288 420,288" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 604,288 736,288 736,420" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 736,604 736,736 604,736" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 420,736 288,736 288,604" \
-  -stroke none -fill '#F2F2F5' \
-    -draw "roundrectangle 432,522 592,682 28,28" \
-  -fill none -stroke '#17171A' -strokewidth 24 \
-    -draw "stroke-linecap round stroke-linejoin round polyline 474,616 512,574 550,616" \
-  -alpha off \
-  "$OUT"
+[ -f "$MASTER" ] || { echo "Brand master not found: $MASTER" >&2; exit 1; }
 
-echo "iOS-Icon erstellt: $OUT"
+# Tile crop measured on the 1254x1254 master: 1082x1082 at +85+82.
+magick "$MASTER" -crop 1082x1082+85+82 +repage -resize 1024x1024 -alpha off "$OUT"
+
+echo "iOS icon created: $OUT"

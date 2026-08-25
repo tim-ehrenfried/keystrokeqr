@@ -2,57 +2,57 @@
 
 [![CI](https://github.com/tim-ehrenfried/keystrokeqr/actions/workflows/ci.yml/badge.svg)](https://github.com/tim-ehrenfried/keystrokeqr/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/tim-ehrenfried/keystrokeqr)](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Scanne einen QR-/Barcode mit dem iPhone — der Text wird sofort an der Cursor-Position auf deinem Mac eingetippt.**
+**Scan a QR or barcode with your iPhone — the text is typed instantly at the cursor position on your Mac.**
 
-Ein zweiteiliges Open-Source-System, das komplett **lokal im WLAN** funktioniert — keine Cloud, keine Accounts, Peer-to-Peer.
+A two-part open-source system that works entirely **on your local Wi-Fi** — no cloud, no accounts, peer-to-peer.
 
 ```
 ┌─────────────┐   Bonjour/mDNS Discovery    ┌──────────────────┐
 │   iPhone    │ ──────────────────────────▶ │       Mac        │
-│  Scanner-   │                             │  Menüleisten-App │
-│    App      │   WebSocket (lokales WLAN)  │                  │
-│ (SwiftUI +  │ ──────────────────────────▶ │  CGEvent-Key-    │
-│AVFoundation)│      {"type":"scan",…}      │  Injection ⌨️     │
+│  Scanner    │                             │   Menu bar app   │
+│    app      │   WebSocket (local Wi-Fi)   │                  │
+│ (SwiftUI +  │ ──────────────────────────▶ │  CGEvent key     │
+│AVFoundation)│      {"type":"scan",…}      │  injection ⌨️     │
 └─────────────┘                             └──────────────────┘
 ```
 
-## Komponenten
+## Components
 
-| Komponente | Pfad | Technologie |
+| Component | Path | Technology |
 |---|---|---|
-| **macOS-Host** (Menüleisten-App) | [`macos/`](macos/) | Swift, Network.framework, CGEvent |
-| **iOS-Scanner** (Client) | [`ios/`](ios/) | SwiftUI, AVFoundation, Network.framework |
-| **Protokoll-Spezifikation** | [`docs/PROTOCOL-v2.md`](docs/PROTOCOL-v2.md) | Bonjour `_keystrokeqr._tcp` + OTP-Pairing + verschlüsselte Sitzung |
+| **macOS host** (menu bar app) | [`macos/`](macos/) | Swift, Network.framework, CGEvent |
+| **iOS scanner** (client) | [`ios/`](ios/) | SwiftUI, AVFoundation, Network.framework |
+| **Protocol specification** | [`docs/PROTOCOL-v2.md`](docs/PROTOCOL-v2.md) | Bonjour `_keystrokeqr._tcp` + OTP pairing + encrypted session |
 
-📖 **Alle Anleitungen und Referenzen: [docs/](docs/README.md)** (Installation, Setup, Protokoll, Sicherheit).
+📖 **All guides and references: [docs/](docs/README.md)** (installation, setup, protocol, security).
 
-## So funktioniert es
+## How it works
 
-1. Die **Mac-App** startet einen lokalen WebSocket-Server (Port 8080, automatischer Fallback) und macht ihn per **Bonjour** (`_keystrokeqr._tcp`) im WLAN auffindbar.
-2. Die **iPhone-App** findet den Mac automatisch — ohne IP-Eingabe — und verbindet sich.
-3. Jeder erkannte QR-/Barcode wird mit haptischem Feedback sofort an den Mac gesendet (1 s Scan-Cooldown gegen Doppel-Scans).
-4. Der Mac tippt den Text als **echte Tastaturanschläge** (CGEvent, Unicode-sicher, layout-unabhängig) in das aktuell fokussierte Fenster — optional gefolgt von **Tab** und/oder **Enter** (in der iPhone-App umschaltbar).
+1. The **Mac app** starts a local WebSocket server (port 8080, automatic fallback) and advertises it on the Wi-Fi network via **Bonjour** (`_keystrokeqr._tcp`).
+2. The **iPhone app** finds the Mac automatically — no IP address needed — and connects.
+3. Every detected QR or barcode is sent to the Mac instantly with haptic feedback (1 s scan cooldown to prevent double scans).
+4. The Mac types the text as **real keystrokes** (CGEvent, Unicode-safe, layout-independent) into the currently focused window — optionally followed by **Tab** and/or **Enter** (toggleable in the iPhone app).
 
 ## Download
 
-Die fertige macOS-App gibt es auf der **[Releases-Seite](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)**
-(`KeystrokeQR-Host-macOS.dmg`, ad-hoc-signiert). Installations- und
-Gatekeeper-Hinweise für Endnutzer ohne Xcode: **[docs/INSTALL.md](docs/INSTALL.md)**.
+The ready-to-use macOS app is available on the **[Releases page](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)**
+(`KeystrokeQR-Host-macOS.dmg`, ad-hoc signed). Installation and
+Gatekeeper notes for end users without Xcode: **[docs/INSTALL.md](docs/INSTALL.md)**.
 
-## Schnellstart
+## Quick start
 
-### Mac (zuerst)
+### Mac (first)
 
 ```bash
 cd macos
-make app        # baut „KeystrokeQR Host.app"
+make app        # builds "KeystrokeQR Host.app"
 open dist/"KeystrokeQR Host.app"
 ```
 
-⚠️ **Einmalig nötig:** Bedienungshilfen-Berechtigung erteilen, sonst kann die App nicht tippen:
-**Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → „KeystrokeQR Host" aktivieren.**
+⚠️ **Required once:** grant Accessibility permission, otherwise the app can't type:
+**System Settings → Privacy & Security → Accessibility → enable "KeystrokeQR Host".**
 Details: [macos/README.md](macos/README.md)
 
 ### iPhone
@@ -62,19 +62,19 @@ cd ios
 open QRKeyboardScanner.xcodeproj
 ```
 
-In Xcode ein Signing-Team wählen und auf dem iPhone installieren. Beim ersten Start Kamera- und Lokales-Netzwerk-Berechtigung erlauben. Details: [ios/README.md](ios/README.md)
+In Xcode, select a signing team and install on your iPhone. On first launch, allow camera and local-network access. Details: [ios/README.md](ios/README.md)
 
-## Sicherheit & Datenschutz
+## Security & privacy
 
-- **Kein Cloud-Dienst**: Die Daten verlassen dein WLAN nicht.
-- Verbindung nur im lokalen Netz; der Mac-Server lauscht ohne Authentifizierung — betreibe ihn nur in vertrauenswürdigen Netzen (Heim-/Firmen-WLAN).
-- Bricht die Verbindung ab, sucht die iPhone-App automatisch neu (Bonjour-Re-Browse mit Backoff).
-- **Threat Model, bewusste Design-Entscheidungen und Empfehlungen: [SECURITY.md](SECURITY.md).** Sicherheitslücken bitte per Mail melden (Responsible Disclosure, Adresse siehe dort).
+- **No cloud service**: your data never leaves your Wi-Fi network.
+- Connections are local-network only, **end-to-end encrypted**, and only work between devices you explicitly **paired** with a one-time code (since v0.6.0).
+- If the connection drops, the iPhone app automatically searches again (Bonjour re-browse with backoff).
+- **Threat model, deliberate design decisions, and recommendations: [SECURITY.md](SECURITY.md).** Please report security vulnerabilities by email (responsible disclosure, address listed there).
 
-## Versionierung
+## Versioning
 
-SemVer, siehe [CHANGELOG.md](CHANGELOG.md). Aktuelle Version: **0.5.0**.
+SemVer, see [CHANGELOG.md](CHANGELOG.md). Current version: **0.14.0**.
 
-## Lizenz
+## License
 
-MIT — siehe [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

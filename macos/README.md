@@ -1,357 +1,348 @@
 # KeystrokeQR Host (macOS)
 
-Menüleisten-App des Open-Source-Systems **KeystrokeQR**: empfängt QR-Scans vom
-iPhone (per WebSocket im lokalen Netz, Bonjour-Discovery) und tippt den
-gescannten Text als echte Tastaturanschläge in das aktuell fokussierte Fenster —
-optional gefolgt von Tab und/oder Enter.
+Menu bar app of the open-source system **KeystrokeQR**: receives QR scans from
+the iPhone (via WebSocket on the local network, Bonjour discovery) and types the
+scanned text as real keystrokes into the currently focused window —
+optionally followed by Tab and/or Enter.
 
-Protokoll: siehe [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)
-(Bonjour `_keystrokeqr._tcp`, Port 8080 mit Fallback auf freien Port,
-JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
-(einmaliges OTP-Pairing) und Ende-zu-Ende verschlüsselt — siehe
-[`../SECURITY.md`](../SECURITY.md). Namen/IDs sind in
-[`../docs/BRANDING.md`](../docs/BRANDING.md) verbindlich festgelegt.
+Protocol: see [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)
+(Bonjour `_keystrokeqr._tcp`, port 8080 with fallback to a free port,
+JSON messages over WebSocket). Since v0.6.0 the connection is paired
+(one-time OTP pairing) and end-to-end encrypted — see
+[`../SECURITY.md`](../SECURITY.md). Names/IDs are authoritatively defined in
+[`../docs/BRANDING.md`](../docs/BRANDING.md).
 
-- **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
-- **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.13.0
+- **Bundle ID:** `de.timehrenfried.keystrokeqr.host`
+- **Bonjour service type:** `_keystrokeqr._tcp` (must match the iOS client exactly)
+- **Version:** 0.14.0
 
-## Voraussetzungen
+## Requirements
 
-- macOS 13 (Ventura) oder neuer
-- Xcode bzw. Swift-Toolchain (Swift 5.9+; getestet mit Swift 6.3)
-- Für Icon/DMG-Erzeugung: ImageMagick 7 (`magick`) sowie `sips`/`iconutil`
-  (Teil von macOS)
+- macOS 13 (Ventura) or newer
+- Xcode or the Swift toolchain (Swift 5.9+; tested with Swift 6.3)
+- For icon/DMG generation: ImageMagick 7 (`magick`) plus `sips`/`iconutil`
+  (part of macOS)
 
-## Bauen
+## Building
 
 ```sh
 cd macos
 make app
 ```
 
-Das erzeugt das App-Bundle **`dist/KeystrokeQR Host.app`** (Release-Build,
-ad-hoc-signiert) inklusive Lokalisierungen (`Contents/Resources/en.lproj` +
-`de.lproj`). Das Bundle ist wichtig, damit macOS die
-Bedienungshilfen-Berechtigung sauber **pro App** zuordnen kann.
+This produces the app bundle **`dist/KeystrokeQR Host.app`** (release build,
+ad-hoc signed) including localizations (`Contents/Resources/en.lproj` +
+`de.lproj`). The bundle matters so that macOS can cleanly attribute the
+Accessibility permission **per app**.
 
-Weitere Targets:
+Additional targets:
 
-| Target       | Wirkung                                                   |
-| ------------ | --------------------------------------------------------- |
-| `make build` | nur das Release-Binary bauen                              |
-| `make icon`  | App-Icon `Support/AppIcon.icns` neu erzeugen (ImageMagick) |
-| `make app`   | App-Bundle unter `dist/` erzeugen                         |
-| `make dmg`   | gestyltes `dist/KeystrokeQR-Host.dmg` bauen               |
-| `make run`   | Bundle bauen und starten                                  |
-| `make clean` | Build-Artefakte, `dist/` und Hintergrundbild entfernen    |
+| Target       | Effect                                                     |
+| ------------ | ---------------------------------------------------------- |
+| `make build` | build only the release binary                              |
+| `make icon`  | regenerate the app icon `Support/AppIcon.icns` (ImageMagick) |
+| `make app`   | create the app bundle under `dist/`                        |
+| `make dmg`   | build the styled `dist/KeystrokeQR-Host.dmg`               |
+| `make run`   | build the bundle and launch it                             |
+| `make clean` | remove build artifacts, `dist/`, and the background image  |
 
-Mit Apple-Developer-Account statt ad-hoc signieren:
+To sign with an Apple Developer account instead of ad-hoc:
 
 ```sh
 make app SIGN_IDENTITY="Developer ID Application: Tim Ehrenfried (TEAMID)"
 ```
 
-(verfügbare Identitäten: `security find-identity -v -p codesigning`)
+(list available identities with `security find-identity -v -p codesigning`)
 
-## DMG-Installer (`make dmg`)
+## DMG installer (`make dmg`)
 
-`make dmg` erzeugt ein gestyltes Disk-Image **`dist/KeystrokeQR-Host.dmg`** mit
-Hintergrundbild (dunkel, „KeystrokeQR Host" + Pfeil „→ In Programme ziehen"),
-dem App-Icon links und einem **/Applications-Symlink** rechts.
+`make dmg` produces a styled disk image **`dist/KeystrokeQR-Host.dmg`** with a
+background image (dark, "KeystrokeQR Host" + an arrow "→ drag to Applications"),
+the app icon on the left, and an **/Applications symlink** on the right.
 
-- Ist `create-dmg` (Homebrew: `brew install create-dmg`) installiert, wird es
-  bevorzugt genutzt und setzt Fenstergröße + Icon-Positionen direkt.
-- Sonst greift der `hdiutil`-Fallback. Er legt App, `/Applications`-Symlink und
-  Hintergrundbild (`.background/background.png`) ins Volume und **versucht** das
-  Feinstyling (Icon-Positionen, Fenster) per Finder-AppleScript.
+- If `create-dmg` (Homebrew: `brew install create-dmg`) is installed, it is
+  preferred and sets the window size + icon positions directly.
+- Otherwise the `hdiutil` fallback kicks in. It places the app, the
+  `/Applications` symlink, and the background image (`.background/background.png`)
+  into the volume and **attempts** the fine styling (icon positions, window)
+  via Finder AppleScript.
 
-> **Einschränkung (Headless/CI):** Das Finder-AppleScript-Styling benötigt eine
-> GUI-/Finder-Session. Läuft `make dmg` ohne (z. B. in GitHub Actions), wird das
-> Styling übersprungen — das DMG ist trotzdem voll funktionsfähig (App +
-> `/Applications`-Symlink + Hintergrundbild), nur ohne vorgesetzte
-> Icon-Koordinaten. Für ein pixelgenau gestyltes DMG `make dmg` lokal bzw. mit
-> installiertem `create-dmg` ausführen.
+> **Limitation (headless/CI):** The Finder AppleScript styling requires a
+> GUI/Finder session. If `make dmg` runs without one (e.g. in GitHub Actions),
+> the styling is skipped — the DMG is still fully functional (app +
+> `/Applications` symlink + background image), just without preset icon
+> coordinates. For a pixel-perfect styled DMG, run `make dmg` locally or with
+> `create-dmg` installed.
 
-Das DMG wird ad-hoc bzw. mit `SIGN_IDENTITY` signiert (Notarisierung ist nicht
-Teil dieses Targets).
+The DMG is signed ad-hoc or with `SIGN_IDENTITY` (notarization is not part of
+this target).
 
-## Internationalisierung (i18n)
+## Internationalization (i18n)
 
-Alle nutzersichtbaren Host-Strings (Menüpunkte inkl. Tippgeschwindigkeit,
-Statuszeilen, Pairing-Fenster inkl. Countdown/Hinweisen sowie das Onboarding-/
-Willkommensfenster) sind lokalisiert. **Basissprache/Development Language ist
-Englisch (`en`)**, zusätzlich Deutsch (`de`).
+All user-visible host strings (menu items including typing speed, status lines,
+the pairing window including countdown/hints, and the onboarding/welcome
+window) are localized. **The base/development language is English (`en`)**,
+with German (`de`) in addition.
 
-- Quellen: `Support/en.lproj/Localizable.strings` und
-  `Support/de.lproj/Localizable.strings` (plus `InfoPlist.strings` für die
-  Berechtigungsdialoge). `make app` kopiert sie nach
+- Sources: `Support/en.lproj/Localizable.strings` and
+  `Support/de.lproj/Localizable.strings` (plus `InfoPlist.strings` for the
+  permission dialogs). `make app` copies them to
   `Contents/Resources/<lang>.lproj/`.
-- Im Code läuft der Zugriff über die Hilfsfunktion `L(_:)`
-  (`NSLocalizedString`, Tabelle `Localizable`) — siehe
+- In code, access goes through the helper function `L(_:)`
+  (`NSLocalizedString`, table `Localizable`) — see
   `Sources/QRKeyboardHost/Localization.swift`.
-- Die angezeigte Sprache folgt der Systemeinstellung des Nutzers.
+- The displayed language follows the user's system setting.
 
-## Starten
+## Launching
 
 ```sh
 make run
-# oder:
+# or:
 open "dist/KeystrokeQR Host.app"
 ```
 
-Die App erscheint als QR-Symbol in der Menüleiste (kein Dock-Icon). Das Menü ist
-seit v0.9.0 **schlank** und dient vor allem dem Blick auf den Status:
+The app appears as a QR icon in the menu bar (no Dock icon). Since v0.9.0 the
+menu is **slim** and mainly serves as a status glance:
 
-- **Kopplungs-/Verbindungsstatus** („Kein Gerät gekoppelt" / „N gekoppelt · M verbunden")
-- **Port und Bonjour-Dienstname** (der Hostname des Macs)
-- **Bedienungshilfen-Status** (✓/✗) — auf einen Blick erkennbar, ob alles bereit ist
-- **Autostart-Status** („Beim Login starten: ✓/✗")
-- **„KeystrokeQR öffnen…"** — öffnet das zentrale Kontrollzentrum (s. u.)
-- **Beenden**
+- **Pairing/connection status** ("No device paired" / "N paired · M connected")
+- **Port and Bonjour service name** (the Mac's hostname)
+- **Accessibility status** (✓/✗) — see at a glance whether everything is ready
+- **Autostart status** ("Start at login: ✓/✗")
+- **"Open KeystrokeQR…"** — opens the central control panel (see below)
+- **Quit**
 
-Optional kann die App zu **Anmeldeobjekte** hinzugefügt werden
-(Systemeinstellungen → Allgemein → Anmeldeobjekte), damit sie automatisch
-startet.
+Optionally, the app can be added to **Login Items**
+(System Settings → General → Login Items) so it starts automatically.
 
-## Kontrollzentrum (KeystrokeQR-Panel)
+## Control panel (KeystrokeQR panel)
 
-Seit **v0.9.0** liegen alle Funktionen gebündelt in einem gestylten Fenster im
-dunklen KeystrokeQR-Look (statt vieler Menüpunkte). Öffnen über den Menüpunkt
-**„KeystrokeQR öffnen…"**. Das Panel läuft als normales, fokussierbares Fenster,
-während die App weiterhin reine Menüleisten-App (`.accessory`) bleibt.
+Since **v0.9.0**, all functionality is bundled in a styled window in the dark
+KeystrokeQR look (instead of many menu items). Open it via the menu item
+**"Open KeystrokeQR…"**. The panel runs as a normal, focusable window while the
+app remains a pure menu bar app (`.accessory`).
 
-Seit **v0.10.0** ist es **ein einziges Fenster** mit interner Navigation: „Hilfe"
-und „Über" werden als Unterseiten in denselben Rahmen geschoben (kein Scroll —
-das Fenster öffnet für jede Seite genau so groß wie ihr Inhalt und passt seine
-Größe beim Navigieren animiert an). Oben links ein **Zurück-Button** (nur auf den
-Unterseiten), oben rechts auf gleicher Höhe ein dezenter grauer
-**„Einführung"-Button**.
+Since **v0.10.0** it is **a single window** with internal navigation: "Help"
+and "About" slide in as subpages within the same frame (no scrolling — the
+window opens at exactly the content size for each page and animates its size
+while navigating). Top left is a **back button** (only on the subpages), top
+right at the same height a subtle gray **"Introduction"** button.
 
-Seit **v0.12.0** ist die Home-Ansicht im **Querformat**: zwei Kartenspalten
-nebeneinander (deutlich breiter als hoch, ~786 pt breit) statt einer hohen
-schmalen Spalte. Links: Verbindung, Bedienungshilfen, Bestätigen vor dem Tippen.
-Rechts: Gekoppelte Geräte, Tippgeschwindigkeit, Beim Login starten. Header und
-Fußzeile (Hilfe/Über) spannen über beide Spalten. Das „so groß wie nötig, kein
-Scroll"-Prinzip bleibt; Hilfe/Über sind weiterhin schmaler (einspaltig).
-Abschnitte der Home-Ansicht:
+Since **v0.12.0** the home view is in **landscape**: two card columns side by
+side (noticeably wider than tall, ~786 pt wide) instead of one tall, narrow
+column. Left: Connection, Accessibility, Confirm before typing.
+Right: Paired devices, Typing speed, Start at login. The header and footer
+(Help/About) span both columns. The "as large as needed, no scrolling"
+principle remains; Help/About stay narrower (single-column).
+Sections of the home view:
 
-- **Verbindung** — Bonjour-Dienstname, Port und „N gekoppelt · M verbunden".
-- **Bedienungshilfen** — großes grünes ✓ „Aktiviert" bzw. rotes ✗ „Nicht
-  aktiviert" mit kurzer Erklärung und Button „Bedienungshilfen öffnen…". Der
-  Status ist **live**: solange das Panel offen (und aktiv) ist, pollt es
-  `AXIsProcessTrusted()` alle ~1,5 s und aktualisiert zusätzlich sofort, sobald
-  das Fenster den Fokus bekommt — nach dem Erteilen der Berechtigung erscheint
-  das ✓ also ohne App-Neustart.
-- **Gekoppelte Geräte** — Liste (Name + Kopplungsdatum) mit „Umbenennen" und
-  „Entfernen" je Gerät und „Gerät koppeln…" (öffnet das bestehende
-  Pairing-Fenster). „Entfernen" löscht den gemeinsamen Schlüssel (PSK) aus der
-  Keychain **und** trennt sofort eine evtl. laufende Sitzung dieses Geräts, damit
-  der Client den Abbruch bemerkt und in Neu-Pairing gehen kann
-  (docs/PROTOCOL-v2.md, „Geräteverwaltung"). Ist noch nichts gekoppelt, zeigt die
-  Karte einen Empty-State („Noch kein Gerät gekoppelt – ‚Gerät koppeln…' wählen.").
-- **Tippgeschwindigkeit** — Schnell / Normal / Langsam als Segmentumschalter,
-  sofort wirksam (s. u.).
-- **Bestätigen vor dem Tippen** — Schalter (Default AUS); s. u.
-- **Beim Login starten** — Schalter mit Live-Registrierungsstatus (s. u.).
-- Einstiege zu den Unterseiten **Hilfe** und **Über** (die „Einführung" liegt als
-  grauer Button oben rechts).
+- **Connection** — Bonjour service name, port, and "N paired · M connected".
+- **Accessibility** — a large green ✓ "Enabled" or red ✗ "Not enabled" with a
+  short explanation and an "Open Accessibility…" button. The status is
+  **live**: while the panel is open (and active), it polls
+  `AXIsProcessTrusted()` every ~1.5 s and additionally refreshes immediately
+  when the window gains focus — so after granting the permission the ✓ appears
+  without restarting the app.
+- **Paired devices** — a list (name + pairing date) with "Rename" and
+  "Remove" per device and "Pair device…" (opens the existing pairing window).
+  "Remove" deletes the shared key (PSK) from the keychain **and** immediately
+  disconnects any running session of that device so the client notices the
+  disconnect and can enter re-pairing
+  (docs/PROTOCOL-v2.md, "Device management"). If nothing is paired yet, the
+  card shows an empty state ("No device paired yet — choose 'Pair device…'.").
+- **Typing speed** — Fast / Normal / Slow as a segmented control, effective
+  immediately (see below).
+- **Confirm before typing** — toggle (default OFF); see below.
+- **Start at login** — toggle with live registration status (see below).
+- Entry points to the **Help** and **About** subpages (the "Introduction" lives
+  as the gray button at the top right).
 
-Alle Panel-Bedienelemente tragen **Accessibility-Labels/-Rollen** für VoiceOver
-(Schalter, Segmentumschalter, Geräte-Zeilen inkl. „Umbenennen"/„Entfernen",
-Statussymbol der Bedienungshilfen).
+All panel controls carry **accessibility labels/roles** for VoiceOver
+(toggles, segmented control, device rows including "Rename"/"Remove", the
+Accessibility status symbol).
 
-## Hilfe & Über (Unterseiten)
+## Help & About (subpages)
 
-- **Hilfe** (Button in der Home-Ansicht) schiebt eine Unterseite mit Kurzanleitung
-  (Hintergrundbetrieb, Kopplung, Bedienungshilfen, Tippgeschwindigkeit bei viel
-  Text), Fehlerbehebung (iPhone findet den Mac nicht → gleiches WLAN/Firewall/VPN;
-  es wird nichts getippt → Bedienungshilfen) sowie Links zum
-  [GitHub-Repo](https://github.com/tim-ehrenfried/keystrokeqr) und zur
-  Dokumentation (als Buttons mit Icon). Zweisprachig (en/de).
-- **Über** zeigt App-Name „KeystrokeQR Host", Version/Build **dynamisch aus dem
-  Bundle**, „© 2026 Tim Ehrenfried", die MIT-Lizenz und die Links — GitHub,
-  „E-Mail schreiben" (mailto:mail@tim-ehrenfried.de) und Dokumentation — als
-  **Buttons mit SF-Symbol** (wie in der iOS-App), im dunklen KeystrokeQR-Stil
-  (kein NSAboutPanel-Default).
+- **Help** (button in the home view) slides in a subpage with a quick guide
+  (background operation, pairing, Accessibility, typing speed for long text),
+  troubleshooting (iPhone can't find the Mac → same Wi-Fi/firewall/VPN;
+  nothing gets typed → Accessibility), and links to the
+  [GitHub repo](https://github.com/tim-ehrenfried/keystrokeqr) and the
+  documentation (as buttons with icons). Bilingual (en/de).
+- **About** shows the app name "KeystrokeQR Host", version/build **dynamically
+  from the bundle**, "© 2026 Tim Ehrenfried", the MIT license, and the links —
+  GitHub, "Send email" (mailto:mail@tim-ehrenfried.de), and documentation — as
+  **buttons with SF Symbols** (like in the iOS app), in the dark KeystrokeQR
+  style (no NSAboutPanel default).
 
-## Willkommen / Onboarding (Erst-Start)
+## Welcome / onboarding (first launch)
 
-Beim **allerersten Start** führt die App einmalig durch einen kleinen
-Einrichtungsassistenten (dunkler KeystrokeQR-Look). Gesamtfluss:
+On the **very first launch**, the app walks through a small setup assistant
+once (dark KeystrokeQR look). Overall flow:
 
-**Willkommen → Funktionsweise → Bedienungshilfen (live geprüft) → „Gerät
-koppeln" → „Erfolgreich! Los geht's" → Kontrollpanel.**
+**Welcome → How it works → Accessibility (checked live) → "Pair device" →
+"Success! Get started" → control panel.**
 
-- Der **Bedienungshilfen-Status wird live geprüft** — analog zum Kontrollzentrum:
-  solange das Fenster aktiv ist, pollt ein Timer (~1,2 s) `AXIsProcessTrusted()`
-  und aktualisiert zusätzlich **sofort**, sobald das Fenster den Fokus bekommt
-  (der Nutzer kommt evtl. gerade aus den Systemeinstellungen zurück). Nicht
-  erteilt → roter Hinweis + Button „Bedienungshilfen öffnen…"; **erteilt → grüner
-  Erfolgs-Zustand „Bedienungshilfen aktiviert ✓"**, der Button verschwindet.
-- Die **Abschluss-Aktion ist „Gerät koppeln"** (öffnet den bestehenden
-  Pairing-Flow) — solange die Bedienungshilfen **nicht** erteilt sind, ist sie
-  **deaktiviert** und ein Hinweis erklärt, warum. Ein generischer „Los geht's"-
-  Abschluss-Button gibt es nicht mehr.
-- **Nach erfolgreichem Koppeln** zeigt der Assistent einen kurzen Erfolgs-Schritt
-  „Erfolgreich gekoppelt!" mit **„Los geht's"** — dieser schließt das Onboarding
-  und **springt ins Kontrollpanel**. (Wird außerhalb des Onboardings gekoppelt,
-  bleibt es beim bestehenden Auto-Close des Pairing-Fensters — kein Sprung.)
+- The **Accessibility status is checked live** — analogous to the control
+  panel: while the window is active, a timer (~1.2 s) polls
+  `AXIsProcessTrusted()` and additionally refreshes **immediately** when the
+  window gains focus (the user may just be coming back from System Settings).
+  Not granted → red hint + "Open Accessibility…" button; **granted → green
+  success state "Accessibility enabled ✓"**, and the button disappears.
+- The **final action is "Pair device"** (opens the existing pairing flow) — as
+  long as Accessibility is **not** granted, it is **disabled** and a hint
+  explains why. There is no generic "Get started" finish button anymore.
+- **After successful pairing**, the assistant shows a short success step
+  "Successfully paired!" with **"Get started"** — this closes the onboarding
+  and **jumps to the control panel**. (Pairing outside the onboarding keeps
+  the existing auto-close of the pairing window — no jump.)
 
-Ob das Onboarding schon durchlaufen wurde, merkt sich die App in UserDefaults
-(`didCompleteHostOnboarding`). Jederzeit erneut aufrufbar über den grauen
-**„Einführung"**-Button oben rechts im KeystrokeQR-Fenster.
+Whether onboarding has been completed is stored in UserDefaults
+(`didCompleteHostOnboarding`). It can be reopened at any time via the gray
+**"Introduction"** button at the top right of the KeystrokeQR window.
 
-## Tippgeschwindigkeit
+## Typing speed
 
-Das Untermenü **„Tippgeschwindigkeit"** stellt ein, wie zügig empfangener Text
-getippt wird (persistiert in UserDefaults, aktuelle Stufe mit Häkchen):
+The **"Typing Speed"** submenu sets how quickly received text is typed
+(persisted in UserDefaults, the current level shown with a checkmark):
 
-| Stufe    | Verhalten                                                            |
+| Level    | Behavior                                                             |
 | -------- | ------------------------------------------------------------------- |
-| Schnell  | große Chunks, sehr kurze Pause — zügig                              |
-| Normal   | Standard (entspricht dem bisherigen Verhalten)                      |
-| Langsam  | kleine Chunks, deutlich größere Pause — robust für träge/entfernte  |
-|          | Zielfelder (Remote-Sessions), damit sich bei viel Text nichts       |
-|          | „verfängt"/verschluckt                                              |
+| Fast     | large chunks, very short pause — quick                              |
+| Normal   | default (matches the previous behavior)                             |
+| Slow     | small chunks, noticeably longer pause — robust for sluggish/remote  |
+|          | target fields (remote sessions), so nothing gets stuck or dropped   |
+|          | with lots of text                                                   |
 
-Die Änderung greift sofort für den nächsten Scan.
+The change takes effect immediately for the next scan.
 
-## „✓ Getippt"-HUD
+## "✓ Typed" HUD
 
-Nach jeder **erfolgreichen** Keystroke-Injektion blendet die App kurz (~0,9 s)
-ein dezentes, sich selbst ausblendendes HUD „✓ Getippt" ein. Seit **v0.12.0**
-erscheint es **unten mittig** — ca. 20 % der sichtbaren Bildschirmhöhe über der
-Unterkante (`NSScreen.main.visibleFrame`), nicht mehr oben. Der Look ist modern
-und klar zum dunklen KeystrokeQR-Design passend: eine **solide dunkle,
-abgerundete Karte** mit dezentem Rahmen und weichem Schatten (kein
-verwaschener Blur/`NSVisualEffectView` mehr), scharfer heller Text und ein
-Häkchen im **Marken-Gelb (#FFD60A)** als gerendertes SF-Symbol. Weiche
-Ein-/Ausblendung.
+After every **successful** keystroke injection, the app briefly (~0.9 s) shows
+a subtle, self-dismissing "✓ Typed" HUD. Since **v0.12.0** it appears
+**bottom-center** — about 20% of the visible screen height above the bottom
+edge (`NSScreen.main.visibleFrame`), no longer at the top. The look is modern
+and clean, matching the dark KeystrokeQR design: a **solid dark, rounded
+card** with a subtle border and soft shadow (no more washed-out
+blur/`NSVisualEffectView`), crisp light text, and a checkmark in the
+**brand yellow (#FFD60A)** as a rendered SF Symbol. Soft fade in/out.
 
-Es dient nur als Rückmeldung und ist so gebaut, dass es **niemals den
-Tastaturfokus stiehlt** (sonst bräche die Eingabe ins Zielfenster ab): ein
-randloses, **nicht-aktivierendes** `NSPanel` (`.nonactivatingPanel`,
-`isFloatingPanel`, `level = .statusBar`, `ignoresMouseEvents`,
-`hidesOnDeactivate = false`), das ausschließlich per `orderFrontRegardless()`
-gezeigt wird — nie `makeKey`/`activate`. Bei schnellen Folge-Scans wird dasselbe
-Panel wiederverwendet und nur der Ausblend-Timer neu gesetzt (kein Stapeln).
+It serves purely as feedback and is built so it **never steals keyboard
+focus** (otherwise input into the target window would break): a borderless,
+**non-activating** `NSPanel` (`.nonactivatingPanel`, `isFloatingPanel`,
+`level = .statusBar`, `ignoresMouseEvents`, `hidesOnDeactivate = false`) that
+is shown exclusively via `orderFrontRegardless()` — never
+`makeKey`/`activate`. For rapid consecutive scans, the same panel is reused
+and only the fade-out timer is reset (no stacking).
 
-## Bestätigen vor dem Tippen
+## Confirm before typing
 
-Im Kontrollzentrum lässt sich der Modus **„Bestätigen vor dem Tippen"**
-aktivieren (Default **AUS**; persistiert in UserDefaults). Ist er an, wird ein
-eingehender Scan **nicht sofort** getippt: Stattdessen erscheint ein
-nicht-aktivierendes Panel mit einer gekürzten **Vorschau** des Texts (plus
-Zeichenzahl und ob danach Tab/Enter folgt) und den Buttons **„Tippen"** /
-**„Verwerfen"**.
+In the control panel, the **"Confirm before typing"** mode can be enabled
+(default **OFF**; persisted in UserDefaults). When on, an incoming scan is
+**not typed immediately**: instead, a non-activating panel appears with a
+truncated **preview** of the text (plus character count and whether Tab/Enter
+follows) and the buttons **"Type"** / **"Discard"**.
 
-Damit der Text zuverlässig im ursprünglichen Zielfeld landet, merkt sich die App
-**vor** dem Anzeigen die gerade fokussierte Fremd-App
-(`NSWorkspace.shared.frontmostApplication`). Bei „Tippen" wird zuerst diese App
-wieder aktiviert, kurz gewartet und **dann** getippt; „Verwerfen" tippt nichts.
-Der Normalpfad (Modus AUS) bleibt unverändert — sofortiges Tippen. Mehrere
-schnell eintreffende Scans werden serialisiert (ein Panel nach dem anderen).
+So the text reliably lands in the original target field, the app remembers the
+foreign app that was focused **before** showing the panel
+(`NSWorkspace.shared.frontmostApplication`). On "Type", that app is
+reactivated first, followed by a short wait, and **then** typing happens;
+"Discard" types nothing. The normal path (mode OFF) is unchanged — immediate
+typing. Multiple scans arriving in quick succession are serialized (one panel
+after another).
 
-## Gerät umbenennen
+## Renaming a device
 
-In der Geräteliste bietet jede Zeile neben „Entfernen" ein **„Umbenennen"** an
-(kleiner Dialog mit vorbefülltem Namensfeld). Der neue Name wird im
-Keychain-Geräteeintrag persistiert (`CryptoManager.renameDevice(_:to:)`); ein
-leerer Name ist unzulässig. PSK, Public Key und Kopplungsdatum bleiben unberührt.
+In the device list, each row offers a **"Rename"** next to "Remove"
+(a small dialog with a pre-filled name field). The new name is persisted in
+the keychain device entry (`CryptoManager.renameDevice(_:to:)`); an empty
+name is not allowed. PSK, public key, and pairing date remain untouched.
 
-## Beim Login starten
+## Start at login
 
-Über den Schalter **„Beim Login starten"** kann die App als Anmeldeobjekt
-registriert werden (`SMAppService.mainApp`, macOS 13+). Der Schalter zeigt den
-**echten Registrierungsstatus** und behandelt Fehler freundlich; verlangt macOS
-eine Freigabe, weist ein Hinweis auf **Systemeinstellungen › Allgemein ›
-Anmeldeobjekte** hin. Der Menüleisten-Eintrag spiegelt den Zustand
-(„Beim Login starten: ✓/✗").
+The **"Start at login"** toggle registers the app as a login item
+(`SMAppService.mainApp`, macOS 13+). The toggle shows the **actual
+registration status** and handles errors gracefully; if macOS requires
+approval, a hint points to **System Settings › General › Login Items**.
+The menu bar entry mirrors the state ("Start at login: ✓/✗").
 
-> **Hinweis:** `SMAppService` wirkt zuverlässig nur aus einer **installierten**
-> `.app` (z. B. in `/Applications`). Aus einem nackten SPM-Binary ohne Bundle
-> kann die Registrierung fehlschlagen — die Logik liest den Status trotzdem
-> korrekt und funktioniert in der ausgelieferten App.
+> **Note:** `SMAppService` works reliably only from an **installed**
+> `.app` (e.g. in `/Applications`). From a bare SPM binary without a bundle,
+> registration may fail — the logic still reads the status correctly and
+> works in the shipped app.
 
 ## Tests (`swift test`)
 
-Die sicherheits-/protokollkritische Kernlogik ist mit XCTest abgedeckt
-(Testtarget `QRKeyboardHostTests` unter `Tests/QRKeyboardHostTests/`,
+The security/protocol-critical core logic is covered with XCTest
+(test target `QRKeyboardHostTests` under `Tests/QRKeyboardHostTests/`,
 `swift test`):
 
-- **HKDF-Ableitungen** (`CryptoCore`): PSK/Confirm/Session-Key mit den exakten
-  Salt-/Info-Strings aus docs/PROTOCOL-v2.md — Determinismus, beidseitige
-  Übereinstimmung, unterschiedliche Inputs ⇒ unterschiedliche Keys.
-- **Pairing-HMAC**: korrekter OTP verifiziert, falscher nicht; konstante-Zeit-
-  Vergleich (`HMAC.isValidAuthenticationCode`).
-- **ChaChaPoly-Frame** (`SecureFrame`): seal→open-Roundtrip, Nonce =
-  Richtungspräfix ‖ big-endian seq, Replay-/Monotonie-Logik, getamperter
-  Ciphertext/Tag schlägt fehl.
-- **Messages** (Codable): scan/ack/pair_*/session_*/enc — Feldnamen exakt.
-- **Payload-Limit**: 8192 UTF-16 (`ScanServer.isTextWithinLimit`), inkl.
-  Surrogatpaar-Zählung.
-- **TypingSpeed-Mapping**: Chunk-Größe/Pause je Stufe.
+- **HKDF derivations** (`CryptoCore`): PSK/confirm/session key with the exact
+  salt/info strings from docs/PROTOCOL-v2.md — determinism, agreement on both
+  sides, different inputs ⇒ different keys.
+- **Pairing HMAC**: a correct OTP verifies, a wrong one does not;
+  constant-time comparison (`HMAC.isValidAuthenticationCode`).
+- **ChaChaPoly frame** (`SecureFrame`): seal→open round trip, nonce =
+  direction prefix ‖ big-endian seq, replay/monotonicity logic, tampered
+  ciphertext/tag fails.
+- **Messages** (Codable): scan/ack/pair_*/session_*/enc — exact field names.
+- **Payload limit**: 8192 UTF-16 (`ScanServer.isTextWithinLimit`), including
+  surrogate-pair counting.
+- **TypingSpeed mapping**: chunk size/pause per level.
 
-Um die Logik ohne Netzwerk/UI testbar zu machen, wurden die reinen
-Krypto-Ableitungen in `CryptoCore` und die Längen-Grenzlogik in eine statische
-Funktion extrahiert (kein Verhaltenswechsel — `CryptoManager`/`ScanServer`
-delegieren dorthin).
+To make the logic testable without networking/UI, the pure crypto derivations
+were extracted into `CryptoCore` and the length-limit logic into a static
+function (no behavior change — `CryptoManager`/`ScanServer` delegate to them).
 
-## Bedienungshilfen-Berechtigung freischalten (erforderlich!)
+## Granting the Accessibility permission (required!)
 
-Damit die App Tastaturanschläge in andere Programme „tippen" darf, braucht sie
-die macOS-Berechtigung **Bedienungshilfen** (Accessibility). Ohne diese
-Berechtigung beantwortet die App Scans mit dem Fehler `accessibility_denied`.
+For the app to be allowed to "type" keystrokes into other programs, it needs
+the macOS **Accessibility** permission. Without it, the app answers scans
+with the error `accessibility_denied`.
 
-Schritt für Schritt:
+Step by step:
 
-1. **App starten** (`make run`). Beim ersten Scan ohne Berechtigung zeigt
-   macOS automatisch einen Hinweis-Dialog an — alternativ direkt über das
-   Menü der App: **„Bedienungshilfen öffnen…"**.
-2. Es öffnen sich die **Systemeinstellungen → Datenschutz & Sicherheit →
-   Bedienungshilfen**.
-3. Falls **„KeystrokeQR Host"** bereits in der Liste steht: den **Schalter
-   aktivieren**.
-4. Falls die App noch nicht in der Liste steht: unten auf **„+"** klicken,
-   zum Ordner `macos/dist/` navigieren und **„KeystrokeQR Host.app"**
-   auswählen, dann den Schalter aktivieren.
-5. Ggf. mit dem Administrator-Passwort bestätigen.
-6. Der Bedienungshilfen-Status wird **live** erkannt: Im Kontrollzentrum
-   (**„KeystrokeQR öffnen…"**) wechselt die Anzeige nach dem Erteilen innerhalb
-   von ~1–2 s auf das grüne ✓ „Aktiviert" — ganz ohne App-Neustart. Auch die
-   Menüleiste zeigt beim nächsten Öffnen **„Bedienungshilfen: ✓ erteilt"**.
+1. **Launch the app** (`make run`). On the first scan without the permission,
+   macOS automatically shows a prompt — alternatively, go directly via the
+   app's menu: **"Open Accessibility…"**.
+2. **System Settings → Privacy & Security → Accessibility** opens.
+3. If **"KeystrokeQR Host"** is already in the list: **enable the toggle**.
+4. If the app is not in the list yet: click **"+"** at the bottom, navigate
+   to the `macos/dist/` folder, select **"KeystrokeQR Host.app"**, then
+   enable the toggle.
+5. Confirm with the administrator password if asked.
+6. The Accessibility status is detected **live**: in the control panel
+   (**"Open KeystrokeQR…"**) the display switches to the green ✓ "Enabled"
+   within ~1–2 s after granting — no app restart needed. The menu bar also
+   shows **"Accessibility: ✓ granted"** the next time it's opened.
 
-> **Hinweis nach Updates:** Wird die App neu gebaut (neue Binary/Signatur),
-> kann macOS die Berechtigung verwerfen. In dem Fall den Eintrag in
-> **Datenschutz & Sicherheit → Bedienungshilfen** entfernen (Minus-Taste)
-> und die App wie oben beschrieben **neu hinzufügen** bzw. den Schalter
-> erneut aktivieren.
+> **Note after updates:** If the app is rebuilt (new binary/signature),
+> macOS may drop the permission. In that case, remove the entry in
+> **Privacy & Security → Accessibility** (minus button) and **re-add** the
+> app as described above, or re-enable the toggle.
 
-> **Hinweis zum Rebrand (v0.7.0):** Bundle-ID, Keychain-Service und
-> Bonjour-Service-Typ haben sich geändert. Bestehende Kopplungen aus v0.6.x
-> müssen einmalig **neu** durchgeführt werden (siehe
-> [`../docs/BRANDING.md`](../docs/BRANDING.md)).
+> **Note on the rebrand (v0.7.0):** Bundle ID, keychain service, and
+> Bonjour service type have changed. Existing pairings from v0.6.x must be
+> redone **once** (see [`../docs/BRANDING.md`](../docs/BRANDING.md)).
 
-## Lokales Netzwerk
+## Local network
 
-Ab macOS 15 (Sequoia) kann macOS zusätzlich eine Freigabe für das **lokale
-Netzwerk** abfragen — diese ebenfalls erlauben, sonst findet das iPhone den
-Mac nicht per Bonjour.
+From macOS 15 (Sequoia), macOS may additionally ask for **local network**
+access — allow this too, otherwise the iPhone cannot find the Mac via
+Bonjour.
 
-## Funktionsweise (Kurzfassung)
+## How it works (in short)
 
-- WebSocket-Server via `Network.framework` (`NWListener` + WebSocket-Options,
-  `autoReplyPing`), fester Port **8080**, bei Belegung automatisch ein freier
-  Port (der iOS-Client nutzt immer den via Bonjour aufgelösten Port).
-- Bonjour-Advertising als `_keystrokeqr._tcp` mit TXT-Record `v=2`.
-- Jede Verbindung durchläuft entweder das OTP-Pairing (nur bei geöffnetem
-  „Gerät koppeln…"-Fenster) oder den Sitzungs-Handshake für bereits
-  gekoppelte Geräte; danach ausschließlich ChaChaPoly-verschlüsselte Frames
-  (Curve25519 + HKDF-SHA256, Identität + PSKs in der Keychain, Service
+- WebSocket server via `Network.framework` (`NWListener` + WebSocket options,
+  `autoReplyPing`), fixed port **8080**, automatically a free port if it's
+  taken (the iOS client always uses the port resolved via Bonjour).
+- Bonjour advertising as `_keystrokeqr._tcp` with TXT record `v=2`.
+- Every connection goes through either OTP pairing (only while the
+  "Pair device…" window is open) or the session handshake for already-paired
+  devices; after that, exclusively ChaChaPoly-encrypted frames
+  (Curve25519 + HKDF-SHA256, identity + PSKs in the keychain, service
   `de.timehrenfried.keystrokeqr.host`). Details:
   [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md).
-- Mehrere iPhones können gleichzeitig verbunden sein; Scans werden strikt
-  sequenziell getippt (Reihenfolge: Text → Tab → Enter).
-- Text-Injektion erfolgt Unicode-basiert über `CGEvent` und ist damit
-  unabhängig vom aktiven Tastaturlayout (auch Emoji und Sonderzeichen).
+- Multiple iPhones can be connected simultaneously; scans are typed strictly
+  sequentially (order: text → Tab → Enter).
+- Text injection is Unicode-based via `CGEvent` and therefore independent of
+  the active keyboard layout (including emoji and special characters).

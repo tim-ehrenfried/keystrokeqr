@@ -1,69 +1,47 @@
 #!/usr/bin/env bash
 #
-# Erzeugt das KeystrokeQR-Host-App-Icon (Support/AppIcon.icns).
+# Builds the KeystrokeQR Host app icon (Support/AppIcon.icns) from the shared
+# brand master `branding/logo-master.png` (3D QR tile with the "K").
 #
-# Motiv (passend zum iOS-Icon): dunkler Anthrazit-Hintergrund, weißer
-# QR-Viewfinder-Rahmen (vier Eck-Klammern), gelbe Scan-Linie (#FFD60A) und
-# ein kleiner heller Tastatur-/Caret-Akzent (Keystroke-Hinweis).
+# Pipeline: crop the tile out of the master (it sits on a pure-black canvas),
+# apply a rounded-rect alpha mask (slightly tighter than the rendered corner
+# radius, so no black fringes survive), add a soft drop shadow, and center the
+# 824 px tile on a transparent 1024 canvas (Apple's standard margin). Then emit
+# the full iconset via sips + iconutil.
 #
-# Benötigt: ImageMagick 7 (`magick`), `sips`, `iconutil` (macOS).
-# Aufruf:   ./Support/make-icon.sh        (aus macos/ heraus)  oder
-#           make icon
+# Requires: ImageMagick 7 (`magick`), `sips`, `iconutil` (macOS).
+# Run:      ./Support/make-icon.sh   (from macos/)   or   make icon
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+MASTER="$HERE/../../branding/logo-master.png"
 OUT_ICNS="$HERE/AppIcon.icns"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-MASTER="$WORK/master.png"
-GRAD="$WORK/grad.png"
-BASE="$WORK/base.png"
+[ -f "$MASTER" ] || { echo "Brand master not found: $MASTER" >&2; exit 1; }
 
-YELLOW="#FFD60A"
+# 1) Crop the tile (measured on the 1254x1254 master: 1082x1082 at +85+82).
+magick "$MASTER" -crop 1082x1082+85+82 +repage "$WORK/tile.png"
 
-# 1) Dunkler Verlauf (Anthrazit -> fast schwarz)
-magick -size 1024x1024 gradient:'#212128'-'#0a0a0c' "$GRAD"
+# 2) Rounded-rect mask + shadow, centered on transparent 1024.
+magick "$WORK/tile.png" -resize 824x824 \
+  \( -size 824x824 xc:none -fill white -draw "roundrectangle 0,0 823,823 180,180" \) \
+  -alpha off -compose CopyOpacity -composite "$WORK/tile-masked.png"
+magick "$WORK/tile-masked.png" \
+  \( +clone -background black -shadow 35x14+0+10 \) +swap \
+  -background none -layers merge +repage \
+  -gravity center -background none -extent 1024x1024 "$WORK/master1024.png"
 
-# 2) In eine abgerundete Kachel maskieren (etwas Rand ringsum)
-magick "$GRAD" \
-  \( -size 1024x1024 xc:black -fill white \
-     -draw "roundrectangle 60,60 964,964 200,200" \) \
-  -alpha off -compose CopyOpacity -composite "$BASE"
-
-# 3) Motiv zeichnen: Scan-Linie (mit Glow), Viewfinder-Ecken, Tastenkappe + Caret
-magick "$BASE" \
-  -fill none \
-  -stroke 'rgba(255,214,10,0.28)' -strokewidth 48 \
-    -draw "stroke-linecap round line 336,486 688,486" \
-  -stroke "$YELLOW" -strokewidth 26 \
-    -draw "stroke-linecap round line 336,486 688,486" \
-  -stroke '#FFFFFF' -strokewidth 38 \
-    -draw "stroke-linecap round stroke-linejoin round polyline 288,420 288,288 420,288" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 604,288 736,288 736,420" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 736,604 736,736 604,736" \
-    -draw "stroke-linecap round stroke-linejoin round polyline 420,736 288,736 288,604" \
-  -stroke none -fill '#F2F2F5' \
-    -draw "roundrectangle 432,522 592,682 28,28" \
-  -fill none -stroke '#17171A' -strokewidth 24 \
-    -draw "stroke-linecap round stroke-linejoin round polyline 474,616 512,574 550,616" \
-  "$MASTER"
-
-# 4) Iconset in allen benötigten Größen erzeugen
+# 3) Iconset in all required sizes.
 ICONSET="$WORK/AppIcon.iconset"
 mkdir -p "$ICONSET"
-gen() { sips -z "$1" "$1" "$MASTER" --out "$ICONSET/$2" >/dev/null; }
-gen 16   icon_16x16.png
-gen 32   icon_16x16@2x.png
-gen 32   icon_32x32.png
-gen 64   icon_32x32@2x.png
-gen 128  icon_128x128.png
-gen 256  icon_128x128@2x.png
-gen 256  icon_256x256.png
-gen 512  icon_256x256@2x.png
-gen 512  icon_512x512.png
-cp "$MASTER" "$ICONSET/icon_512x512@2x.png"
+for s in 16 32 128 256 512; do
+  sips -z "$s" "$s" "$WORK/master1024.png" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+  d=$((s * 2))
+  sips -z "$d" "$d" "$WORK/master1024.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+done
 
-# 5) In .icns wandeln
+# 4) Convert to .icns.
 iconutil -c icns "$ICONSET" -o "$OUT_ICNS"
-echo "Icon erstellt: $OUT_ICNS"
+echo "Icon created: $OUT_ICNS"
