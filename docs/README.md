@@ -29,7 +29,8 @@ Everything else is explained in the **in-app help** of both apps.
 | **[PROTOCOL.md](PROTOCOL.md)** | Original, unencrypted v1 protocol (historical, superseded by v2). |
 | **[BRANDING.md](BRANDING.md)** | Authoritative names, bundle IDs, service types, i18n basics. |
 | **[SECURITY.md](../SECURITY.md)** | Threat model, security decisions, recommendations, responsible disclosure. |
-| **[PLAN-SECURITY-DISTRIBUTION.md](PLAN-SECURITY-DISTRIBUTION.md)** | Roadmap for App Store/TestFlight, notarized DMG, and further distribution. |
+| **[RELEASE-PHASE.md](RELEASE-PHASE.md)** | The final release playbook: signing, App Store/TestFlight, notarized DMG, going public. |
+| **[PLAN-SECURITY-DISTRIBUTION.md](PLAN-SECURITY-DISTRIBUTION.md)** | Earlier roadmap (Part A security done; distribution superseded by RELEASE-PHASE.md). |
 
 ## Repository structure
 
