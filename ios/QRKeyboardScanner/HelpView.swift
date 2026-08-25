@@ -42,6 +42,7 @@ struct HelpView: View {
                         Text("• **Auto-Enter**: Nach dem Text wird zusätzlich die Return-Taste gesendet.")
                         Text("• **Auto-Tab**: Nach dem Text wird zusätzlich die Tab-Taste gesendet (bei beiden: erst Tab, dann Enter).")
                         Text("• Der zuletzt gescannte Text wird unten angezeigt.")
+                        Text("• **Tippen** auf den Sucher fokussiert auf die Stelle (gelber Rahmen), **Auf-/Zuziehen** mit zwei Fingern zoomt. Die Kamera wechselt bei nahen Codes automatisch die Linse (Makro auf neueren iPhones).")
                     }
                     .font(.callout)
                 }

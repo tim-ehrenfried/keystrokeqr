@@ -13,6 +13,11 @@
 			</array>
 		</dict>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Die Kamera wird zum Scannen von QR- und Barcodes benötigt. Der gescannte Inhalt wird an deinen Mac im lokalen WLAN gesendet.</string>
 	<key>NSLocalNetworkUsageDescription</key>

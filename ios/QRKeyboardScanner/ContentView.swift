@@ -14,6 +14,8 @@ struct ContentView: View {
     /// Wird erhöht, wenn der Scanner (Deep-Link/App Intent) sofort scharf sein
     /// soll — setzt in der ScannerView den Cooldown zurück.
     @State private var scanResetToken = 0
+    /// True, sobald die AVCaptureSession tatsächlich Bilder liefert.
+    @State private var isCameraRunning = false
 
     var body: some View {
         ZStack {
@@ -27,15 +29,19 @@ struct ContentView: View {
                         connectionManager.send(text: text, autoEnter: autoEnter, autoTab: autoTab)
                     },
                     isActive: scenePhase == .active,
-                    resetToken: scanResetToken
+                    resetToken: scanResetToken,
+                    onRunningChanged: { running in
+                        isCameraRunning = running
+                    }
                 )
                 .ignoresSafeArea()
+                if !isCameraRunning {
+                    cameraStartingOverlay
+                }
             case .denied, .restricted:
                 CameraDeniedView()
             default:
-                ProgressView("Kamera wird vorbereitet …")
-                    .tint(.white)
-                    .foregroundStyle(.white)
+                cameraStartingOverlay
             }
 
             VStack(spacing: 12) {
@@ -73,6 +79,23 @@ struct ContentView: View {
         .sheet(isPresented: $connectionManager.showServicePicker) {
             servicePicker
         }
+    }
+
+    /// Dunkler Lade-Zustand, bis die Kamera tatsächlich Bilder liefert
+    /// (verhindert weißes Aufblitzen nach dem Launch Screen).
+    private var cameraStartingOverlay: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 14) {
+                ProgressView()
+                    .tint(.white)
+                Text("Kamera wird gestartet …")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+        }
+        .transition(.opacity)
+        .animation(.easeOut(duration: 0.25), value: isCameraRunning)
     }
 
     // MARK: - Status oben

@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.3.0] – 2026-08-25
+
+### Added
+- **iOS – Kamera**: virtuelle Kamera mit automatischem Linsen-/Makro-Wechsel (Triple → DualWide → Dual → Weitwinkel-Fallback), korrekter Start-Zoom (kein Ultraweitwinkel-Start), Continuous-Autofocus mit Nah-Restriktion + Auto-Belichtung + Subject-Area-Reset, **Tap-to-Focus** mit Fokus-Rahmen und **Pinch-to-Zoom** (bis 10x).
+- **iOS – Dunkler Launch-/Ladezustand**: schwarzer Launch Screen (UILaunchScreen + Asset-Farbe), schwarzes „Kamera wird gestartet…"-Overlay bis die Session läuft, dunkler Kamera-verweigert-Screen.
+
+### Fixed
+- **iOS-18-Sperrbildschirm-Steuerung öffnete nichts**: Control-Intent wird vom System im App-Prozess ausgeführt, existierte aber nur in der Widget-Extension → `StartScanIntent` liegt jetzt in `Shared/` mit Membership in App **und** Extension; fehleranfällige `OpenURLIntent`-Variante (iOS-18.0-Bug) entfernt. ControlWidget, Action Button, Shortcuts und Siri laufen über denselben Intent.
+
 ## [0.2.0] – 2026-08-25
 
 ### Added
