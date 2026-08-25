@@ -17,8 +17,11 @@
 "menu.pairDevice" = "Pair device…";
 "menu.device.pairedAt" = "Paired: %@";
 "menu.device.remove" = "Remove";
+"menu.device.rename" = "Rename";
 "menu.showIntro" = "Show Introduction";
 "menu.openPanel" = "Open KeystrokeQR…";
+"menu.startAtLogin.on" = "Start at login: ✓ on";
+"menu.startAtLogin.off" = "Start at login: ✗ off";
 "menu.quit" = "Quit";
 
 /* In-window navigation */
@@ -31,14 +34,47 @@
 "panel.section.accessibility" = "Accessibility";
 "panel.section.devices" = "Paired devices";
 "panel.section.typingSpeed" = "Typing speed";
+"panel.section.confirmTyping" = "Confirm before typing";
+"panel.section.startAtLogin" = "Start at login";
 "panel.accessibility.enabled" = "Enabled";
 "panel.accessibility.disabled" = "Not enabled";
 "panel.accessibility.enabled.detail" = "This Mac is allowed to type scanned text into other apps.";
 "panel.accessibility.disabled.detail" = "Without Accessibility access this Mac can't type scanned text. Grant it in System Settings › Privacy & Security › Accessibility.";
-"panel.devices.empty" = "No device paired yet.";
+"panel.devices.empty" = "No device paired yet — choose “Pair device…”.";
+"panel.confirmTyping.toggle" = "Ask before typing scanned text";
+"panel.confirmTyping.detail" = "When on, scanned text isn't typed right away — a small prompt lets you review it and choose Type or Discard first.";
+"panel.startAtLogin.toggle" = "Launch KeystrokeQR Host at login";
+"panel.startAtLogin.on.detail" = "KeystrokeQR Host starts automatically when you log in.";
+"panel.startAtLogin.off.detail" = "KeystrokeQR Host won't start on its own after login.";
+"panel.startAtLogin.requiresApproval" = "Approval needed: enable KeystrokeQR Host in System Settings › General › Login Items.";
+"panel.startAtLogin.error" = "Couldn't change the login item (%@).";
 "panel.help.button" = "Help";
 "panel.about.button" = "About";
 "panel.showIntro" = "Show introduction again";
+
+/* “✓ Typed” HUD */
+"hud.typed" = "✓ Typed";
+
+/* Confirm-before-typing panel */
+"confirm.title" = "Type this scanned text?";
+"confirm.type" = "Type";
+"confirm.discard" = "Discard";
+"confirm.charCount" = "%d characters";
+"confirm.thenTab" = "then Tab";
+"confirm.thenEnter" = "then Enter";
+"confirm.preview.a11y" = "Scanned text preview";
+
+/* Rename device */
+"rename.title" = "Rename device";
+"rename.message" = "Enter a new name for this paired device.";
+"rename.placeholder" = "Device name";
+"rename.save" = "Save";
+"rename.cancel" = "Cancel";
+
+/* Accessibility labels */
+"a11y.device.row" = "Paired device %1$@, paired %2$@";
+"a11y.device.rename" = "Rename %@";
+"a11y.device.remove" = "Remove %@";
 
 /* Help window */
 "help.window.title" = "Help";

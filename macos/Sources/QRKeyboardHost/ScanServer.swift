@@ -19,6 +19,13 @@ final class ScanServer: @unchecked Sendable {
     /// DoS-Schutz: maximale Länge von `text` in UTF-16-Einheiten.
     static let maximumTextLength = 8_192
 
+    /// Reine Grenzlogik für `payload_too_large`: `text` darf höchstens
+    /// `maximumTextLength` UTF-16-Einheiten haben (docs/PROTOCOL-v2.md, „Limits").
+    /// Als statische Funktion isoliert, damit sie ohne echte Verbindung testbar ist.
+    static func isTextWithinLimit(_ text: String) -> Bool {
+        text.utf16.count <= maximumTextLength
+    }
+
     /// Zustand für die UI. Wird immer auf dem Main Thread gemeldet.
     struct State: Sendable {
         var activeSessionCount: Int = 0
@@ -28,6 +35,24 @@ final class ScanServer: @unchecked Sendable {
 
     /// UI-Callback; wird auf DispatchQueue.main aufgerufen.
     var onStateChange: (@Sendable (State) -> Void)?
+
+    /// Wird nach jeder **erfolgreichen** Keystroke-Injektion auf dem Main Thread
+    /// aufgerufen (für das „✓ Getippt"-HUD). Gilt für beide Pfade (Sofort-Tippen
+    /// und Bestätigungs-Modus).
+    var onDidType: (@Sendable () -> Void)?
+
+    /// Optionaler Bestätigungs-Pfad („Bestätigen vor dem Tippen"). Ist er gesetzt
+    /// UND `HostSettings.confirmBeforeTyping` aktiv, wird ein eingehender Scan
+    /// NICHT direkt getippt, sondern an diesen Handler übergeben (auf dem Main
+    /// Thread aufzurufen). Der Handler zeigt das Bestätigungs-Panel, reaktiviert
+    /// bei „Tippen" die ursprüngliche Ziel-App und tippt dann; das Ergebnis kommt
+    /// über `completion` zurück:
+    /// - `typed == false`: verworfen (nichts getippt),
+    /// - `typed == true, ok == true`: erfolgreich getippt,
+    /// - `typed == true, ok == false`: Bedienungshilfen fehlen.
+    /// `completion` darf von beliebigem Thread aufgerufen werden.
+    var confirmHandler: (@Sendable (_ text: String, _ autoTab: Bool, _ autoEnter: Bool,
+                                    _ completion: @escaping @Sendable (_ typed: Bool, _ ok: Bool) -> Void) -> Void)?
 
     private let queue = DispatchQueue(label: "de.timehrenfried.keystrokeqr.host.server")
     private let injector: KeyInjector
@@ -396,23 +421,53 @@ final class ScanServer: @unchecked Sendable {
             return
         }
 
-        guard scan.text.utf16.count <= Self.maximumTextLength else {
+        guard Self.isTextWithinLimit(scan.text) else {
             sendEncrypted(AckMessage(ok: false, error: ProtocolError.payloadTooLarge.rawValue), context: ctx)
             return
         }
 
-        injector.perform(
-            text: scan.text,
-            autoTab: scan.autoTab ?? false,
-            autoEnter: scan.autoEnter ?? false
-        ) { [weak self] ok in
-            guard let self else { return }
-            let ack = ok
-                ? AckMessage(ok: true)
-                : AckMessage(ok: false, error: ProtocolError.accessibilityDenied.rawValue)
-            self.queue.async {
-                self.sendEncrypted(ack, context: ctx)
+        let text = scan.text
+        let autoTab = scan.autoTab ?? false
+        let autoEnter = scan.autoEnter ?? false
+
+        // „Bestätigen vor dem Tippen": Scan nicht sofort tippen, sondern an den
+        // Handler übergeben (Fokus-schonend, siehe confirmHandler-Doku). Nur wenn
+        // sowohl die Einstellung aktiv als auch ein Handler gesetzt ist.
+        if HostSettings.confirmBeforeTyping, let confirmHandler {
+            confirmHandler(text, autoTab, autoEnter) { [weak self] typed, ok in
+                guard let self else { return }
+                self.queue.async {
+                    guard typed else {
+                        // Verworfen: Nachricht wurde empfangen und bewusst nicht
+                        // getippt. Wir bestätigen die Zustellung (ok=true), tippen
+                        // aber nichts und zeigen kein „Getippt"-HUD.
+                        self.sendEncrypted(AckMessage(ok: true), context: ctx)
+                        return
+                    }
+                    self.finishScan(ok: ok, context: ctx)
+                }
             }
+            return
+        }
+
+        // Normalpfad (Modus AUS): unverändert sofort tippen.
+        injector.perform(text: text, autoTab: autoTab, autoEnter: autoEnter) { [weak self] ok in
+            guard let self else { return }
+            self.queue.async {
+                self.finishScan(ok: ok, context: ctx)
+            }
+        }
+    }
+
+    /// Gemeinsamer Abschluss beider Tipp-Pfade (auf `queue`): passenden Ack senden
+    /// und bei Erfolg das „✓ Getippt"-HUD auslösen.
+    private func finishScan(ok: Bool, context ctx: ConnectionContext) {
+        let ack = ok
+            ? AckMessage(ok: true)
+            : AckMessage(ok: false, error: ProtocolError.accessibilityDenied.rawValue)
+        sendEncrypted(ack, context: ctx)
+        if ok, let onDidType {
+            DispatchQueue.main.async { onDidType() }
         }
     }
 

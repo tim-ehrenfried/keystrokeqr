@@ -118,9 +118,7 @@ final class PairingCoordinator: @unchecked Sendable {
         let otp = current.otp
         lock.unlock()
 
-        let isValid = HMAC<SHA256>.isValidAuthenticationCode(
-            mac, authenticating: Data(otp.utf8), using: confirmKey
-        )
+        let isValid = CryptoCore.isValidPairingMAC(mac, otp: otp, confirmKey: confirmKey)
         if isValid {
             return .success
         }

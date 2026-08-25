@@ -217,13 +217,20 @@ struct ContentView: View {
             Circle()
                 .fill(statusColor)
                 .frame(width: 10, height: 10)
+                .accessibilityHidden(true)
             Text(statusText)
                 .font(.subheadline.weight(.medium))
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(.ultraThinMaterial, in: Capsule())
+        // Farbiger Punkt ist dekorativ; VoiceOver liest eine sprechende
+        // Statuszeile als ein Element (statt Punkt + Text getrennt).
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Connection status: \(statusText)"))
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private var accessibilityWarning: some View {
@@ -311,8 +318,10 @@ struct ContentView: View {
             }
 
             HStack(spacing: 8) {
-                toggleChip("Auto-Enter", isOn: $autoEnter)
-                toggleChip("Auto-Tab", isOn: $autoTab)
+                toggleChip("Auto-Enter", isOn: $autoEnter,
+                           hint: "When on, the Return key is sent after each scanned text.")
+                toggleChip("Auto-Tab", isOn: $autoTab,
+                           hint: "When on, the Tab key is sent after each scanned text.")
                 Spacer(minLength: 0)
                 if !connectionManager.services.isEmpty {
                     Button {
@@ -322,6 +331,7 @@ struct ContentView: View {
                             .font(.title2)
                     }
                     .accessibilityLabel("Choose Mac")
+                    .accessibilityHint("Shows the list of found Macs to connect or switch.")
                 }
                 Button {
                     showClearConfirmation = true
@@ -331,6 +341,7 @@ struct ContentView: View {
                 }
                 .disabled(sentRegistry.isEmpty)
                 .accessibilityLabel("Clear history")
+                .accessibilityHint("Forgets all codes already sent, so they can be sent automatically again.")
                 .confirmationDialog(
                     "Clear scan history?",
                     isPresented: $showClearConfirmation,
@@ -350,6 +361,7 @@ struct ContentView: View {
                         .font(.title2)
                 }
                 .accessibilityLabel("Help")
+                .accessibilityHint("Opens help, pairing management and the intro.")
             }
             .font(.subheadline)
         }
@@ -362,7 +374,7 @@ struct ContentView: View {
     /// Gruppe — eine unschrumpfbare Zeile, die breiter ist als der Platz,
     /// drückt sonst den umgebenden VStack über die Bildschirmränder hinaus
     /// (die Overlays „kleben" dann trotz `.padding(.horizontal)` an den Kanten).
-    private func toggleChip(_ title: String, isOn: Binding<Bool>) -> some View {
+    private func toggleChip(_ title: String, isOn: Binding<Bool>, hint: LocalizedStringKey) -> some View {
         HStack(spacing: 5) {
             Text(title)
                 .lineLimit(1)
@@ -373,6 +385,7 @@ struct ContentView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .fixedSize()
+                .accessibilityHint(hint)
         }
     }
 
@@ -419,7 +432,10 @@ struct ContentView: View {
         .opacity(resendCooldownActive ? 0.6 : 1.0)
         .disabled(resendCooldownActive)
         .animation(.easeOut(duration: 0.15), value: resendCooldownActive)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Send again: \(payload)"))
         .accessibilityHint("Sends the already-transmitted code to the Mac again.")
+        .accessibilityAddTraits(.isButton)
     }
 
     private func resend(_ payload: String) {
@@ -477,8 +493,15 @@ struct ContentView: View {
                         }
                     }
                     if connectionManager.services.isEmpty {
-                        Label("Searching for Mac…", systemImage: "magnifyingglass")
-                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Searching for Mac…", systemImage: "magnifyingglass")
+                                .foregroundStyle(.secondary)
+                            Text("No Mac found yet. Are the iPhone and Mac on the same Wi-Fi, and is the KeystrokeQR Mac app running?")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .accessibilityElement(children: .combine)
                     }
                 } footer: {
                     Text("Tap a Mac to connect. A new Mac is paired once.")

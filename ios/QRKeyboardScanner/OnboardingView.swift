@@ -91,10 +91,12 @@ struct OnboardingView: View {
             Image(systemName: "lock.shield")
                 .font(.system(size: 68, weight: .light))
                 .foregroundStyle(Self.accent)
+                .accessibilityHidden(true)
 
             Text("Permissions")
                 .font(.title.bold())
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
 
             Text("KeystrokeQR needs two permissions to do its job:")
                 .font(.body)
@@ -182,10 +184,12 @@ struct OnboardingView: View {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
                 .font(.title3)
+                .accessibilityLabel("Camera access granted")
         case .denied, .restricted:
             Image(systemName: "xmark.circle.fill")
                 .foregroundStyle(.red)
                 .font(.title3)
+                .accessibilityLabel("Camera access denied")
         default:
             EmptyView()
         }
@@ -200,6 +204,7 @@ struct OnboardingView: View {
                     .animation(.spring(duration: 0.3), value: page)
             }
         }
+        .accessibilityHidden(true)
     }
 
     private var bottomButton: some View {
@@ -248,14 +253,17 @@ private struct OnboardingPage: View {
                 .font(.system(size: 84, weight: .light))
                 .foregroundStyle(accent)
                 .shadow(color: accent.opacity(0.35), radius: 18)
+                .accessibilityHidden(true)
             Text(title)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
             Text(message)
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.78))
                 .multilineTextAlignment(.center)
                 .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             Spacer(minLength: 0)
         }

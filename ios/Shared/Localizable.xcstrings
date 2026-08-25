@@ -1,6 +1,136 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Camera access denied": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamerazugriff verweigert"
+          }
+        }
+      }
+    },
+    "Camera access granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamerazugriff erteilt"
+          }
+        }
+      }
+    },
+    "Connection status: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungsstatus: %@"
+          }
+        }
+      }
+    },
+    "Enter the six-digit code shown on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den sechsstelligen Code ein, der am Mac angezeigt wird."
+          }
+        }
+      }
+    },
+    "Forgets all codes already sent, so they can be sent automatically again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vergisst alle bereits gesendeten Codes, damit sie wieder automatisch gesendet werden."
+          }
+        }
+      }
+    },
+    "No Mac found yet. Are the iPhone and Mac on the same Wi-Fi, and is the KeystrokeQR Mac app running?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Mac gefunden. Sind iPhone und Mac im selben WLAN, und läuft die KeystrokeQR-Mac-App?"
+          }
+        }
+      }
+    },
+    "Opens help, pairing management and the intro.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet Hilfe, Kopplungsverwaltung und die Einführung."
+          }
+        }
+      }
+    },
+    "Opens the iOS Settings app to grant camera access.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet die iOS-Einstellungen, um den Kamerazugriff zu erlauben."
+          }
+        }
+      }
+    },
+    "Pairing code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopplungscode"
+          }
+        }
+      }
+    },
+    "Send again: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut senden: %@"
+          }
+        }
+      }
+    },
+    "Shows the list of found Macs to connect or switch.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die Liste gefundener Macs zum Verbinden oder Wechseln."
+          }
+        }
+      }
+    },
+    "When on, the Return key is sent after each scanned text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn aktiv, wird nach jedem gescannten Text die Return-Taste gesendet."
+          }
+        }
+      }
+    },
+    "When on, the Tab key is sent after each scanned text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn aktiv, wird nach jedem gescannten Text die Tab-Taste gesendet."
+          }
+        }
+      }
+    },
     "**Action Button (iPhone 15 Pro and newer):** Settings → **Action Button** → **Shortcut** → choose the **“Scan QR Code”** action.": {
       "localizations": {
         "de": {

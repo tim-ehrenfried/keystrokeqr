@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.10.0
+- **Version:** 0.11.0
 
 ## Voraussetzungen
 
@@ -106,6 +106,7 @@ seit v0.9.0 **schlank** und dient vor allem dem Blick auf den Status:
 - **Kopplungs-/Verbindungsstatus** („Kein Gerät gekoppelt" / „N gekoppelt · M verbunden")
 - **Port und Bonjour-Dienstname** (der Hostname des Macs)
 - **Bedienungshilfen-Status** (✓/✗) — auf einen Blick erkennbar, ob alles bereit ist
+- **Autostart-Status** („Beim Login starten: ✓/✗")
 - **„KeystrokeQR öffnen…"** — öffnet das zentrale Kontrollzentrum (s. u.)
 - **Beenden**
 
@@ -134,15 +135,23 @@ Unterseiten), oben rechts auf gleicher Höhe ein dezenter grauer
   `AXIsProcessTrusted()` alle ~1,5 s und aktualisiert zusätzlich sofort, sobald
   das Fenster den Fokus bekommt — nach dem Erteilen der Berechtigung erscheint
   das ✓ also ohne App-Neustart.
-- **Gekoppelte Geräte** — Liste (Name + Kopplungsdatum) mit „Entfernen" je Gerät
-  und „Gerät koppeln…" (öffnet das bestehende Pairing-Fenster). „Entfernen"
-  löscht den gemeinsamen Schlüssel (PSK) aus der Keychain **und** trennt sofort
-  eine evtl. laufende Sitzung dieses Geräts, damit der Client den Abbruch bemerkt
-  und in Neu-Pairing gehen kann (docs/PROTOCOL-v2.md, „Geräteverwaltung").
+- **Gekoppelte Geräte** — Liste (Name + Kopplungsdatum) mit „Umbenennen" und
+  „Entfernen" je Gerät und „Gerät koppeln…" (öffnet das bestehende
+  Pairing-Fenster). „Entfernen" löscht den gemeinsamen Schlüssel (PSK) aus der
+  Keychain **und** trennt sofort eine evtl. laufende Sitzung dieses Geräts, damit
+  der Client den Abbruch bemerkt und in Neu-Pairing gehen kann
+  (docs/PROTOCOL-v2.md, „Geräteverwaltung"). Ist noch nichts gekoppelt, zeigt die
+  Karte einen Empty-State („Noch kein Gerät gekoppelt – ‚Gerät koppeln…' wählen.").
 - **Tippgeschwindigkeit** — Schnell / Normal / Langsam als Segmentumschalter,
   sofort wirksam (s. u.).
+- **Bestätigen vor dem Tippen** — Schalter (Default AUS); s. u.
+- **Beim Login starten** — Schalter mit Live-Registrierungsstatus (s. u.).
 - Einstiege zu den Unterseiten **Hilfe** und **Über** (die „Einführung" liegt als
   grauer Button oben rechts).
+
+Alle Panel-Bedienelemente tragen **Accessibility-Labels/-Rollen** für VoiceOver
+(Schalter, Segmentumschalter, Geräte-Zeilen inkl. „Umbenennen"/„Entfernen",
+Statussymbol der Bedienungshilfen).
 
 ## Hilfe & Über (Unterseiten)
 
@@ -181,6 +190,80 @@ getippt wird (persistiert in UserDefaults, aktuelle Stufe mit Häkchen):
 |          | „verfängt"/verschluckt                                              |
 
 Die Änderung greift sofort für den nächsten Scan.
+
+## „✓ Getippt"-HUD
+
+Nach jeder **erfolgreichen** Keystroke-Injektion blendet die App kurz (~0,8 s)
+oben mittig — knapp unter der Menüleiste — ein dezentes, sich selbst
+ausblendendes HUD „✓ Getippt" ein. Es dient nur als Rückmeldung und ist so
+gebaut, dass es **niemals den Tastaturfokus stiehlt** (sonst bräche die Eingabe
+ins Zielfenster ab): ein randloses, **nicht-aktivierendes** `NSPanel`
+(`.nonactivatingPanel`, `isFloatingPanel`, `level = .statusBar`,
+`ignoresMouseEvents`, `hidesOnDeactivate = false`), das ausschließlich per
+`orderFrontRegardless()` gezeigt wird — nie `makeKey`/`activate`. Bei schnellen
+Folge-Scans wird dasselbe Panel wiederverwendet und nur der Ausblend-Timer neu
+gesetzt (kein Stapeln).
+
+## Bestätigen vor dem Tippen
+
+Im Kontrollzentrum lässt sich der Modus **„Bestätigen vor dem Tippen"**
+aktivieren (Default **AUS**; persistiert in UserDefaults). Ist er an, wird ein
+eingehender Scan **nicht sofort** getippt: Stattdessen erscheint ein
+nicht-aktivierendes Panel mit einer gekürzten **Vorschau** des Texts (plus
+Zeichenzahl und ob danach Tab/Enter folgt) und den Buttons **„Tippen"** /
+**„Verwerfen"**.
+
+Damit der Text zuverlässig im ursprünglichen Zielfeld landet, merkt sich die App
+**vor** dem Anzeigen die gerade fokussierte Fremd-App
+(`NSWorkspace.shared.frontmostApplication`). Bei „Tippen" wird zuerst diese App
+wieder aktiviert, kurz gewartet und **dann** getippt; „Verwerfen" tippt nichts.
+Der Normalpfad (Modus AUS) bleibt unverändert — sofortiges Tippen. Mehrere
+schnell eintreffende Scans werden serialisiert (ein Panel nach dem anderen).
+
+## Gerät umbenennen
+
+In der Geräteliste bietet jede Zeile neben „Entfernen" ein **„Umbenennen"** an
+(kleiner Dialog mit vorbefülltem Namensfeld). Der neue Name wird im
+Keychain-Geräteeintrag persistiert (`CryptoManager.renameDevice(_:to:)`); ein
+leerer Name ist unzulässig. PSK, Public Key und Kopplungsdatum bleiben unberührt.
+
+## Beim Login starten
+
+Über den Schalter **„Beim Login starten"** kann die App als Anmeldeobjekt
+registriert werden (`SMAppService.mainApp`, macOS 13+). Der Schalter zeigt den
+**echten Registrierungsstatus** und behandelt Fehler freundlich; verlangt macOS
+eine Freigabe, weist ein Hinweis auf **Systemeinstellungen › Allgemein ›
+Anmeldeobjekte** hin. Der Menüleisten-Eintrag spiegelt den Zustand
+(„Beim Login starten: ✓/✗").
+
+> **Hinweis:** `SMAppService` wirkt zuverlässig nur aus einer **installierten**
+> `.app` (z. B. in `/Applications`). Aus einem nackten SPM-Binary ohne Bundle
+> kann die Registrierung fehlschlagen — die Logik liest den Status trotzdem
+> korrekt und funktioniert in der ausgelieferten App.
+
+## Tests (`swift test`)
+
+Die sicherheits-/protokollkritische Kernlogik ist mit XCTest abgedeckt
+(Testtarget `QRKeyboardHostTests` unter `Tests/QRKeyboardHostTests/`,
+`swift test`):
+
+- **HKDF-Ableitungen** (`CryptoCore`): PSK/Confirm/Session-Key mit den exakten
+  Salt-/Info-Strings aus docs/PROTOCOL-v2.md — Determinismus, beidseitige
+  Übereinstimmung, unterschiedliche Inputs ⇒ unterschiedliche Keys.
+- **Pairing-HMAC**: korrekter OTP verifiziert, falscher nicht; konstante-Zeit-
+  Vergleich (`HMAC.isValidAuthenticationCode`).
+- **ChaChaPoly-Frame** (`SecureFrame`): seal→open-Roundtrip, Nonce =
+  Richtungspräfix ‖ big-endian seq, Replay-/Monotonie-Logik, getamperter
+  Ciphertext/Tag schlägt fehl.
+- **Messages** (Codable): scan/ack/pair_*/session_*/enc — Feldnamen exakt.
+- **Payload-Limit**: 8192 UTF-16 (`ScanServer.isTextWithinLimit`), inkl.
+  Surrogatpaar-Zählung.
+- **TypingSpeed-Mapping**: Chunk-Größe/Pause je Stufe.
+
+Um die Logik ohne Netzwerk/UI testbar zu machen, wurden die reinen
+Krypto-Ableitungen in `CryptoCore` und die Längen-Grenzlogik in eine statische
+Funktion extrahiert (kein Verhaltenswechsel — `CryptoManager`/`ScanServer`
+delegieren dorthin).
 
 ## Bedienungshilfen-Berechtigung freischalten (erforderlich!)
 

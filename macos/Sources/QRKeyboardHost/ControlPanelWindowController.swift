@@ -27,6 +27,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         let openAccessibility: () -> Void
         let pairDevice: () -> Void
         let removeDevice: (UUID) -> Void
+        let renameDevice: (UUID, String) -> Void
         let showIntro: () -> Void
     }
 
@@ -63,6 +64,13 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
 
     // Tippgeschwindigkeit
     private let speedControl = NSSegmentedControl()
+
+    // Beim Login starten
+    private let loginSwitch = NSSwitch()
+    private let loginDetailLabel = NSTextField(wrappingLabelWithString: "")
+
+    // Bestätigen vor dem Tippen
+    private let confirmSwitch = NSSwitch()
 
     private var lastState = ScanServer.State()
     private var accessibilityTimer: Timer?
@@ -217,6 +225,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             makeAccessibilityCard(),
             makeDevicesCard(),
             makeTypingSpeedCard(),
+            makeConfirmTypingCard(),
+            makeStartAtLoginCard(),
             makeHomeFooter()
         ])
         sections.orientation = .vertical
@@ -283,9 +293,13 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         axDetailLabel.drawsBackground = false
         axDetailLabel.preferredMaxLayoutWidth = 380
 
+        axIcon.setAccessibilityElement(true)
+        axIcon.setAccessibilityRole(.image)
+
         let openButton = HostUI.makeSecondaryButton(
             title: L("menu.accessibility.open"), target: self, action: #selector(openAccessibility))
         openButton.setContentHuggingPriority(.required, for: .horizontal)
+        openButton.setAccessibilityLabel(L("menu.accessibility.open"))
 
         let inner = NSStackView(views: [statusRow, axDetailLabel, openButton])
         inner.orientation = .vertical
@@ -307,6 +321,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             title: L("menu.pairDevice"), target: self, action: #selector(pairDevice))
         // Kein Standard-Return-Key (das Fenster ist kein modaler Dialog).
         pairButton.keyEquivalent = ""
+        pairButton.setAccessibilityLabel(L("menu.pairDevice"))
 
         let inner = NSStackView(views: [devicesStack, pairButton])
         inner.orientation = .vertical
@@ -328,6 +343,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         speedControl.action = #selector(changeSpeed)
         syncSpeedSelection()
 
+        speedControl.setAccessibilityLabel(L("panel.section.typingSpeed"))
+
         let hint = HostUI.makeBodyLabel(L("menu.typingSpeed.tooltip"))
         hint.preferredMaxLayoutWidth = 380
 
@@ -339,6 +356,77 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             hint.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
         ])
         return makeCard(title: L("panel.section.typingSpeed"), content: inner)
+    }
+
+    /// Karte „Bestätigen vor dem Tippen" — Schalter (Default AUS) + Erklärung.
+    private func makeConfirmTypingCard() -> NSView {
+        confirmSwitch.state = HostSettings.confirmBeforeTyping ? .on : .off
+        confirmSwitch.target = self
+        confirmSwitch.action = #selector(toggleConfirmTyping)
+        confirmSwitch.setAccessibilityLabel(L("panel.confirmTyping.toggle"))
+
+        let toggleLabel = NSTextField(labelWithString: L("panel.confirmTyping.toggle"))
+        toggleLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        toggleLabel.textColor = .labelColor
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let row = NSStackView(views: [toggleLabel, spacer, confirmSwitch])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 12
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+
+        let detail = HostUI.makeBodyLabel(L("panel.confirmTyping.detail"))
+        detail.preferredMaxLayoutWidth = 380
+
+        let inner = NSStackView(views: [row, detail])
+        inner.orientation = .vertical
+        inner.alignment = .leading
+        inner.spacing = 8
+        NSLayoutConstraint.activate([
+            detail.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+        ])
+        return makeCard(title: L("panel.section.confirmTyping"), content: inner)
+    }
+
+    /// Karte „Beim Login starten" — Schalter mit Live-Registrierungsstatus
+    /// (SMAppService). Zeigt bei „Freigabe nötig" bzw. Fehlern einen Hinweis.
+    private func makeStartAtLoginCard() -> NSView {
+        loginSwitch.target = self
+        loginSwitch.action = #selector(toggleStartAtLogin)
+        loginSwitch.setAccessibilityLabel(L("panel.startAtLogin.toggle"))
+
+        let toggleLabel = NSTextField(labelWithString: L("panel.startAtLogin.toggle"))
+        toggleLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        toggleLabel.textColor = .labelColor
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let row = NSStackView(views: [toggleLabel, spacer, loginSwitch])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 12
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+
+        loginDetailLabel.font = .systemFont(ofSize: 12)
+        loginDetailLabel.textColor = .secondaryLabelColor
+        loginDetailLabel.isEditable = false
+        loginDetailLabel.isSelectable = false
+        loginDetailLabel.drawsBackground = false
+        loginDetailLabel.preferredMaxLayoutWidth = 380
+
+        let inner = NSStackView(views: [row, loginDetailLabel])
+        inner.orientation = .vertical
+        inner.alignment = .leading
+        inner.spacing = 8
+        NSLayoutConstraint.activate([
+            loginDetailLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 380)
+        ])
+        syncStartAtLogin()
+        return makeCard(title: L("panel.section.startAtLogin"), content: inner)
     }
 
     /// Fußzeile der Home-Ansicht: Einstiege in die Unterseiten Hilfe & Über.
@@ -542,11 +630,14 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         updateConnection()
     }
 
-    /// Aktualisiert Verbindungs-/AX-Status und die Geräte-Liste.
+    /// Aktualisiert Verbindungs-/AX-Status, Geräte-Liste und die Schalter
+    /// (Autostart-Status kann sich außerhalb geändert haben).
     func refresh() {
         updateConnection()
         rebuildDevices()
         updateAccessibility(force: true)
+        syncStartAtLogin()
+        confirmSwitch.state = HostSettings.confirmBeforeTyping ? .on : .off
     }
 
     // MARK: - Verbindungsstatus
@@ -596,6 +687,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         axStatusLabel.textColor = trusted ? .systemGreen : .systemRed
         axDetailLabel.stringValue = trusted ? L("panel.accessibility.enabled.detail")
                                             : L("panel.accessibility.disabled.detail")
+        axIcon.setAccessibilityLabel(trusted ? L("panel.accessibility.enabled")
+                                             : L("panel.accessibility.disabled"))
     }
 
     // MARK: - Geräte-Liste
@@ -633,6 +726,14 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         textStack.alignment = .leading
         textStack.spacing = 2
 
+        let renameButton = NSButton(
+            title: L("menu.device.rename"), target: self, action: #selector(renameDevice(_:)))
+        renameButton.bezelStyle = .rounded
+        renameButton.controlSize = .regular
+        renameButton.identifier = NSUserInterfaceItemIdentifier(device.deviceID.uuidString)
+        renameButton.setContentHuggingPriority(.required, for: .horizontal)
+        renameButton.setAccessibilityLabel(String(format: L("a11y.device.rename"), device.name))
+
         let removeButton = NSButton(
             title: L("menu.device.remove"), target: self, action: #selector(removeDevice(_:)))
         removeButton.bezelStyle = .rounded
@@ -640,16 +741,21 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         removeButton.contentTintColor = .systemRed
         removeButton.identifier = NSUserInterfaceItemIdentifier(device.deviceID.uuidString)
         removeButton.setContentHuggingPriority(.required, for: .horizontal)
+        removeButton.setAccessibilityLabel(String(format: L("a11y.device.remove"), device.name))
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        let row = NSStackView(views: [textStack, spacer, removeButton])
+        let row = NSStackView(views: [textStack, spacer, renameButton, removeButton])
         row.orientation = .horizontal
         row.alignment = .centerY
-        row.spacing = 12
+        row.spacing = 10
         row.translatesAutoresizingMaskIntoConstraints = false
         row.widthAnchor.constraint(equalToConstant: 380).isActive = true
+        row.setAccessibilityElement(true)
+        row.setAccessibilityLabel(String(
+            format: L("a11y.device.row"), device.name,
+            Self.dateFormatter.string(from: device.pairedAt)))
         return row
     }
 
@@ -666,10 +772,83 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         updateConnection()
     }
 
+    /// „Umbenennen": kleiner Dialog mit vorbefülltem Namensfeld. Leerer Name ist
+    /// unzulässig (der „Sichern"-Button bleibt dann inaktiv). Persistenz und
+    /// Refresh laufen über die Actions bzw. `rebuildDevices()`.
+    @objc private func renameDevice(_ sender: NSButton) {
+        guard let raw = sender.identifier?.rawValue, let id = UUID(uuidString: raw),
+              let device = crypto.device(for: id) else { return }
+
+        let alert = NSAlert()
+        alert.messageText = L("rename.title")
+        alert.informativeText = L("rename.message")
+        alert.addButton(withTitle: L("rename.save"))
+        alert.addButton(withTitle: L("rename.cancel"))
+
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.stringValue = device.name
+        field.placeholderString = L("rename.placeholder")
+        field.setAccessibilityLabel(L("rename.title"))
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+
+        if let window {
+            alert.beginSheetModal(for: window) { [weak self] response in
+                guard response == .alertFirstButtonReturn else { return }
+                let newName = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !newName.isEmpty else { return }
+                self?.actions.renameDevice(id, newName)
+                self?.rebuildDevices()
+            }
+        } else {
+            let response = alert.runModal()
+            guard response == .alertFirstButtonReturn else { return }
+            let newName = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !newName.isEmpty else { return }
+            actions.renameDevice(id, newName)
+            rebuildDevices()
+        }
+    }
+
     @objc private func changeSpeed() {
         let index = speedControl.selectedSegment
         guard index >= 0, index < TypingSpeed.allCases.count else { return }
         TypingSpeed.current = TypingSpeed.allCases[index]
+    }
+
+    @objc private func toggleConfirmTyping() {
+        HostSettings.confirmBeforeTyping = (confirmSwitch.state == .on)
+    }
+
+    /// Schaltet den Autostart um. Bei Fehler wird der Schalter zurückgesetzt und
+    /// eine freundliche, lokalisierte Meldung eingeblendet.
+    @objc private func toggleStartAtLogin() {
+        let desired = (loginSwitch.state == .on)
+        if let error = LoginItemManager.setEnabled(desired) {
+            loginDetailLabel.stringValue = String(
+                format: L("panel.startAtLogin.error"), error.localizedDescription)
+            loginDetailLabel.textColor = .systemRed
+            // Schalterzustand an die Realität angleichen.
+            loginSwitch.state = LoginItemManager.isEnabled ? .on : .off
+            return
+        }
+        syncStartAtLogin()
+    }
+
+    /// Gleicht Schalter + Hinweistext an den echten Registrierungsstatus an.
+    private func syncStartAtLogin() {
+        let status = LoginItemManager.status
+        loginSwitch.state = (status == .enabled) ? .on : .off
+        loginDetailLabel.textColor = .secondaryLabelColor
+        switch status {
+        case .enabled:
+            loginDetailLabel.stringValue = L("panel.startAtLogin.on.detail")
+        case .notRegistered, .notFound:
+            loginDetailLabel.stringValue = L("panel.startAtLogin.off.detail")
+        case .requiresApproval:
+            loginDetailLabel.stringValue = L("panel.startAtLogin.requiresApproval")
+            loginDetailLabel.textColor = .systemOrange
+        }
     }
 
     @objc private func openRepo() { NSWorkspace.shared.open(HostLinks.repository) }

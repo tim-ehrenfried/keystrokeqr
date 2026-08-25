@@ -10,6 +10,17 @@ enum HostSettings {
         get { UserDefaults.standard.bool(forKey: didCompleteOnboardingKey) }
         set { UserDefaults.standard.set(newValue, forKey: didCompleteOnboardingKey) }
     }
+
+    /// „Bestätigen vor dem Tippen": Ist dies aktiv, wird ein eingehender Scan
+    /// NICHT sofort getippt, sondern der Nutzer muss ihn am Mac in einem
+    /// nicht-aktivierenden Bestätigungs-Panel freigeben („Tippen"/„Verwerfen").
+    /// Default **AUS** — der normale Pfad (sofort tippen) bleibt unverändert.
+    static let confirmBeforeTypingKey = "confirmBeforeTyping"
+
+    static var confirmBeforeTyping: Bool {
+        get { UserDefaults.standard.bool(forKey: confirmBeforeTypingKey) }
+        set { UserDefaults.standard.set(newValue, forKey: confirmBeforeTypingKey) }
+    }
 }
 
 /// Einstellbare Tippgeschwindigkeit (siehe `KeyInjector`). Steuert die

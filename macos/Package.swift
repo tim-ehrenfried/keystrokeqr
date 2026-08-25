@@ -10,6 +10,11 @@ let package = Package(
         .executableTarget(
             name: "QRKeyboardHost",
             path: "Sources/QRKeyboardHost"
+        ),
+        .testTarget(
+            name: "QRKeyboardHostTests",
+            dependencies: ["QRKeyboardHost"],
+            path: "Tests/QRKeyboardHostTests"
         )
     ]
 )

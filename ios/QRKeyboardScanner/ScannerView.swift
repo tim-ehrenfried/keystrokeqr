@@ -593,16 +593,20 @@ struct CameraDeniedView: View {
             Image(systemName: "camera.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.gray)
+                .accessibilityHidden(true)
             Text("No camera access")
                 .font(.title2.bold())
                 .foregroundStyle(.white)
+                .accessibilityAddTraits(.isHeader)
             Text("The app needs access to the camera to scan codes. Please allow access in Settings.")
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 Link("Open Settings", destination: url)
                     .buttonStyle(.borderedProminent)
+                    .accessibilityHint("Opens the iOS Settings app to grant camera access.")
             }
         }
         .padding(32)

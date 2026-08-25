@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Export compliance: the app only uses standard cryptography from Apple's
+	     CryptoKit (HKDF-SHA256, HMAC-SHA256, ChaChaPoly, Curve25519) to secure the
+	     local pairing/session (see docs/PROTOCOL-v2.md). This qualifies for the
+	     exemption under U.S. export regulations, so no encryption-usage question is
+	     asked on every TestFlight/App Store upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDisplayName</key>
 	<string>KeystrokeQR</string>
 	<key>CFBundleURLTypes</key>

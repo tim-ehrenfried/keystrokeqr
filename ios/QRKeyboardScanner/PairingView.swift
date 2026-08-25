@@ -26,8 +26,10 @@ struct PairingView: View {
                         .font(.system(size: 44))
                         .foregroundStyle(didPair ? .green : .yellow)
                         .contentTransition(.symbolEffect(.replace))
+                        .accessibilityHidden(true)
                     Text(service.name)
                         .font(.headline)
+                        .accessibilityAddTraits(.isHeader)
                     Text(didPair ? "Paired ✓" : "New Mac — pair it once.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -46,6 +48,8 @@ struct PairingView: View {
                             .textFieldStyle(.roundedBorder)
                             .focused($otpFieldFocused)
                             .disabled(isPairing)
+                            .accessibilityLabel("Pairing code")
+                            .accessibilityHint("Enter the six-digit code shown on the Mac.")
                             .onChange(of: otp) { _, newValue in
                                 let filtered = String(newValue.filter(\.isNumber).prefix(6))
                                 if filtered != newValue { otp = filtered }

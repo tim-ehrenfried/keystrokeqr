@@ -140,6 +140,20 @@ final class CryptoManager: @unchecked Sendable {
         lock.unlock()
     }
 
+    /// Benennt ein gekoppeltes Gerät um: aktualisiert nur den Anzeigenamen im
+    /// Keychain-Geräteeintrag (PSK/Public Key/Datum bleiben). Ein leerer bzw. nur
+    /// aus Leerraum bestehender Name wird ignoriert (Rückgabe `false`).
+    @discardableResult
+    func renameDevice(_ id: UUID, to newName: String) -> Bool {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        lock.lock(); defer { lock.unlock() }
+        guard let index = devices.firstIndex(where: { $0.deviceID == id }) else { return false }
+        devices[index].name = trimmed
+        persistLocked()
+        return true
+    }
+
     private func persistLocked() {
         guard let data = try? JSONEncoder().encode(devices) else { return }
         _ = Self.keychainWrite(service: Self.keychainService, account: Self.accountPairedDevices, data: data)
@@ -153,33 +167,19 @@ final class CryptoManager: @unchecked Sendable {
     }
 
     /// `PSK = HKDF-SHA256(ikm: shared, salt: "qrkb-pair-v2", info: clientPub‖hostPub, len: 32)`
+    /// Delegiert an die reine Kernfunktion (siehe `CryptoCore` — identisches Schema).
     func derivePSK(shared: SharedSecret, clientPub: Data, hostPub: Data) -> SymmetricKey {
-        shared.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: Data("qrkb-pair-v2".utf8),
-            sharedInfo: clientPub + hostPub,
-            outputByteCount: 32
-        )
+        CryptoCore.derivePSK(shared: shared, clientPub: clientPub, hostPub: hostPub)
     }
 
     /// `confirmKey = HKDF-SHA256(ikm: shared, salt: "qrkb-confirm-v2", info: clientPub‖hostPub, len: 32)`
     func deriveConfirmKey(shared: SharedSecret, clientPub: Data, hostPub: Data) -> SymmetricKey {
-        shared.hkdfDerivedSymmetricKey(
-            using: SHA256.self,
-            salt: Data("qrkb-confirm-v2".utf8),
-            sharedInfo: clientPub + hostPub,
-            outputByteCount: 32
-        )
+        CryptoCore.deriveConfirmKey(shared: shared, clientPub: clientPub, hostPub: hostPub)
     }
 
     /// `sessionKey = HKDF-SHA256(ikm: PSK, salt: clientNonce‖hostNonce, info: "qrkb-session-v2", len: 32)`
     static func deriveSessionKey(psk: SymmetricKey, clientNonce: Data, hostNonce: Data) -> SymmetricKey {
-        HKDF<SHA256>.deriveKey(
-            inputKeyMaterial: psk,
-            salt: clientNonce + hostNonce,
-            info: Data("qrkb-session-v2".utf8),
-            outputByteCount: 32
-        )
+        CryptoCore.deriveSessionKey(psk: psk, clientNonce: clientNonce, hostNonce: hostNonce)
     }
 
     static func symmetricKey(fromDeviceRecord data: Data) -> SymmetricKey {

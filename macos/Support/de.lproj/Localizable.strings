@@ -17,8 +17,11 @@
 "menu.pairDevice" = "Gerät koppeln…";
 "menu.device.pairedAt" = "Gekoppelt: %@";
 "menu.device.remove" = "Entfernen";
+"menu.device.rename" = "Umbenennen";
 "menu.showIntro" = "Einführung anzeigen";
 "menu.openPanel" = "KeystrokeQR öffnen…";
+"menu.startAtLogin.on" = "Beim Login starten: ✓ an";
+"menu.startAtLogin.off" = "Beim Login starten: ✗ aus";
 "menu.quit" = "Beenden";
 
 /* Navigation im Fenster */
@@ -31,14 +34,47 @@
 "panel.section.accessibility" = "Bedienungshilfen";
 "panel.section.devices" = "Gekoppelte Geräte";
 "panel.section.typingSpeed" = "Tippgeschwindigkeit";
+"panel.section.confirmTyping" = "Bestätigen vor dem Tippen";
+"panel.section.startAtLogin" = "Beim Login starten";
 "panel.accessibility.enabled" = "Aktiviert";
 "panel.accessibility.disabled" = "Nicht aktiviert";
 "panel.accessibility.enabled.detail" = "Dieser Mac darf gescannten Text in andere Apps tippen.";
 "panel.accessibility.disabled.detail" = "Ohne Bedienungshilfen-Zugriff kann dieser Mac gescannten Text nicht tippen. Erteile ihn unter Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen.";
-"panel.devices.empty" = "Noch kein Gerät gekoppelt.";
+"panel.devices.empty" = "Noch kein Gerät gekoppelt – „Gerät koppeln…“ wählen.";
+"panel.confirmTyping.toggle" = "Vor dem Tippen nachfragen";
+"panel.confirmTyping.detail" = "Wenn aktiv, wird gescannter Text nicht sofort getippt – eine kleine Abfrage lässt dich ihn prüfen und „Tippen“ oder „Verwerfen“ wählen.";
+"panel.startAtLogin.toggle" = "KeystrokeQR Host beim Login starten";
+"panel.startAtLogin.on.detail" = "KeystrokeQR Host startet automatisch, wenn du dich anmeldest.";
+"panel.startAtLogin.off.detail" = "KeystrokeQR Host startet nach der Anmeldung nicht von selbst.";
+"panel.startAtLogin.requiresApproval" = "Freigabe nötig: Aktiviere KeystrokeQR Host unter Systemeinstellungen › Allgemein › Anmeldeobjekte.";
+"panel.startAtLogin.error" = "Anmeldeobjekt konnte nicht geändert werden (%@).";
 "panel.help.button" = "Hilfe";
 "panel.about.button" = "Über";
 "panel.showIntro" = "Einführung erneut anzeigen";
+
+/* „✓ Getippt“-HUD */
+"hud.typed" = "✓ Getippt";
+
+/* Bestätigungs-Panel „Bestätigen vor dem Tippen“ */
+"confirm.title" = "Diesen gescannten Text tippen?";
+"confirm.type" = "Tippen";
+"confirm.discard" = "Verwerfen";
+"confirm.charCount" = "%d Zeichen";
+"confirm.thenTab" = "danach Tab";
+"confirm.thenEnter" = "danach Enter";
+"confirm.preview.a11y" = "Vorschau des gescannten Texts";
+
+/* Gerät umbenennen */
+"rename.title" = "Gerät umbenennen";
+"rename.message" = "Gib einen neuen Namen für dieses gekoppelte Gerät ein.";
+"rename.placeholder" = "Gerätename";
+"rename.save" = "Sichern";
+"rename.cancel" = "Abbrechen";
+
+/* Barrierefreiheit (VoiceOver) */
+"a11y.device.row" = "Gekoppeltes Gerät %1$@, gekoppelt %2$@";
+"a11y.device.rename" = "%@ umbenennen";
+"a11y.device.remove" = "%@ entfernen";
 
 /* Hilfe-Fenster */
 "help.window.title" = "Hilfe";

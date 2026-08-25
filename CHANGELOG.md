@@ -3,6 +3,17 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.11.0] – 2026-08-25
+
+### Added
+- **macOS – Beim Login starten**: Schalter im Panel (`SMAppService`), startet den Host automatisch bei der Anmeldung.
+- **macOS – „✓ Getippt"-HUD**: dezente, fokus-neutrale Bestätigung nach jeder Keystroke-Injektion (nicht-aktivierendes Panel, stiehlt nie den Fokus).
+- **macOS – Geräte umbenennen** in der gekoppelten-Geräte-Liste.
+- **macOS – „Bestätigen vor dem Tippen"-Modus** (Standard aus): hält eingehende Scans zurück und tippt erst nach Bestätigung; reaktiviert davor die ursprünglich fokussierte App, damit der Text im richtigen Feld landet.
+- **Export-Compliance**: `ITSAppUsesNonExemptEncryption = NO` in der iOS-App (nur Standard-Krypto) — keine Rückfrage mehr bei TestFlight-/Store-Uploads.
+- **Barrierefreiheit**: VoiceOver-Labels/-Hints und Dynamic-Type-Feinschliff (iOS) bzw. Accessibility-Labels + Empty-States (macOS-Panel).
+- **Automatisierte Tests + CI**: Krypto-/Protokoll-Test-Suiten (macOS SwiftPM 45 Tests, iOS XCTest 27 Tests — HKDF-Ableitungen, Pairing-HMAC, ChaChaPoly-Frames/Nonce/Replay, Codable-Wire-Format); der CI-Workflow führt beide bei jedem Push/PR aus.
+
 ## [0.10.0] – 2026-08-25
 
 ### Changed

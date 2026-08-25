@@ -126,6 +126,58 @@ Extension mit Lock-Screen-/Homescreen-Widget (`.widgetURL`) und iOS-18-
 ControlWidget (Bundle-ID `de.timehrenfried.keystrokeqr.widgets`, Deployment
 iOS 17, ControlWidget `@available(iOS 18)`-gated).
 
+## Export-Compliance (App Store / TestFlight)
+
+Die App-Info.plist setzt `ITSAppUsesNonExemptEncryption` = `NO`. Es kommt
+ausschließlich Standard-Kryptografie aus Apples **CryptoKit** zum Einsatz
+(HKDF-SHA256, HMAC-SHA256, ChaChaPoly, Curve25519) — nur zur Absicherung der
+lokalen Kopplung/Sitzung (siehe [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)).
+Das fällt unter die Ausnahme der US-Exportbestimmungen, sodass bei jedem
+TestFlight-/Store-Upload die Export-Compliance-Rückfrage entfällt. Die
+Widget-Extension nutzt keine eigene Krypto und braucht das Flag daher nicht.
+
+## Barrierefreiheit & Dynamic Type
+
+- Nutzersichtbare Controls tragen VoiceOver-Labels/-Hints/-Traits: Statuskapsel
+  (als ein Element „Verbindungsstatus: …", dekorativer Punkt ausgeblendet,
+  `updatesFrequently`), „Erneut senden", „Verlauf leeren", „Mac koppeln",
+  „Mac auswählen", Hilfe, die Auto-Enter/Auto-Tab-Toggles sowie die
+  Onboarding-/Pairing-Navigation. Dekorative Symbole sind
+  `accessibilityHidden`, Überschriften als `.isHeader` markiert.
+- Texte verwenden semantische Fonts (skalieren mit Dynamic Type); wo der Platz
+  knapp ist, greifen `lineLimit`/`minimumScaleFactor` bzw.
+  `fixedSize(horizontal:false, vertical:true)`, damit das Layout bei großen
+  Textgrößen nicht bricht.
+- Empty-/Fehlerzustände: die Mac-Auswahl zeigt bei leerer Liste einen Hinweis
+  („Kein Mac gefunden … gleiches WLAN? Mac-App gestartet?"); der
+  Kamera-verweigert-Screen ist barrierefrei ausgezeichnet.
+
+## Tests
+
+Ein Unit-Test-Target **`QRKeyboardScannerTests`** (im selben handgeschriebenen
+`project.pbxproj`-Stil, `objectVersion 77`, eigene
+`FileSystemSynchronizedRootGroup`) deckt die Krypto-/Protokoll-Kernlogik ab und
+ist in die Test-Action des shared Scheme eingehängt:
+
+- `CryptoManagerTests` — HKDF-Ableitungen mit den exakten Salt/Info-Strings
+  (`qrkb-pair-v2`, `qrkb-confirm-v2`, `qrkb-session-v2`), Curve25519-PSK-
+  Übereinstimmung beider Seiten, Pairing-HMAC, das 12-Byte-Nonce-Schema
+  (Richtungspräfix ‖ big-endian `seq`) und ChaChaPoly-Frame-Roundtrips inkl.
+  Manipulations-/Replay-/Richtungs-Fehlern.
+- `MessagesCodableTests` — Wire-Format der Protokoll-Nachrichten (`scan`, `ack`,
+  `enc`, `pair_*`, `session_*`).
+
+Ausführen:
+
+```sh
+xcodebuild test -project QRKeyboardScanner.xcodeproj \
+  -scheme QRKeyboardScanner -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+(27 Tests, grün; `iPhone 17 Pro` bei Bedarf durch einen via
+`xcrun simctl list devices available` vorhandenen Simulator ersetzen.)
+
 ## Version
 
-`0.7.0` (`MARKETING_VERSION` in App- und Widget-Target, Debug + Release).
+`0.11.0` (`MARKETING_VERSION` in App- und Widget-Target, Debug + Release).
