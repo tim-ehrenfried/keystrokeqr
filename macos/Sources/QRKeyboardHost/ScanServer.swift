@@ -337,14 +337,16 @@ final class ScanServer: @unchecked Sendable {
               msg.type == "session_hello",
               let deviceUUID = UUID(uuidString: msg.deviceID),
               let clientNonce = Data(base64Encoded: msg.nonce) else {
-            sendSessionError(.badSession, on: ctx.connection)
-            ctx.connection.cancel()
+            // erst-absenden-dann-schließen: sonst geht das Frame durch das sofortige
+            // cancel() verloren (siehe send(closeAfterSend:) / PROTOCOL-v2.md).
+            send(SessionErrorMessage(error: ProtocolErrorV2.badSession.rawValue), on: ctx.connection, closeAfterSend: true)
             return
         }
 
         guard let device = crypto.device(for: deviceUUID) else {
-            sendSessionError(.notPaired, on: ctx.connection)
-            ctx.connection.cancel()
+            // `not_paired` MUSS den Client sicher erreichen (z. B. nach „Gerät entfernen"),
+            // damit er seinen PSK löscht und Neu-Pairing anbietet — daher closeAfterSend.
+            send(SessionErrorMessage(error: ProtocolErrorV2.notPaired.rawValue), on: ctx.connection, closeAfterSend: true)
             return
         }
 

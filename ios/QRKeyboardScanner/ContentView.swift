@@ -28,6 +28,8 @@ struct ContentView: View {
     @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var lastScannedText: String?
     @State private var showHelp = false
+    /// Manuell geöffnete „gefundene Macs“-Liste (Wechsel des verbundenen Macs).
+    @State private var showMacSwitcher = false
     /// Wird erhöht, wenn der Scanner (Deep-Link/App Intent) sofort scharf sein
     /// soll — setzt in der ScannerView den Cooldown zurück.
     @State private var scanResetToken = 0
@@ -150,7 +152,10 @@ struct ContentView: View {
             HelpView(connectionManager: connectionManager)
         }
         .sheet(isPresented: $connectionManager.showServicePicker) {
-            servicePicker
+            macListSheet
+        }
+        .sheet(isPresented: $showMacSwitcher) {
+            macListSheet
         }
         .sheet(item: $connectionManager.pendingPairingService) { service in
             PairingView(connectionManager: connectionManager, service: service)
@@ -264,6 +269,15 @@ struct ContentView: View {
                 toggleChip("Auto-Enter", isOn: $autoEnter)
                 toggleChip("Auto-Tab", isOn: $autoTab)
                 Spacer(minLength: 0)
+                if !connectionManager.services.isEmpty {
+                    Button {
+                        showMacSwitcher = true
+                    } label: {
+                        Image(systemName: "desktopcomputer")
+                            .font(.title2)
+                    }
+                    .accessibilityLabel("Choose Mac")
+                }
                 Button {
                     showClearConfirmation = true
                 } label: {
@@ -383,22 +397,69 @@ struct ContentView: View {
         repeatCandidate = nil
     }
 
-    // MARK: - Auswahl bei mehreren Macs
+    // MARK: - Auswahl / Wechsel bei mehreren Macs
 
-    private var servicePicker: some View {
+    /// Erreichbare Liste aller gefundenen Macs — dient sowohl der automatischen
+    /// Auswahl (mehr als ein Mac gefunden) als auch dem aktiven Wechsel des
+    /// verbundenen Macs. Auswahl trennt eine laufende Verbindung sauber und baut
+    /// zum gewählten Mac auf (bzw. bietet Pairing, falls dort noch nicht gekoppelt).
+    private var macListSheet: some View {
         NavigationStack {
-            List(connectionManager.services) { service in
-                Button {
-                    connectionManager.showServicePicker = false
-                    connectionManager.selectService(service)
-                } label: {
-                    Label(service.name, systemImage: "desktopcomputer")
+            List {
+                Section {
+                    ForEach(connectionManager.services) { service in
+                        Button {
+                            connectionManager.showServicePicker = false
+                            showMacSwitcher = false
+                            connectionManager.switchTo(service)
+                        } label: {
+                            HStack {
+                                Label(service.name, systemImage: "desktopcomputer")
+                                    .foregroundStyle(.primary)
+                                Spacer(minLength: 12)
+                                macStatusBadge(connectionManager.status(for: service))
+                            }
+                        }
+                    }
+                    if connectionManager.services.isEmpty {
+                        Label("Searching for Mac…", systemImage: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("Tap a Mac to connect. A new Mac is paired once.")
                 }
             }
             .navigationTitle("Choose Mac")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        connectionManager.showServicePicker = false
+                        showMacSwitcher = false
+                    }
+                }
+            }
         }
         .presentationDetents([.medium])
+    }
+
+    @ViewBuilder
+    private func macStatusBadge(_ status: ConnectionManager.MacStatus) -> some View {
+        switch status {
+        case .connected: macBadge("Connected", .green)
+        case .paired:    macBadge("Paired", .blue)
+        case .new:       macBadge("New", .orange)
+        case .outdated:  macBadge("Update", .red)
+        }
+    }
+
+    private func macBadge(_ text: LocalizedStringKey, _ color: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .foregroundStyle(color)
+            .background(color.opacity(0.18), in: Capsule())
     }
 
     // MARK: - Schnellstart (Deep-Link / App Intent)

@@ -122,6 +122,14 @@ final class ConnectionManager: ObservableObject {
     @Published var outdatedHostDetected = false
     /// Host kennt unsere `deviceID` nicht (mehr) — PSK wurde lokal verworfen, neu koppeln nötig.
     @Published var notPairedServiceName: String?
+    /// Name des aktuell (Phase 2) verbundenen Macs — für Statusanzeige und die
+    /// „gefundene Macs“-Auswahl (Kennzeichnung „verbunden“). `nil`, sobald keine
+    /// Sitzung mehr steht.
+    @Published private(set) var connectedServiceName: String?
+
+    /// Status eines gefundenen Macs relativ zum lokalen Zustand — steuert Beschriftung
+    /// und Verhalten in der Mac-Auswahl (Wechsel zwischen mehreren Macs).
+    enum MacStatus { case connected, paired, new, outdated }
 
     private let crypto = CryptoManager.shared
     private var browser: NWBrowser?
@@ -134,7 +142,26 @@ final class ConnectionManager: ObservableObject {
     private var sessionKey: SymmetricKey?
     private var sendSeq: UInt64 = 0
     private var lastRecvSeq: UInt64?
-    private var connectedServiceName: String?
+
+    /// `true`, sobald wir `session_hello` gesendet haben und auf `session_ready`
+    /// warten (die WS-Verbindung stand also bereits auf `.ready`). Kernstück der
+    /// Unterscheidung „host-seitig entkoppelt“ vs. „transienter Netzabriss“:
+    /// bricht die Verbindung GENAU in diesem Fenster ab, hat der Host unser
+    /// `session_hello` mit unbekannter `deviceID` verworfen (Gerät am Mac
+    /// entfernt) — sein `session_error` geht bei seinem sofortigen `cancel()`
+    /// häufig verloren, sodass wir es nicht als reines Netzproblem behandeln dürfen.
+    private var awaitingSessionReady = false
+    /// Zähler fehlgeschlagener Sitzungs-Handshakes je Servicename (ready→Abbruch,
+    /// ohne je `session_ready` gesehen zu haben). Ab `handshakeFailureThreshold`
+    /// werten wir das als `not_paired` (siehe `connectionLost`), statt endlos
+    /// weiterzureconnecten.
+    private var handshakeFailuresByService: [String: Int] = [:]
+    /// Ab wie vielen aufeinanderfolgenden ready→Abbruch-ohne-`session_ready` wir
+    /// einen Mac als „nicht mehr gekoppelt“ behandeln. 2 lässt einen einzelnen,
+    /// echt transienten Abriss im schmalen Handshake-Fenster zu, fängt aber den
+    /// deterministischen Host-Entkopplungs-Fall (jeder Versuch bricht direkt nach
+    /// `session_hello` ab) verlässlich ab.
+    private let handshakeFailureThreshold = 2
 
     // Pairing-Zustand (Phase 1) der aktuellen Verbindung, falls eine läuft.
     private var pairingCompletion: ((Result<CryptoManager.PairedMac, PairingError>) -> Void)?
@@ -176,6 +203,9 @@ final class ConnectionManager: ObservableObject {
         connection = nil
         services = []
         showServicePicker = false
+        connectedServiceName = nil
+        handshakeFailuresByService.removeAll()
+        resetSessionCrypto()
         state = .idle
     }
 
@@ -257,6 +287,33 @@ final class ConnectionManager: ObservableObject {
         }
     }
 
+    /// Klassifiziert einen gefundenen Mac für die Auswahlliste: aktuell verbunden,
+    /// gekoppelt (PSK vorhanden), neu (v2 ohne PSK) oder veraltet (nur v1).
+    func status(for service: DiscoveredService) -> MacStatus {
+        guard service.isV2 else { return .outdated }
+        if connectedServiceName == service.name, case .connected = state { return .connected }
+        return crypto.pairedMac(forServiceName: service.name) != nil ? .paired : .new
+    }
+
+    /// Nutzergesteuerter Wechsel zu einem ANDEREN gefundenen Mac — auch wenn bereits
+    /// einer verbunden ist. Baut die laufende Sitzung sauber ab (Verbindung `cancel()`
+    /// + `resetSessionCrypto()`, damit KEIN Nonce-/Sitzungsschlüssel zwischen Macs
+    /// überlebt) und verbindet zum gewählten Mac bzw. bietet Pairing an, falls dort
+    /// noch kein PSK vorliegt. Kein App-Neustart nötig.
+    func switchTo(_ service: DiscoveredService) {
+        guard isActive else { return }
+        // Bereits mit genau diesem Mac verbunden? Aktive Sitzung nicht unnötig kappen.
+        if connectedServiceName == service.name, case .connected = state { return }
+        connection?.cancel()
+        connection = nil
+        resetSessionCrypto()
+        connectedServiceName = nil
+        showServicePicker = false
+        // Wechsel ist ein bewusster Neuaufbau — evtl. Zähler dieses Ziels verwerfen.
+        handshakeFailuresByService[service.name] = nil
+        selectService(service)
+    }
+
     // MARK: - Phase 2: Verbindung (gekoppelte Geräte)
 
     /// Verbindet zum gewählten, bereits gekoppelten Bonjour-Service und führt
@@ -326,6 +383,9 @@ final class ConnectionManager: ObservableObject {
         var generator = SystemRandomNumberGenerator()
         let clientNonce = Data((0..<16).map { _ in UInt8.random(in: 0...255, using: &generator) })
         pendingClientNonce = clientNonce
+        // Ab jetzt läuft der Sitzungs-Handshake: ein Abbruch VOR `session_ready`
+        // fließt in die not_paired-vs-transient-Heuristik ein (siehe connectionLost).
+        awaitingSessionReady = true
         send(SessionHelloMessage(deviceID: deviceID.uuidString, nonce: clientNonce.base64EncodedString()), on: connection)
     }
 
@@ -340,9 +400,52 @@ final class ConnectionManager: ObservableObject {
             pairingConnectionClosed()
             return
         }
+
+        // not_paired-vs-transient-Heuristik: Brach die Verbindung ab, NACHDEM wir
+        // `.ready` erreicht + `session_hello` gesendet hatten, aber BEVOR
+        // `session_ready` kam, ist das der host-seitige „Gerät entfernt“-Fall.
+        // Der Host schließt direkt nach dem hello (sein `session_error` geht dabei
+        // oft verloren) — deshalb NICHT stumpf reconnecten, sondern nach wenigen
+        // Wiederholungen entkoppeln und Neu-Pairing anbieten. Ein einzelner echt
+        // transienter Abriss in diesem schmalen Fenster bleibt unter der Schwelle
+        // und führt nur zu einem normalen Reconnect.
+        if awaitingSessionReady, let serviceName = connectedServiceName,
+           crypto.pairedMac(forServiceName: serviceName) != nil {
+            let count = (handshakeFailuresByService[serviceName] ?? 0) + 1
+            handshakeFailuresByService[serviceName] = count
+            if count >= handshakeFailureThreshold {
+                concludeNotPaired(serviceName: serviceName)
+                return
+            }
+        }
+
         connection?.cancel()
         connection = nil
         resetSessionCrypto()
+        connectedServiceName = nil
+        guard isActive else { return }
+        state = .disconnected
+        scheduleRetry()
+    }
+
+    /// Der Host kennt unsere `deviceID` nicht (mehr): PSK lokal verwerfen, Verbindung
+    /// sauber abbauen und **Neu-Pairing anbieten** (statt in eine stille Reconnect-
+    /// Schleife zu laufen). Gemeinsamer Endpunkt für das explizite
+    /// `session_error/not_paired` UND die Handshake-Heuristik (Fall, in dem der
+    /// Host das `session_error`-Frame beim sofortigen `cancel()` verwirft).
+    private func concludeNotPaired(serviceName: String) {
+        awaitingSessionReady = false
+        handshakeFailuresByService[serviceName] = nil
+        // PSK/Mac-Eintrag für genau diesen Mac löschen — danach routet
+        // `selectService` künftige Funde dieses Macs auf den Pairing-Screen,
+        // sodass ein frisches Pairing (neuer `pair_hello`) möglich ist.
+        crypto.removeMac(serviceName: serviceName)
+        connection?.cancel()
+        connection = nil
+        resetSessionCrypto()
+        connectedServiceName = nil
+        // ContentView beobachtet dies und öffnet den Pairing-Screen.
+        notPairedServiceName = serviceName
         guard isActive else { return }
         state = .disconnected
         scheduleRetry()
@@ -352,6 +455,7 @@ final class ConnectionManager: ObservableObject {
         sessionKey = nil
         sendSeq = 0
         lastRecvSeq = nil
+        awaitingSessionReady = false
         pendingSessionHandshakeDeviceID = nil
         pendingSessionHandshakePSK = nil
         pendingClientNonce = nil
@@ -443,6 +547,10 @@ final class ConnectionManager: ObservableObject {
         sessionKey = CryptoManager.deriveSessionKey(psk: psk, clientNonce: clientNonce, hostNonce: hostNonce)
         sendSeq = 0
         lastRecvSeq = nil
+        // Handshake erfolgreich: Fenster-Flag schließen und Fehlversuchs-Zähler
+        // dieses Macs zurücksetzen (der not_paired-Verdacht ist ausgeräumt).
+        awaitingSessionReady = false
+        handshakeFailuresByService[serviceName] = nil
         state = .connected(serviceName)
         _ = connection // Handshake abgeschlossen, Frames folgen ab jetzt.
     }
@@ -450,12 +558,17 @@ final class ConnectionManager: ObservableObject {
     private func handleSessionError(_ data: Data) {
         guard let msg = try? JSONDecoder().decode(SessionErrorMessage.self, from: data) else { return }
         if msg.error == "not_paired", let serviceName = connectedServiceName {
-            // PSK ist auf dem Host nicht (mehr) bekannt: lokal verwerfen und
-            // Neu-Pairing anbieten (siehe docs/PROTOCOL-v2.md, Phase 2).
-            crypto.removeMac(serviceName: serviceName)
-            notPairedServiceName = serviceName
+            // PSK ist auf dem Host nicht (mehr) bekannt: lokal verwerfen, Verbindung
+            // sauber abbauen und Neu-Pairing anbieten (docs/PROTOCOL-v2.md, Phase 2).
+            // Dies ist der schnelle, explizite Pfad; der host-seitige „Gerät
+            // entfernt“-Fall wird zusätzlich über die Handshake-Heuristik gefangen,
+            // falls dieses Frame verlorengeht.
+            concludeNotPaired(serviceName: serviceName)
+        } else {
+            // Anderer/unbekannter Sitzungsfehler → nur Verbindung schließen
+            // (regulärer Reconnect via connectionLost).
+            connection?.cancel()
         }
-        connection?.cancel()
     }
 
     private func handleEncFrame(_ data: Data) {

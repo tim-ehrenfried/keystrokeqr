@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.8.0
+- **Version:** 0.9.0
 
 ## Voraussetzungen
 
@@ -100,25 +100,54 @@ make run
 open "dist/KeystrokeQR Host.app"
 ```
 
-Die App erscheint als QR-Symbol in der Menüleiste (kein Dock-Icon). Das Menü
-zeigt:
+Die App erscheint als QR-Symbol in der Menüleiste (kein Dock-Icon). Das Menü ist
+seit v0.9.0 **schlank** und dient vor allem dem Blick auf den Status:
 
 - **Kopplungs-/Verbindungsstatus** („Kein Gerät gekoppelt" / „N gekoppelt · M verbunden")
 - **Port und Bonjour-Dienstname** (der Hostname des Macs)
-- **Bedienungshilfen-Status** (✓/✗) mit Direktlink in die Systemeinstellungen
-- **„Gerät koppeln…"** — öffnet ein poliertes Pairing-Fenster (Onboarding-Look)
-  mit dem 6-stelligen, 90 s gültigen Code in Einzelkästchen, Countdown-Balken
-  und freundlichen Statushinweisen (siehe
-  [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md))
-- **Gekoppelte Geräte** — pro Gerät ein Untermenü mit Kopplungsdatum und
-  „Entfernen" (löscht den gemeinsamen Schlüssel und trennt laufende Sitzungen)
-- **„Tippgeschwindigkeit"** — Untermenü Schnell / Normal / Langsam (s. u.)
-- **„Einführung anzeigen"** — öffnet erneut das Willkommensfenster
+- **Bedienungshilfen-Status** (✓/✗) — auf einen Blick erkennbar, ob alles bereit ist
+- **„KeystrokeQR öffnen…"** — öffnet das zentrale Kontrollzentrum (s. u.)
 - **Beenden**
 
 Optional kann die App zu **Anmeldeobjekte** hinzugefügt werden
 (Systemeinstellungen → Allgemein → Anmeldeobjekte), damit sie automatisch
 startet.
+
+## Kontrollzentrum (KeystrokeQR-Panel)
+
+Seit **v0.9.0** liegen alle Funktionen gebündelt in einem gestylten Fenster im
+dunklen KeystrokeQR-Look (statt vieler Menüpunkte). Öffnen über den Menüpunkt
+**„KeystrokeQR öffnen…"**. Das Panel läuft als normales, fokussierbares Fenster,
+während die App weiterhin reine Menüleisten-App (`.accessory`) bleibt. Abschnitte:
+
+- **Verbindung** — Bonjour-Dienstname, Port und „N gekoppelt · M verbunden".
+- **Bedienungshilfen** — großes grünes ✓ „Aktiviert" bzw. rotes ✗ „Nicht
+  aktiviert" mit kurzer Erklärung und Button „Bedienungshilfen öffnen…". Der
+  Status ist **live**: solange das Panel offen (und aktiv) ist, pollt es
+  `AXIsProcessTrusted()` alle ~1,5 s und aktualisiert zusätzlich sofort, sobald
+  das Fenster den Fokus bekommt — nach dem Erteilen der Berechtigung erscheint
+  das ✓ also ohne App-Neustart.
+- **Gekoppelte Geräte** — Liste (Name + Kopplungsdatum) mit „Entfernen" je Gerät
+  und „Gerät koppeln…" (öffnet das bestehende Pairing-Fenster). „Entfernen"
+  löscht den gemeinsamen Schlüssel (PSK) aus der Keychain **und** trennt sofort
+  eine evtl. laufende Sitzung dieses Geräts, damit der Client den Abbruch bemerkt
+  und in Neu-Pairing gehen kann (docs/PROTOCOL-v2.md, „Geräteverwaltung").
+- **Tippgeschwindigkeit** — Schnell / Normal / Langsam als Segmentumschalter,
+  sofort wirksam (s. u.).
+- **Hilfe** und **Über** sowie „Einführung erneut anzeigen".
+
+## Hilfe & Über
+
+- **Hilfe** (Button im Panel) öffnet ein Fenster mit Kurzanleitung
+  (Hintergrundbetrieb, Kopplung, Bedienungshilfen, Tippgeschwindigkeit bei viel
+  Text), Fehlerbehebung (iPhone findet den Mac nicht → gleiches WLAN/Firewall/VPN;
+  es wird nichts getippt → Bedienungshilfen) sowie Links zum
+  [GitHub-Repo](https://github.com/tim-ehrenfried/keystrokeqr) und zur
+  Dokumentation. Zweisprachig (en/de).
+- **Über** zeigt App-Name „KeystrokeQR Host", Version/Build **dynamisch aus dem
+  Bundle**, „© 2026 Tim Ehrenfried", Kontakt (mailto:mail@tim-ehrenfried.de),
+  GitHub-Link und die MIT-Lizenz — im dunklen KeystrokeQR-Stil (kein
+  NSAboutPanel-Default).
 
 ## Willkommen / Onboarding (Erst-Start)
 
@@ -163,9 +192,10 @@ Schritt für Schritt:
    zum Ordner `macos/dist/` navigieren und **„KeystrokeQR Host.app"**
    auswählen, dann den Schalter aktivieren.
 5. Ggf. mit dem Administrator-Passwort bestätigen.
-6. Die App **neu starten** (Menüleiste → Beenden, dann erneut öffnen), damit
-   die Berechtigung sicher greift. Im Menü sollte nun
-   **„Bedienungshilfen: ✓ erteilt"** stehen.
+6. Der Bedienungshilfen-Status wird **live** erkannt: Im Kontrollzentrum
+   (**„KeystrokeQR öffnen…"**) wechselt die Anzeige nach dem Erteilen innerhalb
+   von ~1–2 s auf das grüne ✓ „Aktiviert" — ganz ohne App-Neustart. Auch die
+   Menüleiste zeigt beim nächsten Öffnen **„Bedienungshilfen: ✓ erteilt"**.
 
 > **Hinweis nach Updates:** Wird die App neu gebaut (neue Binary/Signatur),
 > kann macOS die Berechtigung verwerfen. In dem Fall den Eintrag in

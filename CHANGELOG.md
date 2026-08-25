@@ -3,6 +3,18 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.9.0] – 2026-08-25
+
+### Added
+- **macOS – KeystrokeQR-Panel (Kontrollzentrum)**: Ein gestyltes Fenster bündelt die bisherigen Menüpunkte — Verbindungsstatus, **live sichtbarer Bedienungshilfen-Status** (grünes ✓ „Aktiviert" / rotes ✗, aktualisiert sich ohne Neustart nach dem Erteilen), gekoppelte Geräte (mit „Entfernen"), Kopplung, Tippgeschwindigkeit, Hilfe, Über, Einführung. Das Menüleisten-Menü ist dadurch schlank (inkl. ✓/✗-Kurzstatus).
+- **macOS – In-App-Hilfe** (Kurzanleitung + Troubleshooting + Repo/Docs-Links) und **Über/About** (Version dynamisch, © 2026 Tim Ehrenfried, mail@tim-ehrenfried.de, GitHub, MIT).
+- **iOS – Mehrere Macs & Mac-Wechsel**: Liste aller gefundenen Macs mit Status-Badges (Verbunden/Gekoppelt/Neu/Aktualisieren), jederzeit über einen Button erreichbar; aktiver Wechsel trennt sauber die aktuelle Verbindung (kein Session-Key-Leak zwischen Macs) und verbindet/koppelt zum gewählten Mac.
+
+### Fixed
+- **Nach „Gerät entfernen" am Mac war keine (erneute) Verbindung möglich**: Das `session_error`/`not_paired`-Frame ging durch das sofortige Schließen der Verbindung verloren, sodass das iPhone in einer stillen Endlos-Reconnect-Schleife hing statt Neu-Pairing anzubieten.
+  - **macOS**: `not_paired`/`bad_session` werden jetzt erst **nach bestätigtem Absenden** geschlossen (`closeAfterSend`), erreichen den Client also zuverlässig; „Gerät entfernen" trennt zudem sofort die aktive Sitzung.
+  - **iOS**: unterscheidet host-seitiges Entkoppeln von transientem Netzabriss (Handshake-Fenster-Heuristik als Fallback) → löscht bei `not_paired` den veralteten PSK und bietet direkt Neu-Pairing an, statt endlos zu suchen.
+
 ## [0.8.0] – 2026-08-25
 
 ### Added

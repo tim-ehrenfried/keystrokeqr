@@ -18,7 +18,45 @@
 "menu.device.pairedAt" = "Gekoppelt: %@";
 "menu.device.remove" = "Entfernen";
 "menu.showIntro" = "Einführung anzeigen";
+"menu.openPanel" = "KeystrokeQR öffnen…";
 "menu.quit" = "Beenden";
+
+/* Kontrollzentrum */
+"panel.window.title" = "KeystrokeQR";
+"panel.section.connection" = "Verbindung";
+"panel.section.accessibility" = "Bedienungshilfen";
+"panel.section.devices" = "Gekoppelte Geräte";
+"panel.section.typingSpeed" = "Tippgeschwindigkeit";
+"panel.accessibility.enabled" = "Aktiviert";
+"panel.accessibility.disabled" = "Nicht aktiviert";
+"panel.accessibility.enabled.detail" = "Dieser Mac darf gescannten Text in andere Apps tippen.";
+"panel.accessibility.disabled.detail" = "Ohne Bedienungshilfen-Zugriff kann dieser Mac gescannten Text nicht tippen. Erteile ihn unter Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen.";
+"panel.devices.empty" = "Noch kein Gerät gekoppelt.";
+"panel.help.button" = "Hilfe";
+"panel.about.button" = "Über";
+"panel.showIntro" = "Einführung erneut anzeigen";
+
+/* Hilfe-Fenster */
+"help.window.title" = "Hilfe";
+"help.title" = "KeystrokeQR Host – Hilfe";
+"help.quickstart.title" = "Kurzanleitung";
+"help.quickstart.body" = "KeystrokeQR Host läuft unauffällig in der Menüleiste — kein Fenster nötig. Kopple dein iPhone einmal mit dem angezeigten Code, dann scanne in der KeystrokeQR-App einen QR- oder Barcode: Dieser Mac tippt den Text in das gerade fokussierte Feld. Zum Tippen wird die Bedienungshilfen-Berechtigung benötigt (siehe Panel). Bei viel Text oder trägen/entfernten Eingabefeldern die Tippgeschwindigkeit verringern, damit nichts verschluckt wird.";
+"help.troubleshooting.title" = "Fehlerbehebung";
+"help.trouble.notFound.title" = "iPhone findet den Mac nicht";
+"help.trouble.notFound.body" = "Stelle sicher, dass beide Geräte im selben WLAN sind. Prüfe, ob eine Firewall oder ein VPN das lokale Netzwerk blockiert, und erlaube die Abfrage zum lokalen Netzwerk, falls macOS sie zeigt.";
+"help.trouble.notTyping.title" = "Es wird nichts getippt";
+"help.trouble.notTyping.body" = "Erteile KeystrokeQR Host die Bedienungshilfen-Berechtigung und achte darauf, dass das Zielfeld fokussiert ist. Das Panel zeigt ein grünes ✓, sobald der Zugriff erteilt ist.";
+"help.links.title" = "Links";
+"help.link.github" = "GitHub-Repository";
+"help.link.docs" = "Dokumentation";
+
+/* Über-Fenster */
+"about.window.title" = "Über";
+"about.version" = "Version %1$@ (Build %2$@)";
+"about.copyright" = "© 2026 Tim Ehrenfried";
+"about.license" = "MIT-Lizenz";
+"about.link.github" = "GitHub";
+"about.link.contact" = "mail@tim-ehrenfried.de";
 
 /* Tippgeschwindigkeit */
 "menu.typingSpeed" = "Tippgeschwindigkeit";

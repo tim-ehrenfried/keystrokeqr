@@ -18,7 +18,45 @@
 "menu.device.pairedAt" = "Paired: %@";
 "menu.device.remove" = "Remove";
 "menu.showIntro" = "Show Introduction";
+"menu.openPanel" = "Open KeystrokeQR…";
 "menu.quit" = "Quit";
+
+/* Control panel */
+"panel.window.title" = "KeystrokeQR";
+"panel.section.connection" = "Connection";
+"panel.section.accessibility" = "Accessibility";
+"panel.section.devices" = "Paired devices";
+"panel.section.typingSpeed" = "Typing speed";
+"panel.accessibility.enabled" = "Enabled";
+"panel.accessibility.disabled" = "Not enabled";
+"panel.accessibility.enabled.detail" = "This Mac is allowed to type scanned text into other apps.";
+"panel.accessibility.disabled.detail" = "Without Accessibility access this Mac can't type scanned text. Grant it in System Settings › Privacy & Security › Accessibility.";
+"panel.devices.empty" = "No device paired yet.";
+"panel.help.button" = "Help";
+"panel.about.button" = "About";
+"panel.showIntro" = "Show introduction again";
+
+/* Help window */
+"help.window.title" = "Help";
+"help.title" = "KeystrokeQR Host Help";
+"help.quickstart.title" = "Quick start";
+"help.quickstart.body" = "KeystrokeQR Host runs quietly in the menu bar — no window needed. Pair your iPhone once with the on-screen code, then scan any QR or barcode in the KeystrokeQR app: this Mac types the text into whatever field is focused. Typing needs Accessibility permission (see the panel). For long text or slow/remote input fields, lower the Typing speed so nothing gets dropped.";
+"help.troubleshooting.title" = "Troubleshooting";
+"help.trouble.notFound.title" = "iPhone can't find this Mac";
+"help.trouble.notFound.body" = "Make sure both devices are on the same Wi-Fi network. Check that a firewall or VPN isn't blocking the local network, and allow the local-network prompt on macOS if it appears.";
+"help.trouble.notTyping.title" = "Nothing gets typed";
+"help.trouble.notTyping.body" = "Grant Accessibility permission to KeystrokeQR Host and make sure the target field is focused. The panel shows a green ✓ once access is granted.";
+"help.links.title" = "Links";
+"help.link.github" = "GitHub repository";
+"help.link.docs" = "Documentation";
+
+/* About window */
+"about.window.title" = "About";
+"about.version" = "Version %1$@ (build %2$@)";
+"about.copyright" = "© 2026 Tim Ehrenfried";
+"about.license" = "MIT License";
+"about.link.github" = "GitHub";
+"about.link.contact" = "mail@tim-ehrenfried.de";
 
 /* Typing speed */
 "menu.typingSpeed" = "Typing Speed";

@@ -64,6 +64,48 @@ enum HostUI {
         button.controlSize = .large
         return button
     }
+
+    /// Abschnittsüberschrift (klein, halbfett, gedämpft) für das Panel/Hilfe/Info.
+    static func makeSectionTitle(_ text: String) -> NSTextField {
+        let label = NSTextField(labelWithString: text.uppercased())
+        label.font = .systemFont(ofSize: 11, weight: .semibold)
+        label.textColor = .tertiaryLabelColor
+        return label
+    }
+
+    /// Fließtext-Label (umbrechend, gedämpft).
+    static func makeBodyLabel(_ text: String) -> NSTextField {
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabelColor
+        label.isEditable = false
+        label.isSelectable = false
+        label.drawsBackground = false
+        return label
+    }
+
+    /// Als Link gestalteter Button (accent, unterstrichen), öffnet eine URL.
+    static func makeLinkButton(title: String, target: AnyObject, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: target, action: action)
+        button.isBordered = false
+        button.bezelStyle = .inline
+        button.contentTintColor = accent
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: accent,
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .underlineStyle: NSUnderlineStyle.single.rawValue
+        ]
+        button.attributedTitle = NSAttributedString(string: title, attributes: attributes)
+        button.setButtonType(.momentaryChange)
+        return button
+    }
+}
+
+/// Verbindliche externe Links (siehe docs/BRANDING.md, README).
+enum HostLinks {
+    static let repository = URL(string: "https://github.com/tim-ehrenfried/keystrokeqr")!
+    static let docs = URL(string: "https://github.com/tim-ehrenfried/keystrokeqr/tree/main/docs")!
+    static let contactMailto = URL(string: "mailto:mail@tim-ehrenfried.de")!
 }
 
 /// Schlanke, farbige Fortschrittsleiste (Countdown im Pairing-Fenster).

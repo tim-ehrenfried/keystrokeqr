@@ -11,13 +11,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let pairingCoordinator = PairingCoordinator()
     private var pairingWindowController: PairingWindowController?
     private var onboardingWindowController: OnboardingWindowController?
+    private var controlPanelWindowController: ControlPanelWindowController?
+    private var helpWindowController: HelpWindowController?
+    private var aboutWindowController: AboutWindowController?
     private var server: ScanServer?
-    private var typingSpeedItems: [NSMenuItem] = []
 
     private let connectionItem = NSMenuItem(title: L("menu.status.waiting"), action: nil, keyEquivalent: "")
     private let portItem = NSMenuItem(title: L("menu.port.placeholder"), action: nil, keyEquivalent: "")
     private let accessibilityItem = NSMenuItem(title: L("menu.accessibility.placeholder"), action: nil, keyEquivalent: "")
-    private let pairedHeaderItem = NSMenuItem(title: L("menu.pairedDevices.header"), action: nil, keyEquivalent: "")
     private let mainMenu = NSMenu()
 
     private var lastState = ScanServer.State()
@@ -64,64 +65,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         connectionItem.isEnabled = false
         portItem.isEnabled = false
         accessibilityItem.isEnabled = false
-        pairedHeaderItem.isEnabled = false
 
+        // Schlankes Menü: Status auf einen Blick (Verbindung, Port/Dienst,
+        // Bedienungshilfen ✓/✗) + „KeystrokeQR öffnen…“ (Kontrollzentrum) +
+        // „Beenden“. Alle weiteren Funktionen liegen im Panel.
         mainMenu.addItem(connectionItem)
         mainMenu.addItem(portItem)
-        mainMenu.addItem(NSMenuItem.separator())
         mainMenu.addItem(accessibilityItem)
-
-        let openAXItem = NSMenuItem(
-            title: L("menu.accessibility.open"),
-            action: #selector(openAccessibilitySettings),
-            keyEquivalent: ""
-        )
-        openAXItem.target = self
-        mainMenu.addItem(openAXItem)
-
         mainMenu.addItem(NSMenuItem.separator())
 
-        let pairItem = NSMenuItem(
-            title: L("menu.pairDevice"),
-            action: #selector(openPairingWindow),
+        let openPanelItem = NSMenuItem(
+            title: L("menu.openPanel"),
+            action: #selector(openControlPanel),
             keyEquivalent: ""
         )
-        pairItem.target = self
-        mainMenu.addItem(pairItem)
-
-        mainMenu.addItem(pairedHeaderItem)
-        // Geräte-Einträge werden in menuWillOpen(_:) dynamisch eingefügt
-        // (nach pairedHeaderItem, vor dem folgenden Separator).
-
-        mainMenu.addItem(NSMenuItem.separator())
-
-        // Untermenü „Tippgeschwindigkeit“ (Schnell / Normal / Langsam).
-        let speedItem = NSMenuItem(title: L("menu.typingSpeed"), action: nil, keyEquivalent: "")
-        let speedMenu = NSMenu()
-        typingSpeedItems.removeAll()
-        for speed in TypingSpeed.allCases {
-            let item = NSMenuItem(
-                title: speed.localizedTitle,
-                action: #selector(selectTypingSpeed(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = speed.rawValue
-            item.toolTip = L("menu.typingSpeed.tooltip")
-            speedMenu.addItem(item)
-            typingSpeedItems.append(item)
-        }
-        speedItem.submenu = speedMenu
-        mainMenu.addItem(speedItem)
-        updateTypingSpeedChecks()
-
-        let introItem = NSMenuItem(
-            title: L("menu.showIntro"),
-            action: #selector(showOnboardingFromMenu),
-            keyEquivalent: ""
-        )
-        introItem.target = self
-        mainMenu.addItem(introItem)
+        openPanelItem.target = self
+        mainMenu.addItem(openPanelItem)
 
         mainMenu.addItem(NSMenuItem.separator())
 
@@ -140,7 +99,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Accessibility-Status bei jedem Öffnen aktualisieren
         // (der Nutzer kann die Berechtigung jederzeit ändern).
         updateAccessibilityItem()
-        rebuildPairedDevicesMenu()
     }
 
     private func apply(state: ScanServer.State) {
@@ -157,6 +115,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let portText = state.port.map(String.init) ?? "–"
         portItem.title = String(format: L("menu.port.format"), portText, state.serviceName)
+
+        // Falls das Kontrollzentrum offen ist, denselben Zustand dorthin spiegeln.
+        controlPanelWindowController?.apply(state: state)
     }
 
     private func updateAccessibilityItem() {
@@ -167,56 +128,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// Entfernt bisherige Geräte-Menüeinträge und fügt die aktuelle Liste
-    /// gekoppelter Geräte (Name + Datum, je ein Untermenü mit „Entfernen“)
-    /// direkt nach `pairedHeaderItem` wieder ein.
-    private func rebuildPairedDevicesMenu() {
-        guard let headerIndex = mainMenu.items.firstIndex(of: pairedHeaderItem) else { return }
-
-        // Alle bisherigen dynamischen Geräte-Items (Tag 42) entfernen.
-        var index = headerIndex + 1
-        while index < mainMenu.items.count, mainMenu.items[index].tag == Self.deviceItemTag {
-            mainMenu.removeItem(at: index)
-        }
-
-        let devices = crypto.pairedDevices()
-        let formatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateStyle = .medium
-            f.timeStyle = .short
-            return f
-        }()
-
-        for device in devices {
-            let deviceItem = NSMenuItem(title: device.name, action: nil, keyEquivalent: "")
-            deviceItem.tag = Self.deviceItemTag
-            let submenu = NSMenu()
-
-            let dateItem = NSMenuItem(
-                title: String(format: L("menu.device.pairedAt"), formatter.string(from: device.pairedAt)),
-                action: nil, keyEquivalent: ""
-            )
-            dateItem.isEnabled = false
-            submenu.addItem(dateItem)
-            submenu.addItem(NSMenuItem.separator())
-
-            let removeItem = NSMenuItem(
-                title: L("menu.device.remove"),
-                action: #selector(removeDevice(_:)),
-                keyEquivalent: ""
-            )
-            removeItem.target = self
-            removeItem.representedObject = device.deviceID
-            submenu.addItem(removeItem)
-
-            deviceItem.submenu = submenu
-            mainMenu.insertItem(deviceItem, at: index)
-            index += 1
-        }
-    }
-
-    private static let deviceItemTag = 42
-
     // MARK: - Aktionen
 
     @objc private func openAccessibilitySettings() {
@@ -225,14 +136,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSWorkspace.shared.open(url)
     }
 
+    @objc private func openControlPanel() {
+        let controller = controlPanelWindowController ?? ControlPanelWindowController(
+            crypto: crypto,
+            actions: ControlPanelWindowController.Actions(
+                openAccessibility: { [weak self] in self?.openAccessibilitySettings() },
+                pairDevice: { [weak self] in self?.openPairingWindow() },
+                removeDevice: { [weak self] id in self?.removeDevice(id) },
+                showHelp: { [weak self] in self?.showHelp() },
+                showAbout: { [weak self] in self?.showAbout() },
+                showIntro: { [weak self] in self?.showOnboarding() }
+            )
+        )
+        controlPanelWindowController = controller
+        controller.present()
+        controller.apply(state: lastState)
+    }
+
     @objc private func openPairingWindow() {
         let controller = pairingWindowController ?? PairingWindowController(coordinator: pairingCoordinator)
         pairingWindowController = controller
         controller.start()
     }
 
-    @objc private func showOnboardingFromMenu() {
-        showOnboarding()
+    private func showHelp() {
+        let controller = helpWindowController ?? HelpWindowController()
+        helpWindowController = controller
+        controller.present()
+    }
+
+    private func showAbout() {
+        let controller = aboutWindowController ?? AboutWindowController()
+        aboutWindowController = controller
+        controller.present()
     }
 
     private func showOnboarding() {
@@ -244,23 +180,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         controller.present()
     }
 
-    @objc private func selectTypingSpeed(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let speed = TypingSpeed(rawValue: raw) else { return }
-        TypingSpeed.current = speed
-        updateTypingSpeedChecks()
-    }
-
-    private func updateTypingSpeedChecks() {
-        let current = TypingSpeed.current
-        for item in typingSpeedItems {
-            let raw = item.representedObject as? String
-            item.state = (raw == current.rawValue) ? .on : .off
-        }
-    }
-
-    @objc private func removeDevice(_ sender: NSMenuItem) {
-        guard let deviceID = sender.representedObject as? UUID else { return }
+    /// Entfernt ein Gerät: PSK aus der Keychain löschen UND die evtl. gerade
+    /// aktive Sitzung dieses Geräts serverseitig trennen (docs/PROTOCOL-v2.md,
+    /// „Geräteverwaltung“), damit der Client den Abbruch sofort bemerkt und in
+    /// Neu-Pairing gehen kann. Ein späteres `session_hello` dieses `deviceID`
+    /// beantwortet der Host mit `not_paired`.
+    private func removeDevice(_ deviceID: UUID) {
         crypto.removeDevice(deviceID)
         server?.disconnectDevice(deviceID)
         apply(state: lastState)
