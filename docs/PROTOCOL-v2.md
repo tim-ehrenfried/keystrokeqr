@@ -103,6 +103,29 @@ Host prüft `mac == expectedMAC` (konstante Zeit, `HMAC.isValidAuthenticationCod
   ```
   (weitere `error`: `pairing_closed`, `pairing_expired`) → OTP verworfen, Verbindung getrennt.
 
+### Fehlerbehandlung & Wiederholung (verbindlich, ab v0.8.0)
+
+Der bisherige Ablauf (iOS läuft in einen Timeout, Mac zeigt kryptische Meldung und
+erzeugt keinen neuen Code) ist zu vermeiden. Stattdessen:
+
+- **Falscher Code (`bad_otp`):**
+  - **Host:** verwirft den alten OTP, **erzeugt sofort automatisch einen neuen OTP** und
+    setzt den 90-s-Timer zurück, lässt das Pairing-Fenster offen und zeigt einen
+    freundlichen, lokalisierten Hinweis („Falscher Code – ein neuer Code wurde erzeugt.").
+    Keine technischen Roh-/Crash-Meldungen im UI.
+  - **Client:** MUSS auf ein empfangenes `pair_error` **sofort** reagieren (nicht in den
+    Timeout laufen): klaren Hinweis „Falscher Code" zeigen, Eingabefeld leeren, auf dem
+    Pairing-Screen bleiben und für den nächsten Versuch die Pairing-Verbindung neu aufbauen
+    (`pair_hello`), damit gegen den **neuen** OTP gehandshaked wird.
+- **Abgelaufener Code (`pairing_expired`) / Fenster geschlossen (`pairing_closed`):**
+  Host erzeugt auf Wunsch (Button „Neuen Code") einen neuen OTP; Client zeigt klaren Hinweis
+  und ermöglicht erneuten Versuch. Kein stiller Timeout ohne Rückmeldung.
+- **Erfolg (`pair_ok`):** Client speichert und **schließt den Pairing-Screen automatisch**,
+  verbindet zur Sitzung. Host zeigt kurz „Gerät gekoppelt ✓" und **schließt das
+  Pairing-Fenster automatisch** (nach ~1,5 s).
+- **Client-Timeout** ist nur der letzte Ausweg, wenn gar keine Antwort kommt — mit klarer
+  Meldung und „Erneut versuchen", nie als Ersatz für die obigen expliziten Fehler.
+
 ---
 
 ## Phase 2 – Gesicherte Sitzung (jede normale Verbindung)

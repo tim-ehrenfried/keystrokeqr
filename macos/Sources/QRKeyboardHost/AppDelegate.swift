@@ -10,7 +10,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let crypto = CryptoManager.shared
     private let pairingCoordinator = PairingCoordinator()
     private var pairingWindowController: PairingWindowController?
+    private var onboardingWindowController: OnboardingWindowController?
     private var server: ScanServer?
+    private var typingSpeedItems: [NSMenuItem] = []
 
     private let connectionItem = NSMenuItem(title: L("menu.status.waiting"), action: nil, keyEquivalent: "")
     private let portItem = NSMenuItem(title: L("menu.port.placeholder"), action: nil, keyEquivalent: "")
@@ -32,6 +34,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         server.start()
 
         updateAccessibilityItem()
+
+        // Beim allerersten Start einmalig das Willkommensfenster zeigen.
+        if !HostSettings.didCompleteOnboarding {
+            showOnboarding()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -85,6 +92,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainMenu.addItem(pairedHeaderItem)
         // Geräte-Einträge werden in menuWillOpen(_:) dynamisch eingefügt
         // (nach pairedHeaderItem, vor dem folgenden Separator).
+
+        mainMenu.addItem(NSMenuItem.separator())
+
+        // Untermenü „Tippgeschwindigkeit“ (Schnell / Normal / Langsam).
+        let speedItem = NSMenuItem(title: L("menu.typingSpeed"), action: nil, keyEquivalent: "")
+        let speedMenu = NSMenu()
+        typingSpeedItems.removeAll()
+        for speed in TypingSpeed.allCases {
+            let item = NSMenuItem(
+                title: speed.localizedTitle,
+                action: #selector(selectTypingSpeed(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = speed.rawValue
+            item.toolTip = L("menu.typingSpeed.tooltip")
+            speedMenu.addItem(item)
+            typingSpeedItems.append(item)
+        }
+        speedItem.submenu = speedMenu
+        mainMenu.addItem(speedItem)
+        updateTypingSpeedChecks()
+
+        let introItem = NSMenuItem(
+            title: L("menu.showIntro"),
+            action: #selector(showOnboardingFromMenu),
+            keyEquivalent: ""
+        )
+        introItem.target = self
+        mainMenu.addItem(introItem)
 
         mainMenu.addItem(NSMenuItem.separator())
 
@@ -192,6 +229,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let controller = pairingWindowController ?? PairingWindowController(coordinator: pairingCoordinator)
         pairingWindowController = controller
         controller.start()
+    }
+
+    @objc private func showOnboardingFromMenu() {
+        showOnboarding()
+    }
+
+    private func showOnboarding() {
+        let controller = onboardingWindowController ?? OnboardingWindowController(
+            onOpenAccessibility: { [weak self] in self?.openAccessibilitySettings() },
+            onPairDevice: { [weak self] in self?.openPairingWindow() }
+        )
+        onboardingWindowController = controller
+        controller.present()
+    }
+
+    @objc private func selectTypingSpeed(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let speed = TypingSpeed(rawValue: raw) else { return }
+        TypingSpeed.current = speed
+        updateTypingSpeedChecks()
+    }
+
+    private func updateTypingSpeedChecks() {
+        let current = TypingSpeed.current
+        for item in typingSpeedItems {
+            let raw = item.representedObject as? String
+            item.state = (raw == current.rawValue) ? .on : .off
+        }
     }
 
     @objc private func removeDevice(_ sender: NSMenuItem) {

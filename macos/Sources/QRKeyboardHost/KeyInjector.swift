@@ -7,9 +7,6 @@ import ApplicationServices
 /// Alle Scans werden strikt sequenziell auf einer seriellen Queue abgearbeitet.
 final class KeyInjector: @unchecked Sendable {
 
-    /// Maximale Chunk-Größe in UTF-16-Einheiten für keyboardSetUnicodeString.
-    private static let chunkSize = 20
-
     /// Virtuelle Keycodes (ANSI, layout-unabhängig für Sondertasten).
     private static let keyCodeReturn: CGKeyCode = 36
     private static let keyCodeTab: CGKeyCode = 48
@@ -47,7 +44,9 @@ final class KeyInjector: @unchecked Sendable {
                 return
             }
 
-            self.typeText(text)
+            // Geschwindigkeit pro Scan frisch aus den Einstellungen lesen,
+            // damit Menü-Änderungen sofort greifen.
+            self.typeText(text, speed: TypingSpeed.current)
             if autoTab {
                 self.pressKey(Self.keyCodeTab)
             }
@@ -60,16 +59,19 @@ final class KeyInjector: @unchecked Sendable {
 
     // MARK: - Private
 
-    /// Tippt beliebigen Unicode-Text in Chunks von max. 20 UTF-16-Einheiten.
-    /// Surrogatpaare werden nie getrennt.
-    private func typeText(_ text: String) {
+    /// Tippt beliebigen Unicode-Text in Chunks. Chunk-Größe und Inter-Chunk-
+    /// Pause richten sich nach der gewählten `TypingSpeed`. Surrogatpaare
+    /// werden nie getrennt.
+    private func typeText(_ text: String, speed: TypingSpeed) {
         guard !text.isEmpty else { return }
         let source = CGEventSource(stateID: .hidSystemState)
         let units = Array(text.utf16)
+        let chunkSize = speed.chunkSize
+        let delay = speed.interChunkDelayMicroseconds
 
         var index = 0
         while index < units.count {
-            var end = min(index + Self.chunkSize, units.count)
+            var end = min(index + chunkSize, units.count)
             // Surrogatpaar nicht trennen: endet der Chunk auf einem
             // High-Surrogate, wandert das Paar in den nächsten Chunk.
             if end < units.count, (0xD800...0xDBFF).contains(units[end - 1]) {
@@ -86,9 +88,9 @@ final class KeyInjector: @unchecked Sendable {
                 up.post(tap: .cghidEventTap)
             }
 
-            // Kleine Pause zwischen den Chunks, damit die Zielanwendung
-            // die Events in Reihenfolge verarbeitet.
-            usleep(10_000)
+            // Pause zwischen den Chunks, damit die Zielanwendung die Events in
+            // Reihenfolge verarbeitet (größer bei „Langsam“).
+            usleep(delay)
             index = end
         }
     }

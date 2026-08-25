@@ -140,9 +140,21 @@ final class ConnectionManager: ObservableObject {
     private var pairingCompletion: ((Result<CryptoManager.PairedMac, PairingError>) -> Void)?
     private var pairingServiceName: String?
     private var pairingOTP: String?
+    /// Letzter Ausweg: bricht einen Pairing-Versuch ab, wenn der Mac GAR NICHT
+    /// antwortet (kein `pair_ok`, kein `pair_error`, kein Verbindungsabbruch).
+    /// Wird von jedem expliziten Pairing-Ergebnis sofort gecancelt, damit ein
+    /// eintreffendes `pair_error` immer VOR dem Timeout gewinnt.
+    private var pairingTimeoutTask: Task<Void, Never>?
+    /// `true`, sobald wir `pair_confirm` gesendet haben und auf `pair_ok`/
+    /// `pair_error` warten. Schließt der Host danach die Verbindung ohne
+    /// verwertbares `pair_error` (der Frame kann beim harten `cancel()` des
+    /// Hosts verlorengehen), werten wir das als falschen Code (häufigster Fall).
+    private var pairingConfirmSent = false
+    /// Obergrenze für einen einzelnen Pairing-Versuch (letzter Ausweg).
+    private let pairingTimeout: Duration = .seconds(12)
 
     enum PairingError: Error {
-        case notFound, connectionFailed, badOTP, closed, expired, invalidResponse
+        case notFound, connectionFailed, badOTP, closed, expired, invalidResponse, timedOut
     }
 
     // MARK: - Lifecycle
@@ -319,6 +331,15 @@ final class ConnectionManager: ObservableObject {
 
     private func connectionLost(_ lost: NWConnection) {
         guard connection === lost else { return }
+        // Läuft gerade ein Pairing, darf der Empfangsschleifen-Fehler die
+        // wartende Continuation NICHT lecken lassen (sonst hängt der Screen bis
+        // zum NWConnection-Timeout — der ursprüngliche „Timeout statt Fehler").
+        // Über die Pairing-Auswertung (mit Gnadenfrist für ein `pair_error`)
+        // abwickeln statt über den Sitzungs-Teardown.
+        if pairingCompletion != nil {
+            pairingConnectionClosed()
+            return
+        }
         connection?.cancel()
         connection = nil
         resetSessionCrypto()
@@ -466,9 +487,14 @@ final class ConnectionManager: ObservableObject {
         connection?.cancel()
         resetSessionCrypto()
 
+        // Frischer Versuch: baut IMMER eine NEUE Pairing-Verbindung auf (neuer
+        // `pair_hello`). Nach einem falschen Code hat der Mac laut Protokoll
+        // bereits automatisch einen NEUEN OTP erzeugt — der nächste `pair()`-
+        // Aufruf handshaked also gegen diesen neuen Code.
         let newConnection = makeConnection(to: service.endpoint)
         pairingOTP = otp
         pairingServiceName = service.name
+        pairingConfirmSent = false
 
         return await withCheckedContinuation { continuation in
             pairingCompletion = { result in
@@ -488,7 +514,10 @@ final class ConnectionManager: ObservableObject {
                             on: newConnection
                         )
                     case .failed, .cancelled:
-                        self.finishPairing(.failure(.connectionFailed))
+                        // Verbindung weg, bevor ein explizites Ergebnis kam:
+                        // ein evtl. schon empfangenes `pair_error` gewinnt (kurze
+                        // Gnadenfrist), sonst als Abbruch/falscher Code werten.
+                        self.pairingConnectionClosed()
                     default:
                         break
                     }
@@ -496,6 +525,37 @@ final class ConnectionManager: ObservableObject {
             }
             receiveLoop(on: newConnection)
             newConnection.start(queue: queue)
+            // Letzter Ausweg: reagiert der Mac gar nicht, brechen wir sauber ab.
+            armPairingTimeout()
+        }
+    }
+
+    /// Startet den Pairing-Timeout neu (letzter Ausweg). Ein eintreffendes
+    /// `pair_ok`/`pair_error` oder ein Verbindungsabbruch canceln ihn zuvor,
+    /// sodass der Timeout NIE einen expliziten Fehler „überholt".
+    private func armPairingTimeout() {
+        pairingTimeoutTask?.cancel()
+        pairingTimeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: self?.pairingTimeout ?? .seconds(12))
+            guard let self, !Task.isCancelled, self.pairingCompletion != nil else { return }
+            self.finishPairing(.failure(.timedOut))
+        }
+    }
+
+    /// Die Pairing-Verbindung wurde geschlossen (Host-`cancel()` nach `pair_error`
+    /// oder echter Abbruch). Kurze Gnadenfrist, damit ein bereits im Empfangspuffer
+    /// liegendes `pair_error`/`pair_ok` noch verarbeitet wird und GEWINNT; erst
+    /// danach werten wir den reinen Verbindungsverlust aus.
+    private func pairingConnectionClosed() {
+        guard pairingCompletion != nil else { return }
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(200))
+            guard let self, self.pairingCompletion != nil else { return }
+            // Kein explizites `pair_error` eingetroffen. Hatten wir schon
+            // `pair_confirm` gesendet, ist ein verworfener Code die mit Abstand
+            // häufigste Ursache (der Host schließt danach hart) → als falscher
+            // Code melden; sonst technischer Verbindungsfehler.
+            self.finishPairing(.failure(self.pairingConfirmSent ? .badOTP : .connectionFailed))
         }
     }
 
@@ -517,6 +577,7 @@ final class ConnectionManager: ObservableObject {
         pendingPairingPSK = crypto.derivePSK(shared: shared, clientPub: clientPub, hostPub: hostPub)
         pendingPairingHostPub = hostPub
 
+        pairingConfirmSent = true
         send(PairConfirmMessage(mac: mac.base64EncodedString()), on: connection)
     }
 
@@ -553,6 +614,9 @@ final class ConnectionManager: ObservableObject {
     }
 
     private func finishPairing(_ result: Result<CryptoManager.PairedMac, PairingError>) {
+        pairingTimeoutTask?.cancel()
+        pairingTimeoutTask = nil
+        pairingConfirmSent = false
         connection?.cancel()
         connection = nil
         pendingPairingPSK = nil

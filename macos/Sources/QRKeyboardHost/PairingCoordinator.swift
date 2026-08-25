@@ -1,16 +1,32 @@
 import Foundation
 import CryptoKit
 
-/// Steuert das Pairing-Fenster gemäß docs/PROTOCOL-v2.md „Phase 1 – Pairing“:
-/// Erzeugt einen 6-stelligen OTP (90 s gültig, `SystemRandomNumberGenerator`),
-/// akzeptiert genau EINEN `pair_confirm`-Versuch pro OTP (kein Brute-Force
-/// über mehrere Versuche — das OTP wird beim ersten Versuch verbraucht,
-/// unabhängig vom Ergebnis).
+/// Steuert das Pairing-Fenster gemäß docs/PROTOCOL-v2.md „Phase 1 – Pairing“
+/// inkl. „Fehlerbehandlung & Wiederholung (verbindlich, ab v0.8.0)“:
+/// Erzeugt einen 6-stelligen OTP (90 s gültig, `SystemRandomNumberGenerator`).
+/// Pro OTP-Wert wird genau EIN `pair_confirm`-Versuch zugelassen (kein
+/// Brute-Force). Ist der Versuch falsch, wird der alte OTP verworfen und
+/// **sofort ein neuer** OTP mit frischem 90-s-Fenster erzeugt — jeder Rateversuch
+/// zielt so gegen einen anderen Zufallscode.
 final class PairingCoordinator: @unchecked Sendable {
 
+    /// Ereignisse, die das Pairing-Fenster (Main Thread) verarbeitet.
     enum PairingEvent {
         case paired(name: String)
-        case failed(reason: String)
+        /// Falscher Code — ein neuer OTP wurde erzeugt (mitgeliefert), Fenster
+        /// bleibt offen, Countdown zurückgesetzt.
+        case wrongCodeNewIssued(newOTP: String)
+        /// Ein Versuch traf ein abgelaufenes/geschlossenes Fenster.
+        case expiredOrClosed
+    }
+
+    /// Ergebnis eines `pair_confirm`-Versuchs — steuert die Host-Antwort.
+    enum ConfirmOutcome {
+        case success
+        /// Falscher Code; ein frischer OTP wurde erzeugt.
+        case wrongCode(newOTP: String)
+        case pairingClosed
+        case pairingExpired
     }
 
     private struct Session {
@@ -25,12 +41,29 @@ final class PairingCoordinator: @unchecked Sendable {
     /// Wird auf dem Main Thread aufgerufen (Pairing-Fenster hört zu).
     var onEvent: (@Sendable (PairingEvent) -> Void)?
 
+    // MARK: - Session-Lebenszyklus
+
+    private static func randomOTP() -> String {
+        var generator = SystemRandomNumberGenerator()
+        let value = Int.random(in: 0...999_999, using: &generator)
+        return String(format: "%06d", value)
+    }
+
     /// Startet ein neues 90-Sekunden-Fenster mit frischem OTP.
     @discardableResult
     func startSession() -> String {
-        var generator = SystemRandomNumberGenerator()
-        let value = Int.random(in: 0...999_999, using: &generator)
-        let otp = String(format: "%06d", value)
+        let otp = Self.randomOTP()
+        lock.lock()
+        session = Session(otp: otp, deadline: Date().addingTimeInterval(90))
+        lock.unlock()
+        return otp
+    }
+
+    /// Erzeugt sofort einen neuen OTP und setzt den 90-s-Timer zurück
+    /// (nach falschem Code oder auf Nutzerwunsch „Neuen Code erzeugen“).
+    @discardableResult
+    func regenerate() -> String {
+        let otp = Self.randomOTP()
         lock.lock()
         session = Session(otp: otp, deadline: Date().addingTimeInterval(90))
         lock.unlock()
@@ -57,23 +90,28 @@ final class PairingCoordinator: @unchecked Sendable {
         return max(0, Int(session.deadline.timeIntervalSinceNow.rounded(.up)))
     }
 
-    /// Prüft `pair_confirm`. Konsumiert das OTP beim ersten Versuch IMMER
-    /// (unabhängig vom Ergebnis). Rückgabe: `nil` bei Erfolg, sonst Fehlercode
-    /// (`bad_otp` | `pairing_closed` | `pairing_expired`).
-    func attemptConfirm(mac: Data, confirmKey: SymmetricKey) -> String? {
+    // MARK: - Bestätigung
+
+    /// Prüft `pair_confirm`. Bei falschem Code wird der OTP verworfen und
+    /// **sofort ein neuer** erzeugt (frisches 90-s-Fenster), zurückgegeben als
+    /// `.wrongCode(newOTP:)`. Erfolg konsumiert den OTP (kein zweiter Versuch
+    /// gegen denselben Code).
+    func attemptConfirm(mac: Data, confirmKey: SymmetricKey) -> ConfirmOutcome {
         lock.lock()
         guard var current = session else {
             lock.unlock()
-            return "pairing_closed"
+            return .pairingClosed
         }
         guard Date() < current.deadline else {
             session = nil
             lock.unlock()
-            return "pairing_expired"
+            return .pairingExpired
         }
         guard !current.attemptUsed else {
+            // Defensiv: sollte nicht auftreten, da wir nach jedem Versuch neu
+            // erzeugen. Trotzdem sauber einen neuen Code ausgeben.
             lock.unlock()
-            return "bad_otp"
+            return .wrongCode(newOTP: regenerate())
         }
         current.attemptUsed = true
         session = current
@@ -83,6 +121,10 @@ final class PairingCoordinator: @unchecked Sendable {
         let isValid = HMAC<SHA256>.isValidAuthenticationCode(
             mac, authenticating: Data(otp.utf8), using: confirmKey
         )
-        return isValid ? nil : "bad_otp"
+        if isValid {
+            return .success
+        }
+        // Falscher Code: alten OTP verwerfen, sofort neuen erzeugen.
+        return .wrongCode(newOTP: regenerate())
     }
 }

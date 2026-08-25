@@ -17,13 +17,33 @@
 "menu.pairDevice" = "Gerät koppeln…";
 "menu.device.pairedAt" = "Gekoppelt: %@";
 "menu.device.remove" = "Entfernen";
+"menu.showIntro" = "Einführung anzeigen";
 "menu.quit" = "Beenden";
+
+/* Tippgeschwindigkeit */
+"menu.typingSpeed" = "Tippgeschwindigkeit";
+"menu.typingSpeed.fast" = "Schnell";
+"menu.typingSpeed.normal" = "Normal";
+"menu.typingSpeed.slow" = "Langsam";
+"menu.typingSpeed.tooltip" = "Wie schnell Text getippt wird. „Langsam“ für Remote-Sitzungen oder träge Eingabefelder.";
 
 /* Pairing-Fenster */
 "pairing.window.title" = "Gerät koppeln";
-"pairing.prompt" = "Code in der iPhone-App eingeben:";
+"pairing.subtitle" = "iPhone koppeln";
+"pairing.prompt" = "Gib diesen Code in der KeystrokeQR-App auf deinem iPhone ein.";
 "pairing.waiting" = "Warte auf iPhone …";
 "pairing.countdown.valid" = "gültig für %d s";
 "pairing.countdown.expired" = "Code abgelaufen";
+"pairing.newCode" = "Neuen Code erzeugen";
+"pairing.badOTP" = "Falscher Code – ein neuer Code wurde erzeugt. Bitte erneut eingeben.";
+"pairing.successShort" = "Gerät gekoppelt ✓";
 "pairing.success" = "„%@“ erfolgreich gekoppelt.";
 "pairing.failed" = "Pairing fehlgeschlagen (%@).";
+
+/* Onboarding / Willkommensfenster */
+"onboarding.window.title" = "Willkommen";
+"onboarding.title" = "Willkommen bei KeystrokeQR Host";
+"onboarding.body" = "Scanne mit der KeystrokeQR-App auf deinem iPhone einen QR- oder Barcode — dieser Mac tippt den Text in das gerade fokussierte Feld, genau an deiner Cursor-Position.";
+"onboarding.accessibility.title" = "Bedienungshilfen-Berechtigung nötig";
+"onboarding.accessibility.body" = "Um für dich zu tippen, benötigt KeystrokeQR Host Zugriff auf die Bedienungshilfen unter Systemeinstellungen › Datenschutz & Sicherheit.";
+"onboarding.done" = "Los geht’s";

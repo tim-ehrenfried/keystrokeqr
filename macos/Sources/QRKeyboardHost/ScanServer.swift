@@ -301,22 +301,32 @@ final class ScanServer: @unchecked Sendable {
         let hostPub = crypto.identityPublicKey
         let confirmKey = crypto.deriveConfirmKey(shared: shared, clientPub: clientPub, hostPub: hostPub)
 
-        if let errorCode = pairingCoordinator.attemptConfirm(mac: macData, confirmKey: confirmKey) {
-            sendPairError(rawValue: errorCode, on: ctx.connection)
-            pairingCoordinator.onEvent?(.failed(reason: errorCode))
-            ctx.connection.cancel()
-            return
+        switch pairingCoordinator.attemptConfirm(mac: macData, confirmKey: confirmKey) {
+        case .success:
+            let psk = crypto.derivePSK(shared: shared, clientPub: clientPub, hostPub: hostPub)
+            let deviceID = crypto.addDevice(name: deviceName, clientPublicKey: clientPub, psk: psk)
+            // Nach `pair_ok` schließt der Host die Pairing-Verbindung — aber erst
+            // NACH bestätigtem Absenden (closeAfterSend), damit der Client `pair_ok`
+            // garantiert erhält und den PSK speichert (sonst hätte der Mac das Gerät
+            // gespeichert, der Client aber nicht). Client verbindet für Phase 2 neu.
+            send(PairOkMessage(deviceID: deviceID.uuidString, hostName: serviceName), on: ctx.connection, closeAfterSend: true)
+            pairingCoordinator.onEvent?(.paired(name: deviceName))
+
+        case .wrongCode(let newOTP):
+            // Falscher Code: Client bekommt `bad_otp` (erst-absenden-dann-schließen),
+            // das Fenster bleibt offen und zeigt bereits den frisch erzeugten OTP.
+            // Der Client baut für den nächsten Versuch eine neue Verbindung auf.
+            send(PairErrorMessage(error: ProtocolErrorV2.badOTP.rawValue), on: ctx.connection, closeAfterSend: true)
+            pairingCoordinator.onEvent?(.wrongCodeNewIssued(newOTP: newOTP))
+
+        case .pairingClosed:
+            send(PairErrorMessage(error: ProtocolErrorV2.pairingClosed.rawValue), on: ctx.connection, closeAfterSend: true)
+            pairingCoordinator.onEvent?(.expiredOrClosed)
+
+        case .pairingExpired:
+            send(PairErrorMessage(error: ProtocolErrorV2.pairingExpired.rawValue), on: ctx.connection, closeAfterSend: true)
+            pairingCoordinator.onEvent?(.expiredOrClosed)
         }
-
-        let psk = crypto.derivePSK(shared: shared, clientPub: clientPub, hostPub: hostPub)
-        let deviceID = crypto.addDevice(name: deviceName, clientPublicKey: clientPub, psk: psk)
-        send(PairOkMessage(deviceID: deviceID.uuidString, hostName: serviceName), on: ctx.connection)
-        pairingCoordinator.onEvent?(.paired(name: deviceName))
-
-        // Bewusste Design-Entscheidung (siehe PROTOCOL-v2.md): Nach `pair_ok`
-        // schließt der Host die Pairing-Verbindung; der Client verbindet sich
-        // für Phase 2 regulär neu (mit dem frisch gespeicherten PSK).
-        ctx.connection.cancel()
     }
 
     // MARK: - Phase 2: Sitzung
@@ -406,7 +416,11 @@ final class ScanServer: @unchecked Sendable {
 
     // MARK: - Senden
 
-    private func send<T: Encodable>(_ message: T, on connection: NWConnection) {
+    /// Sendet eine Nachricht. Mit `closeAfterSend: true` wird die Verbindung erst
+    /// NACH bestätigtem Absenden geschlossen (im `.contentProcessed`-Completion),
+    /// damit das Frame (z. B. `pair_ok`/`pair_error`) nicht durch ein sofortiges
+    /// `cancel()` verworfen wird — siehe PROTOCOL-v2.md (Fehlerbehandlung).
+    private func send<T: Encodable>(_ message: T, on connection: NWConnection, closeAfterSend: Bool = false) {
         let data = encodeMessage(message)
         let metadata = NWProtocolWebSocket.Metadata(opcode: .text)
         let context = NWConnection.ContentContext(identifier: "msg", metadata: [metadata])
@@ -417,6 +431,9 @@ final class ScanServer: @unchecked Sendable {
             completion: .contentProcessed { error in
                 if let error {
                     NSLog("QRKeyboardHost: Sendefehler: %@", String(describing: error))
+                }
+                if closeAfterSend {
+                    connection.cancel()
                 }
             }
         )

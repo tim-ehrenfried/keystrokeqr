@@ -3,6 +3,21 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.8.0] – 2026-08-25
+
+### Added
+- **macOS – einstellbare Tippgeschwindigkeit**: Menü „Tippgeschwindigkeit" (Schnell / Normal / Langsam) steuert Chunk-Größe und Pause im KeyInjector, damit sich bei viel Text im Zielfeld nichts verschluckt; Wahl persistent, greift sofort.
+- **macOS – Erst-Start-Onboarding**: gestyltes Willkommensfenster beim ersten Start (Funktionsweise, Bedienungshilfen-Button, „Gerät koppeln…"), erneut über „Einführung anzeigen" aufrufbar.
+
+### Changed
+- **Pairing-Fenster (macOS) neu gestaltet**: dunkler Onboarding-Look, Code in Ziffernkästchen, Countdown-Balken, Wortmarke; schließt bei Erfolg automatisch nach ~1,5 s.
+- **iOS – Pairing-Screen** schließt bei Erfolg automatisch; klare Status-/Fehlerzeile mit Spinner.
+
+### Fixed
+- **Falscher Kopplungscode führte zu Timeout / kryptischem Fehler**: Der Host verwarf den OTP, erzeugte aber keinen neuen; der Client lief in einen Timeout, weil das `pair_error`-Frame beim sofortigen Verbindungsabbruch verloren ging.
+  - **macOS**: bei falschem Code wird sofort automatisch ein **neuer OTP** erzeugt (Fenster bleibt offen, freundlicher Hinweis, Countdown zurückgesetzt); `pair_ok`/`pair_error` werden erst **nach bestätigtem Absenden** geschlossen (kein verworfenes Frame mehr), inkl. „Neuen Code erzeugen" bei Ablauf.
+  - **iOS**: reagiert sofort auf `pair_error` (klarer „Falscher Code"-Hinweis, Feld-Reset, Reconnect gegen den neuen Code) mit Grace-Period, sodass der Fehler den Verbindungsabbruch immer schlägt; echter Timeout nur noch als letzter Ausweg.
+
 ## [0.7.0] – 2026-08-25
 
 ### Changed

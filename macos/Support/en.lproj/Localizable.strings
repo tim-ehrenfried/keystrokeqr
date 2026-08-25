@@ -17,13 +17,33 @@
 "menu.pairDevice" = "Pair device…";
 "menu.device.pairedAt" = "Paired: %@";
 "menu.device.remove" = "Remove";
+"menu.showIntro" = "Show Introduction";
 "menu.quit" = "Quit";
+
+/* Typing speed */
+"menu.typingSpeed" = "Typing Speed";
+"menu.typingSpeed.fast" = "Fast";
+"menu.typingSpeed.normal" = "Normal";
+"menu.typingSpeed.slow" = "Slow";
+"menu.typingSpeed.tooltip" = "How fast text is typed. Use Slow for remote sessions or slow input fields.";
 
 /* Pairing window */
 "pairing.window.title" = "Pair device";
-"pairing.prompt" = "Enter the code in the iPhone app:";
+"pairing.subtitle" = "Pair your iPhone";
+"pairing.prompt" = "Enter this code in the KeystrokeQR app on your iPhone.";
 "pairing.waiting" = "Waiting for iPhone …";
 "pairing.countdown.valid" = "valid for %d s";
 "pairing.countdown.expired" = "Code expired";
+"pairing.newCode" = "Generate new code";
+"pairing.badOTP" = "Wrong code – a new code was generated. Please enter it again.";
+"pairing.successShort" = "Device paired ✓";
 "pairing.success" = "“%@” paired successfully.";
 "pairing.failed" = "Pairing failed (%@).";
+
+/* Onboarding / welcome window */
+"onboarding.window.title" = "Welcome";
+"onboarding.title" = "Welcome to KeystrokeQR Host";
+"onboarding.body" = "Scan a QR or barcode with the KeystrokeQR app on your iPhone — this Mac types the text into whatever field is focused, right where your cursor is.";
+"onboarding.accessibility.title" = "Accessibility permission required";
+"onboarding.accessibility.body" = "To type for you, KeystrokeQR Host needs Accessibility access in System Settings › Privacy & Security.";
+"onboarding.done" = "Get started";

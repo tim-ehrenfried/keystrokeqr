@@ -1,6 +1,66 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Connection to the Mac failed. Please try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung zum Mac fehlgeschlagen. Bitte erneut versuchen."
+          }
+        }
+      }
+    },
+    "No response from the Mac. Please try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Antwort vom Mac. Bitte erneut versuchen."
+          }
+        }
+      }
+    },
+    "Paired ✓" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gekoppelt ✓"
+          }
+        }
+      }
+    },
+    "Pairing…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopplung läuft…"
+          }
+        }
+      }
+    },
+    "The pairing window on the Mac is closed. Reopen it and try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Pairing-Fenster am Mac ist geschlossen. Erneut öffnen und noch einmal versuchen."
+          }
+        }
+      }
+    },
+    "Wrong code – please try again. A new code is on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falscher Code – bitte erneut eingeben. Ein neuer Code liegt am Mac bereit."
+          }
+        }
+      }
+    },
     "1. On the Mac, open **System Settings**." : {
       "localizations" : {
         "de" : {

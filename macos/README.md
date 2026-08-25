@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.7.0
+- **Version:** 0.8.0
 
 ## Voraussetzungen
 
@@ -78,9 +78,10 @@ Teil dieses Targets).
 
 ## Internationalisierung (i18n)
 
-Alle nutzersichtbaren Host-Strings (Menüpunkte, Statuszeilen, Pairing-Fenster
-inkl. Countdown/Fehlermeldungen) sind lokalisiert. **Basissprache/Development
-Language ist Englisch (`en`)**, zusätzlich Deutsch (`de`).
+Alle nutzersichtbaren Host-Strings (Menüpunkte inkl. Tippgeschwindigkeit,
+Statuszeilen, Pairing-Fenster inkl. Countdown/Hinweisen sowie das Onboarding-/
+Willkommensfenster) sind lokalisiert. **Basissprache/Development Language ist
+Englisch (`en`)**, zusätzlich Deutsch (`de`).
 
 - Quellen: `Support/en.lproj/Localizable.strings` und
   `Support/de.lproj/Localizable.strings` (plus `InfoPlist.strings` für die
@@ -105,16 +106,43 @@ zeigt:
 - **Kopplungs-/Verbindungsstatus** („Kein Gerät gekoppelt" / „N gekoppelt · M verbunden")
 - **Port und Bonjour-Dienstname** (der Hostname des Macs)
 - **Bedienungshilfen-Status** (✓/✗) mit Direktlink in die Systemeinstellungen
-- **„Gerät koppeln…"** — öffnet ein Fenster mit einem 6-stelligen, 90 s
-  gültigen Code fürs Pairing eines neuen iPhones (siehe
+- **„Gerät koppeln…"** — öffnet ein poliertes Pairing-Fenster (Onboarding-Look)
+  mit dem 6-stelligen, 90 s gültigen Code in Einzelkästchen, Countdown-Balken
+  und freundlichen Statushinweisen (siehe
   [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md))
 - **Gekoppelte Geräte** — pro Gerät ein Untermenü mit Kopplungsdatum und
   „Entfernen" (löscht den gemeinsamen Schlüssel und trennt laufende Sitzungen)
+- **„Tippgeschwindigkeit"** — Untermenü Schnell / Normal / Langsam (s. u.)
+- **„Einführung anzeigen"** — öffnet erneut das Willkommensfenster
 - **Beenden**
 
 Optional kann die App zu **Anmeldeobjekte** hinzugefügt werden
 (Systemeinstellungen → Allgemein → Anmeldeobjekte), damit sie automatisch
 startet.
+
+## Willkommen / Onboarding (Erst-Start)
+
+Beim **allerersten Start** zeigt die App einmalig ein gestyltes Willkommens-
+fenster: kurz, was die App tut (iPhone scannt → Mac tippt), ein Hinweis auf die
+nötige **Bedienungshilfen**-Berechtigung mit Button „Bedienungshilfen öffnen…"
+sowie „Gerät koppeln…". Ob es schon gezeigt wurde, merkt sich die App in
+UserDefaults (`didCompleteHostOnboarding`). Jederzeit erneut aufrufbar über den
+Menüpunkt **„Einführung anzeigen"**.
+
+## Tippgeschwindigkeit
+
+Das Untermenü **„Tippgeschwindigkeit"** stellt ein, wie zügig empfangener Text
+getippt wird (persistiert in UserDefaults, aktuelle Stufe mit Häkchen):
+
+| Stufe    | Verhalten                                                            |
+| -------- | ------------------------------------------------------------------- |
+| Schnell  | große Chunks, sehr kurze Pause — zügig                              |
+| Normal   | Standard (entspricht dem bisherigen Verhalten)                      |
+| Langsam  | kleine Chunks, deutlich größere Pause — robust für träge/entfernte  |
+|          | Zielfelder (Remote-Sessions), damit sich bei viel Text nichts       |
+|          | „verfängt"/verschluckt                                              |
+
+Die Änderung greift sofort für den nächsten Scan.
 
 ## Bedienungshilfen-Berechtigung freischalten (erforderlich!)
 
