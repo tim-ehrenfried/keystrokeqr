@@ -15,11 +15,25 @@ LANGS       := en de
 # (verfügbare Identitäten anzeigen: security find-identity -v -p codesigning)
 SIGN_IDENTITY ?= -
 
+# Branding-Gating (siehe Sources/QRKeyboardHost/BrandingConfig.swift):
+# Standard (OFFICIAL=0) ist der NEUTRALE Community-Build — ohne persönliche
+# Kontakt-/Infrastruktur-Referenzen (keine Mail, keine Landing-Page-/iOS-URL,
+# keine QR-Promo-Karte). Offizielle Builds (unsere CI/Signierung) bauen mit
+#   make build|app|dmg OFFICIAL=1
+# → swift build … -Xswiftc -DOFFICIAL_BUILD, wodurch BrandingConfig die
+# offiziellen Werte einkompiliert. Der GitHub-Repo-Link bleibt ungegated.
+OFFICIAL ?= 0
+ifeq ($(OFFICIAL),1)
+SWIFT_BUILD_FLAGS := -Xswiftc -DOFFICIAL_BUILD
+else
+SWIFT_BUILD_FLAGS :=
+endif
+
 .PHONY: build app icon dmg dmg-bg run clean
 
-## Release-Binary bauen
+## Release-Binary bauen (OFFICIAL=1 → offizielles Branding, s. o.)
 build:
-	swift build -c release
+	swift build -c release $(SWIFT_BUILD_FLAGS)
 
 ## App-Icon aus dem Master neu erzeugen (Support/AppIcon.icns)
 icon:

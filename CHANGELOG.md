@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer](https://semver.org/).
 
+## [0.16.0] – 2026-08-25
+
+### Added
+- **Official vs. community builds**: builds we ship embed the official branding (contact email, landing-page links, App-Store QR); anyone building from the repo gets a neutral community build with those references compiled out (`OFFICIAL_BUILD` flag via `BrandingConfig` on both platforms — set by `make … OFFICIAL=1` and our release pipeline, never by default; verified via binary string checks). See [docs/BRANDING.md](docs/BRANDING.md).
+- **Cross-promotion (official builds)**: the Mac onboarding (and panel help) shows a scannable QR code leading to the iPhone app (`…/ios`, redirects to the App Store once live); the iOS app links to "Download the latest Mac host" (`…/mac` → latest release). Landing page gained the `/ios` and `/mac` redirect stubs.
+- **iOS – aiming**: when several codes are visible in the scan window, the one closest to the window center is chosen deterministically (yellow outline; other codes dimmed white) — aim by moving the phone.
+
+### Changed
+- **iOS – hold-to-send duration** shortened to 0.3 s; **send sound** is now a crisp scanner-style beep (SystemSound 1052) instead of the dull tock. Auto-Enter confirmed off by default.
+
 ## [0.15.0] – 2026-08-25 (iOS only)
 
 ### Added

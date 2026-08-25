@@ -18,7 +18,10 @@ jobs:
 
       - name: Gestyltes DMG bauen (ad-hoc-signiert)
         working-directory: macos
-        run: make dmg
+        # OFFICIAL=1: only our release pipeline bakes in the official branding
+        # (contact email, landing-page links, App-Store QR). Community builds
+        # from the repo stay neutral by default. See docs/BRANDING.md.
+        run: make dmg OFFICIAL=1
 
       - name: Bundle & DMG verifizieren
         working-directory: macos

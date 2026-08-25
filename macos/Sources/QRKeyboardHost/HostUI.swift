@@ -1,4 +1,5 @@
 import AppKit
+import CoreImage
 
 /// Gemeinsame Optik für Pairing- und Onboarding-Fenster (dezenter dunkler
 /// Look). Bündelt Farben, Fonts und ein paar wiederverwendbare Bausteine, damit
@@ -127,13 +128,109 @@ enum HostUI {
         button.keyEquivalent = ""
         return button
     }
+
+    // MARK: - QR-Code (Cross-Promotion „iPhone-App laden")
+
+    /// Rendert einen QR-Code nativ via CoreImage (`CIQRCodeGenerator`), scharf
+    /// skaliert über `samplingNearest()` (keine weichgezeichneten Module).
+    /// Klassische dunkle Module auf hellem Grund — die Kachel drumherum liefert
+    /// `makeQRTile` (weiß, mit Ruhezone), damit der Code auf dem dunklen
+    /// Fensterhintergrund mit der Kamera zuverlässig scanbar bleibt.
+    static func makeQRCodeImage(from string: String, sideLength: CGFloat) -> NSImage? {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        filter.setValue(Data(string.utf8), forKey: "inputMessage")
+        filter.setValue("M", forKey: "inputCorrectionLevel")
+        guard let output = filter.outputImage else { return nil }
+        // Ganzzahliger Skalierungsfaktor + Nearest-Neighbor ⇒ harte Modulkanten
+        // (auch auf Retina großzügig überabgetastet, Faktor ×2).
+        let scale = max(1, (sideLength * 2 / output.extent.width).rounded(.up))
+        let scaled = output.samplingNearest()
+            .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
+        return NSImage(cgImage: cgImage, size: NSSize(width: sideLength, height: sideLength))
+    }
+
+    /// Weiße, abgerundete QR-Kachel mit Innenrand (Ruhezone). Hoher Kontrast:
+    /// dunkle Module auf weißem Grund — bewusst NICHT invertiert, das scannt
+    /// mit jeder Kamera am zuverlässigsten (auch im dunklen Fenster).
+    static func makeQRTile(url: URL, tileSize: CGFloat) -> NSView {
+        let quietZone: CGFloat = 8
+        let tile = NSView()
+        tile.wantsLayer = true
+        tile.layer?.backgroundColor = NSColor.white.cgColor
+        tile.layer?.cornerRadius = 10
+
+        let imageView = NSImageView()
+        imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.image = makeQRCodeImage(from: url.absoluteString,
+                                          sideLength: tileSize - 2 * quietZone)
+        imageView.setAccessibilityElement(true)
+        imageView.setAccessibilityRole(.image)
+        imageView.setAccessibilityLabel(L("promo.iosApp.a11y"))
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        tile.addSubview(imageView)
+        tile.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tile.widthAnchor.constraint(equalToConstant: tileSize),
+            tile.heightAnchor.constraint(equalToConstant: tileSize),
+            imageView.leadingAnchor.constraint(equalTo: tile.leadingAnchor, constant: quietZone),
+            imageView.trailingAnchor.constraint(equalTo: tile.trailingAnchor, constant: -quietZone),
+            imageView.topAnchor.constraint(equalTo: tile.topAnchor, constant: quietZone),
+            imageView.bottomAnchor.constraint(equalTo: tile.bottomAnchor, constant: -quietZone)
+        ])
+        return tile
+    }
+
+    /// Cross-Promotion-Karte „Hol dir die iPhone-App": weiße QR-Kachel links,
+    /// Titel + Erklärung rechts. `width` = Gesamtbreite der Karte (Onboarding
+    /// und Panel nutzen unterschiedliche Kartenbreiten).
+    static func makeIOSPromoCard(url: URL, width: CGFloat, tileSize: CGFloat = 108) -> NSView {
+        let card = makeCard()
+        let tile = makeQRTile(url: url, tileSize: tileSize)
+
+        let title = NSTextField(labelWithString: L("promo.iosApp.title"))
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        title.textColor = .labelColor
+
+        let body = makeBodyLabel(L("promo.iosApp.body"))
+        let textWidth = width - tileSize - 3 * 16   // Ränder + Abstand zur Kachel
+        body.preferredMaxLayoutWidth = textWidth
+
+        let textStack = NSStackView(views: [title, body])
+        textStack.orientation = .vertical
+        textStack.alignment = .leading
+        textStack.spacing = 6
+
+        let inner = NSStackView(views: [tile, textStack])
+        inner.orientation = .horizontal
+        inner.alignment = .centerY
+        inner.spacing = 16
+        inner.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        inner.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(inner)
+        NSLayoutConstraint.activate([
+            inner.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            inner.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            inner.topAnchor.constraint(equalTo: card.topAnchor),
+            inner.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+            card.widthAnchor.constraint(equalToConstant: width),
+            body.widthAnchor.constraint(lessThanOrEqualToConstant: textWidth)
+        ])
+        return card
+    }
 }
 
 /// Verbindliche externe Links (siehe docs/BRANDING.md, README).
+/// Repository/Docs (GitHub) sind bewusst UNgegated — Kontakt & Landing-Page
+/// liegen hinter `BrandingConfig` (nur in offiziellen Builds gesetzt).
 enum HostLinks {
     static let repository = URL(string: "https://github.com/tim-ehrenfried/keystrokeqr")!
     static let docs = URL(string: "https://github.com/tim-ehrenfried/keystrokeqr/tree/main/docs")!
-    static let contactMailto = URL(string: "mailto:mail@tim-ehrenfried.de")!
+    /// `nil` im Community-Build (Mail-Button wird ausgeblendet).
+    static var contactMailto: URL? {
+        BrandingConfig.contactEmail.flatMap { URL(string: "mailto:\($0)") }
+    }
 }
 
 /// Schlanke, farbige Fortschrittsleiste (Countdown im Pairing-Fenster).

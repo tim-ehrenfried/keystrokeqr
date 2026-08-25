@@ -14,7 +14,7 @@ JSON messages over WebSocket). Since v0.6.0 the connection is paired
 
 - **Bundle ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour service type:** `_keystrokeqr._tcp` (must match the iOS client exactly)
-- **Version:** 0.14.0
+- **Version:** 0.16.0
 
 ## Requirements
 
@@ -53,6 +53,23 @@ make app SIGN_IDENTITY="Developer ID Application: Tim Ehrenfried (TEAMID)"
 ```
 
 (list available identities with `security find-identity -v -p codesigning`)
+
+## Official vs. community builds
+
+The repo builds **neutral by default**: personal contact and infrastructure
+references (contact email, landing page, iPhone-app link/QR) are **not**
+compiled in. They live behind the compile-time flag `OFFICIAL_BUILD` in
+`Sources/QRKeyboardHost/BrandingConfig.swift`:
+
+| Variant             | How to build                        | Behavior                                                                 |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| Community (default) | `make build` / `make app` / `make dmg` | `BrandingConfig` values are `nil`: no "Get the iPhone app" QR card, no email button; the About page shows "Community build — source & issues on GitHub". |
+| Official (our CI/signing) | `make build OFFICIAL=1` (same for `app`/`dmg`) | Builds with `swift build -c release -Xswiftc -DOFFICIAL_BUILD`; contact email, landing page (`keystrokeqr.tim-ehrenfried.de`), and the iPhone-app QR (`…/ios`) are compiled in. |
+
+The **GitHub repository link is intentionally not gated** — source & issues
+apply to both variants. The onboarding assistant and the Help subpage render
+the iPhone-app QR code natively via CoreImage (`CIQRCodeGenerator`, sharply
+scaled, dark modules on a white tile) **only in official builds**.
 
 ## DMG installer (`make dmg`)
 
@@ -170,9 +187,12 @@ Accessibility status symbol).
   documentation (as buttons with icons). Bilingual (en/de).
 - **About** shows the app name "KeystrokeQR Host", version/build **dynamically
   from the bundle**, "© 2026 Tim Ehrenfried", the MIT license, and the links —
-  GitHub, "Send email" (mailto:mail@tim-ehrenfried.de), and documentation — as
-  **buttons with SF Symbols** (like in the iOS app), in the dark KeystrokeQR
-  style (no NSAboutPanel default).
+  GitHub, website + email (official builds only, see
+  "Official vs. community builds"), and documentation — as **buttons with
+  SF Symbols** (like in the iOS app), in the dark KeystrokeQR style
+  (no NSAboutPanel default). Community builds show
+  "Community build — source & issues on GitHub" instead of the personal
+  contact references.
 
 ## Welcome / onboarding (first launch)
 

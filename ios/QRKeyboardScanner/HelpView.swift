@@ -23,6 +23,14 @@ struct HelpView: View {
                 } icon: {
                     Image(systemName: "accessibility")
                 }
+                // Nur in offiziellen Builds (OFFICIAL_BUILD): direkter Weg zum
+                // aktuellen Mac-Host — Community-Builds bleiben neutral.
+                if let macURL = BrandingConfig.macDownloadURL {
+                    Link(destination: macURL) {
+                        Label("Download the latest Mac host", systemImage: "arrow.down.circle")
+                    }
+                    .accessibilityHint("Opens the download page for the KeystrokeQR Mac app in the browser.")
+                }
             }
 
             Section("One-time pairing") {

@@ -87,15 +87,16 @@ after completion. The flow can be reopened at any time from Settings
   preview.
 - Supported symbologies: QR, EAN-8/13, Code 128/39/93, PDF417, DataMatrix,
   Aztec, Interleaved 2/5, ITF-14, UPC-E.
-- Yellow outlines around all currently detected codes in the scan window (like
-  the system scanner), smoothly tracking, with a short fade-out when they leave
-  the frame.
+- Outlines around all currently detected codes in the scan window (like the
+  system scanner), smoothly tracking, with a short fade-out when they leave
+  the frame — yellow for the selected (center-most) code, subtle white for
+  the others.
 - **Two send modes** (Settings → Sending, persisted):
   - **Push to send (default):** the scanner detects codes live (outlines +
     "Last detected" preview) but sends nothing automatically. While a code is
     in the scan window, a round yellow shutter-style send button appears above
-    the control bar. **Hold it briefly** (~0.45 s, like the Lock Screen
-    flashlight/camera buttons: subtle haptic on press, visible ring progress,
+    the control bar. **Hold it briefly** (~0.3 s, in the style of the Lock
+    Screen flashlight/camera buttons: subtle haptic on press, visible ring progress,
     a firm haptic "pop" on trigger) to send the detected code exactly once —
     keeping it held does NOT repeat, and a short cooldown (~0.9 s) prevents
     double triggers. A too-short tap shows a "Hold to send" hint instead. The
@@ -108,7 +109,14 @@ after completion. The flow can be reopened at any time from Settings
     also hold-to-trigger, for deliberate repetition.
 - **Haptics & sound:** "Haptics on send" (default ON) plays success/error
   feedback when a code is actually sent; "Sound on send" (default OFF) plays
-  a short, subtle system tock (AudioToolbox, respects the silent switch).
+  a short, clearly audible scanner-style beep (system sound 1052,
+  AudioToolbox, respects the silent switch).
+- **Aiming with multiple codes:** if several codes are visible in the scan
+  window at once, the code whose center is closest to the center of the scan
+  window deterministically wins — it feeds the candidate/preview/send button
+  (push to send) as well as auto-send (continuous). The chosen code gets the
+  yellow outline, all other visible codes a subtle dimmed white one, so you
+  can "aim" by moving the phone.
 - **Settings** (gear in the control bar) bundle everything: send mode picker,
   Auto-Enter, Auto-Tab, haptics/sound, clear history (with confirmation),
   "Manage paired Macs", plus **Help** and **About** as sub-pages and "Show the
@@ -212,6 +220,34 @@ xcodebuild test -project QRKeyboardScanner.xcodeproj \
 (27 tests, green; replace `iPhone 17 Pro` with a simulator available via
 `xcrun simctl list devices available` if needed.)
 
+## Official vs. community builds
+
+Official builds (built/signed by the maintainer or CI) contain personal
+contact and infrastructure references: the contact e-mail, the landing page
+and the "Download the latest Mac host" link
+(`https://keystrokeqr.tim-ehrenfried.de/mac`) in About and Help. Builds made
+by third parties from this repository stay **neutral**: none of these
+references are compiled into the binary; About shows
+"Community build — source & issues on GitHub" instead. The GitHub repository
+link is deliberately **not** gated — it points to this source code (MIT) and
+is correct in every build.
+
+All gated values live in
+[`QRKeyboardScanner/BrandingConfig.swift`](QRKeyboardScanner/BrandingConfig.swift)
+behind the Swift compilation condition `OFFICIAL_BUILD`. The project does
+**not** set this flag anywhere — a default build is always a neutral
+community build. Official builds pass the flag from the outside (note the
+`$(inherited)` so the Debug `DEBUG` condition is preserved):
+
+```sh
+xcodebuild -project QRKeyboardScanner.xcodeproj \
+  -scheme QRKeyboardScanner \
+  -sdk iphonesimulator \
+  -destination 'generic/platform=iOS Simulator' \
+  build CODE_SIGNING_ALLOWED=NO \
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFICIAL_BUILD'
+```
+
 ## Version
 
-`0.15.0` (`MARKETING_VERSION` in the app, widget and test targets, Debug + Release).
+`0.16.0` (`MARKETING_VERSION` in the app, widget and test targets, Debug + Release).

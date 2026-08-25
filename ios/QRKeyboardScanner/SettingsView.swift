@@ -132,8 +132,12 @@ struct SettingsView: View {
 }
 
 /// „Über“-Seite (früher Abschnitt in der Hilfe): Version, Copyright, Kontakt.
+/// Kontakt-/Infrastruktur-Einträge (E-Mail, Landing-Page, Mac-Host-Download)
+/// kommen aus `BrandingConfig` und erscheinen nur in offiziellen Builds
+/// (`OFFICIAL_BUILD`); Community-Builds zeigen stattdessen einen neutralen
+/// Hinweis. Der GitHub-Link (Quellcode, MIT) ist bewusst immer sichtbar.
 struct AboutView: View {
-    /// Version + Build dynamisch aus dem Bundle, z. B. „0.15.0 (1)“.
+    /// Version + Build dynamisch aus dem Bundle, z. B. „0.16.0 (1)“.
     private static var appVersionString: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
@@ -153,15 +157,38 @@ struct AboutView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
-                if let mailURL = URL(string: "mailto:mail@tim-ehrenfried.de") {
+                if let email = BrandingConfig.contactEmail,
+                   let mailURL = URL(string: "mailto:\(email)") {
                     Link(destination: mailURL) {
-                        Label("mail@tim-ehrenfried.de", systemImage: "envelope")
+                        Label {
+                            Text(verbatim: email)
+                        } icon: {
+                            Image(systemName: "envelope")
+                        }
                     }
                 }
-                if let repoURL = URL(string: "https://github.com/tim-ehrenfried/keystrokeqr") {
-                    Link(destination: repoURL) {
-                        Label("Open source on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                if let landingURL = BrandingConfig.landingPageURL,
+                   let host = landingURL.host {
+                    Link(destination: landingURL) {
+                        Label {
+                            Text(verbatim: host)
+                        } icon: {
+                            Image(systemName: "globe")
+                        }
                     }
+                }
+                if let macURL = BrandingConfig.macDownloadURL {
+                    Link(destination: macURL) {
+                        Label("Download the latest Mac host", systemImage: "arrow.down.circle")
+                    }
+                    .accessibilityHint("Opens the download page for the KeystrokeQR Mac app in the browser.")
+                }
+                Link(destination: BrandingConfig.repositoryURL) {
+                    Label("Open source on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                }
+            } footer: {
+                if !BrandingConfig.isOfficialBuild {
+                    Text("Community build — source & issues on GitHub")
                 }
             }
         }

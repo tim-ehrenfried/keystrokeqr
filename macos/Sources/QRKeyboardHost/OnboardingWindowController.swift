@@ -107,14 +107,27 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
         pairHint.drawsBackground = false
         pairHint.stringValue = L("onboarding.pair.needsAccessibility")
 
-        let stack = NSStackView(views: [header, title, body, card, pairButton, pairHint])
+        // Cross-Promotion: QR-Code zur iPhone-App unter der Bedienungshilfen-
+        // Karte — nur in offiziellen Builds (BrandingConfig, sonst nil).
+        var views: [NSView] = [header, title, body, card]
+        var promoCard: NSView?
+        if let iosAppURL = BrandingConfig.iosAppURL {
+            let promo = HostUI.makeIOSPromoCard(url: iosAppURL, width: Self.contentWidth,
+                                                tileSize: 96)
+            promoCard = promo
+            views.append(promo)
+        }
+        views.append(contentsOf: [pairButton, pairHint])
+
+        let stack = NSStackView(views: views)
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 16
         stack.setCustomSpacing(20, after: header)
         stack.setCustomSpacing(8, after: title)
         stack.setCustomSpacing(22, after: body)
-        stack.setCustomSpacing(20, after: card)
+        stack.setCustomSpacing(promoCard == nil ? 20 : 14, after: card)
+        if let promoCard { stack.setCustomSpacing(20, after: promoCard) }
         stack.setCustomSpacing(10, after: pairButton)
         stack.edgeInsets = NSEdgeInsets(top: Self.edgeInset, left: Self.edgeInset,
                                         bottom: Self.edgeInset, right: Self.edgeInset)

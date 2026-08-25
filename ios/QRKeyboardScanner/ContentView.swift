@@ -433,7 +433,7 @@ struct ContentView: View {
     }
 
     /// Push-to-Send: runder Auslöser im Shutter-Stil (Markengelb), unten mittig
-    /// über der Bedienleiste. Gedrückt HALTEN (~0,45 s) sendet den aktuell
+    /// über der Bedienleiste. Gedrückt HALTEN (~0,3 s) sendet den aktuell
     /// erkannten Code genau einmal; Halten wiederholt nicht (Cooldown + Einmal-
     /// Auslösung in HoldTriggerButton).
     private func sendButton(for payload: String) -> some View {
@@ -555,11 +555,20 @@ struct ContentView: View {
         }
     }
 
-    /// Kurzer, dezenter System-Ton beim Senden (Setting `sendSound`, Default AUS).
+    /// Kurzer, klar hörbarer Piep beim Senden (Setting `sendSound`, Default AUS).
     /// AudioServices respektiert den Lautlos-Schalter von sich aus.
+    ///
+    /// Ausprobierte SystemSound-IDs (Auswahl bewusst „Scanner-Piep“-artig):
+    /// - 1057 (Tock.caf) — bisheriger Ton: dumpfes Klacken, in lauter Umgebung
+    ///   kaum hörbar → verworfen.
+    /// - 1103 (Tink.caf) — heller Tastatur-Klick, kurz, aber immer noch eher
+    ///   „Klick“ als „Piep“ → verworfen.
+    /// - 1052 (SIMToolkitPositiveACK.caf) — kurzer, schriller Bestätigungs-
+    ///   Piep (hohe Sinus-Charakteristik), klingt wie ein Handscanner-Beep
+    ///   und schneidet auch in lauter Umgebung durch → GEWÄHLT.
     private func playSendSoundIfEnabled() {
         guard sendSound else { return }
-        AudioServicesPlaySystemSound(1057) // dezentes „Tock“
+        AudioServicesPlaySystemSound(1052) // schriller Scanner-Piep (SIMToolkitPositiveACK)
     }
 
     /// „Zum Senden halten“-Hinweis: erscheint nach einem zu kurzen Tap auf den

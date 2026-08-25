@@ -505,7 +505,16 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         linksStack.alignment = .leading
         linksStack.spacing = 8
 
-        let stack = NSStackView(views: [header, title, quickCard, troubleCard, linksStack])
+        // Cross-Promotion „iPhone-App laden" — nur in offiziellen Builds
+        // (BrandingConfig.iosAppURL, sonst nil): kleine QR-Karte wie im
+        // Onboarding, gleiche Breite wie die übrigen Hilfe-Karten.
+        var views: [NSView] = [header, title, quickCard, troubleCard]
+        if let iosAppURL = BrandingConfig.iosAppURL {
+            views.append(HostUI.makeIOSPromoCard(url: iosAppURL, width: 412, tileSize: 88))
+        }
+        views.append(linksStack)
+
+        let stack = NSStackView(views: views)
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 18
@@ -608,22 +617,50 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         license.alignment = .center
 
         // Links als Buttons mit Icon (wie iOS-App) statt blauer Text-Links.
+        // Kontakt (Mail) und Website nur in offiziellen Builds (BrandingConfig);
+        // der GitHub-Link ist bewusst ungegated.
         let githubButton = HostUI.makeIconButton(
             title: L("about.link.github"), systemImage: "chevron.left.forwardslash.chevron.right",
             target: self, action: #selector(openGitHub))
-        let contactButton = HostUI.makeIconButton(
-            title: L("about.link.contact"), systemImage: "envelope",
-            target: self, action: #selector(openContact))
         let docsButton = HostUI.makeIconButton(
             title: L("about.link.docs"), systemImage: "book",
             target: self, action: #selector(openDocs))
 
-        let linkStack = NSStackView(views: [githubButton, contactButton, docsButton])
+        var linkButtons: [NSView] = [githubButton]
+        if BrandingConfig.landingPageURL != nil {
+            linkButtons.append(HostUI.makeIconButton(
+                title: L("about.link.website"), systemImage: "globe",
+                target: self, action: #selector(openWebsite)))
+        }
+        if let email = BrandingConfig.contactEmail {
+            linkButtons.append(HostUI.makeIconButton(
+                title: email, systemImage: "envelope",
+                target: self, action: #selector(openContact)))
+        }
+        linkButtons.append(docsButton)
+
+        let linkStack = NSStackView(views: linkButtons)
         linkStack.orientation = .vertical
         linkStack.alignment = .centerX
         linkStack.spacing = 10
 
-        let stack = NSStackView(views: [icon, name, version, copyright, license, linkStack])
+        var aboutViews: [NSView] = [icon, name, version, copyright, license]
+        // Community-Build (ohne OFFICIAL_BUILD): neutraler Hinweis statt
+        // persönlicher Kontakt-Referenzen.
+        if !BrandingConfig.isOfficialBuild {
+            let communityLabel = NSTextField(wrappingLabelWithString: L("about.communityBuild"))
+            communityLabel.font = .systemFont(ofSize: 12)
+            communityLabel.textColor = .secondaryLabelColor
+            communityLabel.alignment = .center
+            communityLabel.isEditable = false
+            communityLabel.isSelectable = false
+            communityLabel.drawsBackground = false
+            communityLabel.preferredMaxLayoutWidth = Self.aboutWidth - 2 * 28
+            aboutViews.append(communityLabel)
+        }
+        aboutViews.append(linkStack)
+
+        let stack = NSStackView(views: aboutViews)
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 8
@@ -908,7 +945,14 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
     @objc private func openRepo() { NSWorkspace.shared.open(HostLinks.repository) }
     @objc private func openDocs() { NSWorkspace.shared.open(HostLinks.docs) }
     @objc private func openGitHub() { NSWorkspace.shared.open(HostLinks.repository) }
-    @objc private func openContact() { NSWorkspace.shared.open(HostLinks.contactMailto) }
+    @objc private func openContact() {
+        guard let url = HostLinks.contactMailto else { return }
+        NSWorkspace.shared.open(url)
+    }
+    @objc private func openWebsite() {
+        guard let url = BrandingConfig.landingPageURL else { return }
+        NSWorkspace.shared.open(url)
+    }
 
     private func syncSpeedSelection() {
         if let index = TypingSpeed.allCases.firstIndex(of: TypingSpeed.current) {

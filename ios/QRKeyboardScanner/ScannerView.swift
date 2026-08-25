@@ -154,8 +154,9 @@ struct ScannerView: UIViewRepresentable {
         /// Zoom-Faktor zu Beginn einer Pinch-Geste.
         private var pinchStartZoom: CGFloat = 1.0
 
-        // Gelbe Outlines um alle aktuell sichtbaren Codes (wie der
-        // System-Scanner): CAShapeLayer direkt über dem Preview-Layer —
+        // Outlines um alle aktuell sichtbaren Codes (wie der System-Scanner):
+        // der GEWÄHLTE (mittigste) Code gelb, übrige dezent weiß.
+        // CAShapeLayer direkt über dem Preview-Layer —
         // performant, kein SwiftUI-Redraw pro Frame. Ein Layer pro Code,
         // Pfad-Updates animieren implizit; verschwundene Codes faden nach
         // ~0,3 s aus.
@@ -438,6 +439,48 @@ struct ScannerView: UIViewRepresentable {
 
         // MARK: AVCaptureMetadataOutputObjectsDelegate (Delegate-Queue: main)
 
+        /// Ein im aktuellen Frame erkannter Code mit vorab berechneten
+        /// Layer-Koordinaten: `transformed` (perspektivische Ecken für die
+        /// Outline) und `distanceToWindowCenter` (Zentrum der transformierten
+        /// Bounds ↔ Mitte des Scan-Fensters) für die Ziel-Auswahl.
+        private struct DetectedCode {
+            let payload: String?
+            let key: String
+            let transformed: AVMetadataMachineReadableCodeObject?
+            let distanceToWindowCenter: CGFloat
+        }
+
+        /// Sammelt alle maschinenlesbaren Codes des Frames und rechnet sie
+        /// einmalig in Layer-Koordinaten um (Basis für Auswahl UND Outlines).
+        private func detectedCodes(from objects: [AVMetadataObject]) -> [DetectedCode] {
+            guard let previewView else { return [] }
+            let previewLayer = previewView.videoPreviewLayer
+            let windowRect = ScanRegion.rect(in: previewView.bounds.size)
+            let windowCenter = CGPoint(x: windowRect.midX, y: windowRect.midY)
+
+            return objects.compactMap { object in
+                guard let code = object as? AVMetadataMachineReadableCodeObject else { return nil }
+                let transformed = previewLayer.transformedMetadataObject(for: code)
+                    as? AVMetadataMachineReadableCodeObject
+                let distance: CGFloat
+                if let transformed {
+                    distance = hypot(
+                        transformed.bounds.midX - windowCenter.x,
+                        transformed.bounds.midY - windowCenter.y
+                    )
+                } else {
+                    // Ohne Layer-Zuordnung (sollte nicht vorkommen) nie bevorzugen.
+                    distance = .greatestFiniteMagnitude
+                }
+                return DetectedCode(
+                    payload: code.stringValue,
+                    key: code.stringValue ?? "type:\(code.type.rawValue)",
+                    transformed: transformed,
+                    distanceToWindowCenter: distance
+                )
+            }
+        }
+
         func metadataOutput(
             _ output: AVCaptureMetadataOutput,
             didOutput metadataObjects: [AVMetadataObject],
@@ -445,15 +488,23 @@ struct ScannerView: UIViewRepresentable {
         ) {
             let now = Date()
 
+            // Zielen bei MEHREREN Codes im Fenster: deterministisch gewinnt
+            // der Code, dessen Zentrum am nächsten an der Mitte des
+            // Scan-Fensters liegt — er speist Kandidat/Vorschau/Senden
+            // (Push-Modus) UND Auto-Send (Continuous). Durch Bewegen des
+            // iPhones „zielt“ man so auf den gewünschten Code.
+            let codes = detectedCodes(from: metadataObjects)
+            let selected = codes
+                .filter { $0.payload?.isEmpty == false }
+                .min { $0.distanceToWindowCenter < $1.distanceToWindowCenter }
+
             // Outlines immer aktualisieren — für ALLE sichtbaren Codes,
-            // unabhängig von Cooldown und Sent-Status.
-            updateOutlines(for: metadataObjects, at: now)
+            // unabhängig von Cooldown und Sent-Status. Der GEWÄHLTE Code
+            // bekommt die gelbe Outline, alle übrigen eine dezente weiße.
+            updateOutlines(for: codes, selectedKey: selected?.key, at: now)
 
             guard now >= cooldownUntil else { return }
-            guard let object = metadataObjects
-                .compactMap({ $0 as? AVMetadataMachineReadableCodeObject })
-                .first(where: { $0.stringValue?.isEmpty == false }),
-                  let text = object.stringValue else { return }
+            guard let text = selected?.payload else { return }
 
             if shouldAutoSend(text) {
                 // Neuer Code: exakt 1 Sekunde Cooldown, keine weitere Verarbeitung.
@@ -490,30 +541,43 @@ struct ScannerView: UIViewRepresentable {
 
         // MARK: Code-Outlines (Main-Thread)
 
-        private func updateOutlines(for objects: [AVMetadataObject], at now: Date) {
+        private func updateOutlines(
+            for codes: [DetectedCode],
+            selectedKey: String?,
+            at now: Date
+        ) {
             guard let previewView else { return }
             let previewLayer = previewView.videoPreviewLayer
 
-            for object in objects {
-                guard let code = object as? AVMetadataMachineReadableCodeObject,
-                      let transformed = previewLayer.transformedMetadataObject(for: code)
-                        as? AVMetadataMachineReadableCodeObject,
+            for code in codes {
+                guard let transformed = code.transformed,
                       transformed.corners.count >= 4 else { continue }
 
                 // Stabiler Schlüssel pro Code: Payload, sonst Symbologie.
-                let key = code.stringValue ?? "type:\(code.type.rawValue)"
+                let key = code.key
                 let path = Self.roundedOutlinePath(corners: transformed.corners).cgPath
+                let isSelected = key == selectedKey
 
-                if let shape = outlineLayers[key] {
+                let shape: CAShapeLayer
+                if let existing = outlineLayers[key] {
+                    shape = existing
                     // Pfad-Änderungen animieren bei Standalone-Layern implizit
                     // (~0,25 s) → sanftes Nachführen der Position.
                     shape.path = path
                 } else {
-                    let shape = Self.makeOutlineLayer()
+                    shape = CAShapeLayer()
+                    shape.lineWidth = 3
+                    shape.lineJoin = .round
+                    shape.lineCap = .round
+                    shape.shadowOffset = .zero
                     shape.path = path
                     previewLayer.addSublayer(shape)
                     outlineLayers[key] = shape
                 }
+                // Ziel-Feedback: der GEWÄHLTE (mittigste) Code leuchtet gelb,
+                // alle anderen sichtbaren Codes bekommen eine dezente weiße,
+                // gedimmte Outline — Wechsel animieren implizit weich.
+                Self.applyOutlineStyle(to: shape, selected: isSelected)
                 outlineLastSeen[key] = now
             }
 
@@ -555,18 +619,22 @@ struct ScannerView: UIViewRepresentable {
             outlineCleanupTimer = nil
         }
 
-        private static func makeOutlineLayer() -> CAShapeLayer {
-            let shape = CAShapeLayer()
-            shape.strokeColor = UIColor.systemYellow.cgColor
-            shape.fillColor = UIColor.systemYellow.withAlphaComponent(0.08).cgColor
-            shape.lineWidth = 3
-            shape.lineJoin = .round
-            shape.lineCap = .round
-            shape.shadowColor = UIColor.systemYellow.cgColor
-            shape.shadowOpacity = 0.55
-            shape.shadowRadius = 4
-            shape.shadowOffset = .zero
-            return shape
+        /// Farbstil je Auswahlzustand: gelb + Glow für den gewählten Code,
+        /// dezentes gedimmtes Weiß ohne Glow für alle übrigen.
+        private static func applyOutlineStyle(to shape: CAShapeLayer, selected: Bool) {
+            if selected {
+                shape.strokeColor = UIColor.systemYellow.cgColor
+                shape.fillColor = UIColor.systemYellow.withAlphaComponent(0.08).cgColor
+                shape.shadowColor = UIColor.systemYellow.cgColor
+                shape.shadowOpacity = 0.55
+                shape.shadowRadius = 4
+            } else {
+                shape.strokeColor = UIColor.white.withAlphaComponent(0.45).cgColor
+                shape.fillColor = UIColor.white.withAlphaComponent(0.04).cgColor
+                shape.shadowColor = UIColor.clear.cgColor
+                shape.shadowOpacity = 0
+                shape.shadowRadius = 0
+            }
         }
 
         private static func fadeOutAndRemove(_ shape: CAShapeLayer) {

@@ -291,6 +291,16 @@
         }
       }
     },
+    "Community build — source & issues on GitHub": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Community-Build — Quellcode & Issues auf GitHub"
+          }
+        }
+      }
+    },
     "Connected": {
       "localizations": {
         "de": {
@@ -377,6 +387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fertig"
+          }
+        }
+      }
+    },
+    "Download the latest Mac host": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuesten Mac-Host laden"
           }
         }
       }
@@ -707,6 +727,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öffnet den KeystrokeQR-Scanner."
+          }
+        }
+      }
+    },
+    "Opens the download page for the KeystrokeQR Mac app in the browser.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet die Download-Seite der KeystrokeQR-Mac-App im Browser."
           }
         }
       }

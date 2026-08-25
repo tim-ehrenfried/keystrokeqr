@@ -3,7 +3,7 @@ import UIKit
 
 /// Auslöser im Stil der Sperrbildschirm-Buttons (Taschenlampe/Kamera):
 /// löst NICHT bei Tap oder Touch-Down aus, sondern erst nach bewusstem
-/// Gedrückthalten (~0,45 s).
+/// Gedrückthalten (~0,3 s).
 ///
 /// Verhalten:
 /// - Druckbeginn: dezente Haptik, Button wächst leicht an, ein sichtbarer
@@ -17,8 +17,11 @@ import UIKit
 /// Erscheinungsbild (Shutter-Kreis, Kapsel, …) selbst.
 struct HoldTriggerButton<Label: View>: View {
     var isEnabled = true
-    /// Haltedauer bis zur Auslösung (Sperrbildschirm-Gefühl: ~0,4–0,5 s).
-    var holdDuration: Double = 0.45
+    /// Haltedauer bis zur Auslösung — bewusst kurz (0,3 s): schützt weiterhin
+    /// vor versehentlichen Taps, fühlt sich aber flotter an als die
+    /// Sperrbildschirm-Buttons (~0,45 s). Die Fortschritts-Animation läuft
+    /// automatisch über dieselbe Dauer (`withAnimation(.linear(duration:))`).
+    var holdDuration: Double = 0.3
     var action: () -> Void
     /// Zu kurz gedrückt (kein Auslösen) — z. B. Hinweistext einblenden.
     var onTooShort: () -> Void = { }

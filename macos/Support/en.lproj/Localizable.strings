@@ -96,8 +96,14 @@
 "about.copyright" = "© 2026 Tim Ehrenfried";
 "about.license" = "MIT License";
 "about.link.github" = "GitHub";
-"about.link.contact" = "mail@tim-ehrenfried.de";
+"about.link.website" = "Website";
 "about.link.docs" = "Documentation";
+"about.communityBuild" = "Community build — source & issues on GitHub";
+
+/* Cross-promotion: iPhone app (official builds only, see BrandingConfig) */
+"promo.iosApp.title" = "Get the iPhone app";
+"promo.iosApp.body" = "Scan this code with your iPhone camera to install the KeystrokeQR scanner app.";
+"promo.iosApp.a11y" = "QR code linking to the KeystrokeQR iPhone app";
 
 /* Typing speed */
 "menu.typingSpeed" = "Typing Speed";

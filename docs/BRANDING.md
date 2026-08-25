@@ -63,6 +63,30 @@ the target name.
 - macOS: `Localizable.strings`/string catalog for menu, pairing, and status texts; base = en.
 - New user-visible text is maintained bilingually (en first, de as an equal).
 
+## Official vs. community builds (since v0.16.0)
+
+Official builds — the ones **we** ship (GitHub releases, App Store) — embed
+personal/infrastructure references: the contact email
+(mail@tim-ehrenfried.de), the landing page (keystrokeqr.tim-ehrenfried.de,
+including the `/ios` App-Store QR in the Mac onboarding and the `/mac`
+"download the newest host" link in the iOS app). Anyone building from this
+repo gets a **neutral community build**: those references are compiled out
+(About shows "Community build — source & issues on GitHub" instead); only the
+GitHub repository link remains, since it *is* the source.
+
+Mechanism: the Swift compilation condition **`OFFICIAL_BUILD`**, read by
+`BrandingConfig.swift` on both platforms. It is **off by default** and only
+set by our own pipeline:
+
+| Build | How the flag is set |
+|---|---|
+| macOS (Make) | `make app OFFICIAL=1` / `make dmg OFFICIAL=1` (the release workflow does this) |
+| iOS (xcodebuild) | `SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFICIAL_BUILD'` (our device/App-Store builds) |
+| CI build check | intentionally **neutral** — it verifies the community path |
+
+Non-repo dependencies of ours (the landing page, releases infrastructure) are
+therefore never baked into third-party builds.
+
 ## App icon (since v0.14.0)
 
 The single source of truth for the app icon is **`branding/logo-master.png`**
