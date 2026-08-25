@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer](https://semver.org/).
 
+## [0.15.0] – 2026-08-25 (iOS only)
+
+### Added
+- **Push-to-send mode (new default)**: the scanner keeps detecting codes live, but nothing is sent automatically anymore. As soon as a code is inside the scan window, a round yellow shutter button appears — **hold it (~0.45 s) until the haptic "pop"** to send exactly once (Lock-Screen-button behavior: a short tap shows a "Hold to send" hint instead of sending, holding longer never repeats). The previous behavior lives on as the "Continuous" mode (auto-send once per code + "Send again" trigger, now also hold-to-trigger).
+- **Send feedback settings**: haptic feedback on send (default on) and an optional short sound (default off, respects the silent switch).
+- **Scan window**: only a full-width 1:1 square slightly above the screen center actively scans; the rest of the camera view is dimmed (translucent black) with rounded corners and yellow viewfinder brackets. Detection is technically restricted to the window (`rectOfInterest`); tap-to-focus and pinch-to-zoom still work everywhere.
+- **Settings screen**: the help button became a gear — a dedicated dark settings sheet now bundles everything (send mode, Auto-Enter, Auto-Tab, haptics, sound, clear history, manage paired Macs) with **Help**, **About**, and "Show the intro again" as subpages. The Auto-Enter/Auto-Tab toggles left the bottom bar, which is now much slimmer.
+
 ## [0.14.0] – 2026-08-25
 
 ### Changed

@@ -71,7 +71,7 @@ struct OnboardingView: View {
             icon: "qrcode.viewfinder",
             accent: Self.accent,
             title: "Welcome to KeystrokeQR",
-            message: "Scan a QR or barcode with your iPhone — and your Mac types it instantly, as if you had entered it on the keyboard."
+            message: "Scan a QR or barcode with your iPhone and hold the send button — your Mac types it instantly, as if you had entered it on the keyboard."
         )
     }
 

@@ -62,7 +62,7 @@ in the dark app design: welcome → how it works (local, encrypted, no
 cloud) → permissions (the camera prompt is triggered contextually here, local
 network is announced) → pairing. Persisted via `@AppStorage`
 (`didCompleteOnboarding`); camera access and Bonjour discovery start only
-after completion. The flow can be reopened at any time from Help
+after completion. The flow can be reopened at any time from Settings
 ("Show the intro again").
 
 ## Required permissions
@@ -75,24 +75,53 @@ after completion. The flow can be reopened at any time from Help
 ## Features
 
 - Full-screen viewfinder, status capsule (Searching / Connecting / Connected / Disconnected).
+- **Scan window (region of interest):** only a square 1:1 cutout scans — full
+  screen width, horizontally centered, its center slightly above the middle of
+  the screen (~43 % of the screen height). The rest of the camera image is
+  dimmed but still visible (translucent black overlay, rounded corners, yellow
+  viewfinder corner brackets). Detection is restricted to the window via
+  `AVCaptureMetadataOutput.rectOfInterest`
+  (`metadataOutputRectConverted(fromLayerRect:)`, recomputed after session
+  start and on every layout pass); codes outside are ignored, outlines only
+  appear inside. Tap-to-focus and pinch-to-zoom keep working on the whole
+  preview.
 - Supported symbologies: QR, EAN-8/13, Code 128/39/93, PDF417, DataMatrix,
   Aztec, Interleaved 2/5, ITF-14, UPC-E.
-- On detection: haptic feedback, the viewfinder freezes briefly, exactly 1 s cooldown.
-- Yellow outlines around all currently detected codes in the viewfinder (like
+- Yellow outlines around all currently detected codes in the scan window (like
   the system scanner), smoothly tracking, with a short fade-out when they leave
   the frame.
-- **Send-once:** Each code is typed automatically only once. When the same code
-  is scanned again, a yellow **"Send again"** trigger appears instead, for
-  deliberate repetition. "Clear history" (⟲) resets the list; on app restart
-  it is cleared automatically (no persistence).
+- **Two send modes** (Settings → Sending, persisted):
+  - **Push to send (default):** the scanner detects codes live (outlines +
+    "Last detected" preview) but sends nothing automatically. While a code is
+    in the scan window, a round yellow shutter-style send button appears above
+    the control bar. **Hold it briefly** (~0.45 s, like the Lock Screen
+    flashlight/camera buttons: subtle haptic on press, visible ring progress,
+    a firm haptic "pop" on trigger) to send the detected code exactly once —
+    keeping it held does NOT repeat, and a short cooldown (~0.9 s) prevents
+    double triggers. A too-short tap shows a "Hold to send" hint instead. The
+    button fades out ~2 s after the code leaves the frame. Codes already sent
+    in this session are marked subtly ("Already sent") next to the preview and
+    may deliberately be sent again.
+  - **Continuous:** the previous behavior — each code is typed automatically
+    once (viewfinder freeze + 1 s cooldown on detection). When the same code
+    is scanned again, the yellow **"Send again"** trigger appears instead,
+    also hold-to-trigger, for deliberate repetition.
+- **Haptics & sound:** "Haptics on send" (default ON) plays success/error
+  feedback when a code is actually sent; "Sound on send" (default OFF) plays
+  a short, subtle system tock (AudioToolbox, respects the silent switch).
+- **Settings** (gear in the control bar) bundle everything: send mode picker,
+  Auto-Enter, Auto-Tab, haptics/sound, clear history (with confirmation),
+  "Manage paired Macs", plus **Help** and **About** as sub-pages and "Show the
+  intro again". The bottom control bar itself stays slim: last detected/scanned
+  text, Mac picker button, settings button.
+- "Clear history" resets the send-once list; on app restart it is cleared
+  automatically (no persistence).
 - Best rear camera as a virtual device (Triple → DualWide → Dual → Wide):
   automatic lens switching including macro for close codes; continuous
   autofocus with a near-range preference, **tap-to-focus** (yellow frame), and
   **pinch-to-zoom** (up to 10x).
 - Consistently dark design including a dark launch screen and dark loading
   state until the camera delivers frames.
-- **Auto-Enter** / **Auto-Tab** toggles (persisted), display of the last
-  scanned text, in-app help.
 - Automatic reconnect on connection loss; a picker list when multiple Macs
   are found.
 - If the Mac reports `accessibility_denied`, the app shows a clear notice.
@@ -141,10 +170,13 @@ extension uses no crypto of its own and therefore doesn't need the flag.
 
 - User-visible controls carry VoiceOver labels/hints/traits: the status
   capsule (as one element "Connection status: …", decorative dot hidden,
-  `updatesFrequently`), "Send again", "Clear history", "Pair Mac",
-  "Choose Mac", Help, the Auto-Enter/Auto-Tab toggles, and the
-  onboarding/pairing navigation. Decorative symbols are
-  `accessibilityHidden`, headings are marked as `.isHeader`.
+  `updatesFrequently`), the send button ("Send: …"), "Send again",
+  "Clear history", "Pair Mac", "Choose Mac", Settings, the settings toggles,
+  and the onboarding/pairing navigation. The hold-to-trigger buttons are
+  activatable directly via the default VoiceOver action (no hold required).
+  Decorative symbols are `accessibilityHidden`, headings are marked as
+  `.isHeader`; the scan-window overlay is decorative and hidden from
+  accessibility.
 - Texts use semantic fonts (scaling with Dynamic Type); where space is tight,
   `lineLimit`/`minimumScaleFactor` or
   `fixedSize(horizontal:false, vertical:true)` keep the layout from breaking
@@ -182,4 +214,4 @@ xcodebuild test -project QRKeyboardScanner.xcodeproj \
 
 ## Version
 
-`0.14.0` (`MARKETING_VERSION` in the app and widget targets, Debug + Release).
+`0.15.0` (`MARKETING_VERSION` in the app, widget and test targets, Debug + Release).

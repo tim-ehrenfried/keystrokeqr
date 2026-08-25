@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import AudioToolbox
 import UIKit
 
 /// App-Laufzeit-scoped Registry der bereits gesendeten Payloads.
@@ -21,13 +22,19 @@ struct ContentView: View {
 
     @AppStorage("autoEnter") private var autoEnter = false
     @AppStorage("autoTab") private var autoTab = false
+    /// Sende-Modus: Push-to-Send (Standard) oder Continuous (Auto-Senden).
+    @AppStorage("sendMode") private var sendMode: SendMode = .pushToSend
+    /// Haptik, wenn tatsächlich gesendet wurde (Default AN).
+    @AppStorage("sendHaptics") private var sendHaptics = true
+    /// Kurzer System-Ton beim Senden (Default AUS; respektiert Lautlos-Schalter).
+    @AppStorage("sendSound") private var sendSound = false
     /// Merkt sich, ob das erste Onboarding einmal durchlaufen wurde.
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
     @State private var showOnboarding = false
 
     @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var lastScannedText: String?
-    @State private var showHelp = false
+    @State private var showSettings = false
     /// Manuell geöffnete „gefundene Macs“-Liste (Wechsel des verbundenen Macs).
     @State private var showMacSwitcher = false
     /// In der Mac-Auswahlliste angetippter Mac, dessen Auswahl (`switchTo`) ERST
@@ -44,13 +51,21 @@ struct ContentView: View {
 
     /// Bereits gesendete Codes (nur App-Laufzeit, siehe `SentRegistry`).
     @StateObject private var sentRegistry = SentRegistry()
-    /// Bereits gesendeter Code, der gerade im Sucher ist → Auslöser-Button.
-    @State private var repeatCandidate: String?
-    /// Blendet den Auslöser-Button nach Ablauf ohne erneute Erkennung aus.
-    @State private var repeatHideTask: Task<Void, Never>?
-    /// Kurzes visuelles Feedback + Sperre nach manuellem Senden (1-s-Cooldown).
-    @State private var resendCooldownActive = false
-    @State private var showClearConfirmation = false
+    /// Aktuell im Scan-Fenster erkannter Code, der den Auslöser speist:
+    /// Push-to-Send → runder Send-Button (jeder erkannte Code);
+    /// Continuous → gelber „Erneut senden“-Auslöser (nur bereits gesendete).
+    @State private var triggerCandidate: String?
+    /// Blendet den Auslöser nach Ablauf ohne erneute Erkennung aus (~2 s Nachlauf).
+    @State private var triggerHideTask: Task<Void, Never>?
+    /// Kurzes visuelles Feedback + Sperre nach manuellem Senden (~0,9-s-Cooldown
+    /// gegen Doppel-Trigger).
+    @State private var sendCooldownActive = false
+    /// „Zum Senden halten“-Hinweis nach einem zu kurzen Tap auf den Auslöser.
+    @State private var showHoldHint = false
+    @State private var holdHintTask: Task<Void, Never>?
+
+    /// Markengelb #FFD60A (Auslöser, Scan-Fenster-Klammern).
+    private static let accent = ScanWindowOverlay.accent
 
     #if targetEnvironment(simulator)
     /// Nur Simulator: blendet Auslöser-Kapsel + „Zuletzt gescannt" dauerhaft
@@ -67,17 +82,19 @@ struct ContentView: View {
             case .authorized:
                 ScannerView(
                     onScan: { text in
-                        lastScannedText = text
-                        sentRegistry.insert(text)
-                        connectionManager.send(text: text, autoEnter: autoEnter, autoTab: autoTab)
+                        handleAutoScan(text)
                     },
                     shouldAutoSend: { [sentRegistry] text in
-                        !sentRegistry.contains(text)
+                        // Push-to-Send sendet NIE automatisch — jede Erkennung
+                        // läuft über den (gedrosselten) Detection-Kanal und
+                        // speist den Send-Button.
+                        sendMode == .continuous && !sentRegistry.contains(text)
                     },
                     onRepeatDetection: { text in
-                        handleRepeatDetection(text)
+                        handleDetection(text)
                     },
                     isActive: scenePhase == .active,
+                    playScanHaptics: sendHaptics,
                     resetToken: scanResetToken,
                     onRunningChanged: { running in
                         isCameraRunning = running
@@ -87,6 +104,10 @@ struct ContentView: View {
                 if !isCameraRunning {
                     cameraStartingOverlay
                 }
+                // Scan-Fenster (1:1, volle Breite, oberhalb der Mitte): außen
+                // abgedunkelt, Ausschnitt klar — liegt bewusst ÜBER dem dunklen
+                // Kamera-Startzustand, damit das Fenster sofort sichtbar ist.
+                ScanWindowOverlay()
             case .denied, .restricted:
                 CameraDeniedView()
             default:
@@ -105,9 +126,18 @@ struct ContentView: View {
                     pairMacPrompt
                 }
                 Spacer(minLength: 0)
-                if let repeatCandidate {
-                    resendButton(for: repeatCandidate)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                if let triggerCandidate {
+                    VStack(spacing: 10) {
+                        if showHoldHint {
+                            holdHintLabel
+                        }
+                        if sendMode == .pushToSend {
+                            sendButton(for: triggerCandidate)
+                        } else {
+                            resendButton(for: triggerCandidate)
+                        }
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 controlBar
             }
@@ -117,7 +147,7 @@ struct ContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 12)
-            .animation(.spring(duration: 0.3), value: repeatCandidate)
+            .animation(.spring(duration: 0.3), value: triggerCandidate)
         }
         .preferredColorScheme(.dark)
         .task {
@@ -132,7 +162,7 @@ struct ContentView: View {
             #if targetEnvironment(simulator)
             if Self.simulatorLayoutPreview {
                 lastScannedText = "Freiburg Wirtschaft Touristik und Messe GmbH & Co. KG"
-                repeatCandidate = "Freiburg Wirtschaft Tour…"
+                triggerCandidate = "Freiburg Wirtschaft Tour…"
             }
             #endif
         }
@@ -157,8 +187,19 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .startScanRequested)) { _ in
             activateScanner()
         }
-        .sheet(isPresented: $showHelp) {
-            HelpView(connectionManager: connectionManager)
+        .sheet(isPresented: $showSettings) {
+            SettingsView(
+                connectionManager: connectionManager,
+                sentRegistry: sentRegistry,
+                onClearHistory: clearHistory
+            )
+        }
+        .onChange(of: sendMode) { _, _ in
+            // Moduswechsel: laufenden Auslöser-Zustand verwerfen — der jeweils
+            // passende Auslöser baut sich über die nächste Erkennung neu auf.
+            triggerHideTask?.cancel()
+            triggerCandidate = nil
+            showHoldHint = false
         }
         .sheet(isPresented: $connectionManager.showServicePicker) {
             macListSheet
@@ -168,6 +209,11 @@ struct ContentView: View {
         }
         .sheet(item: $connectionManager.pendingPairingService) { service in
             PairingView(connectionManager: connectionManager, service: service)
+        }
+        .onChange(of: connectionManager.pendingPairingService) { _, service in
+            // Nur Simulator-Layout-Preview: Pairing-Angebote automatisch
+            // ablehnen, damit die Scanner-UI (Overlay/Auslöser) sichtbar bleibt.
+            autoDeclinePairingForLayoutPreview(service)
         }
         .onChange(of: connectionManager.notPairedServiceName) { _, serviceName in
             guard let serviceName,
@@ -306,114 +352,150 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Bedienleiste unten
+    // MARK: - Bedienleiste unten (schlank: Vorschau, Mac-Wahl, Einstellungen)
 
     private var controlBar: some View {
-        VStack(spacing: 12) {
+        HStack(spacing: 12) {
             if let lastScannedText {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Last scanned")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text(sendMode == .pushToSend ? "Last detected" : "Last scanned")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        // Dezente Kennzeichnung im Push-Modus: dieser Code wurde
+                        // in dieser Sitzung schon (mindestens einmal) gesendet.
+                        if sendMode == .pushToSend, sentRegistry.contains(lastScannedText) {
+                            Label("Already sent", systemImage: "checkmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundStyle(Self.accent.opacity(0.9))
+                                .labelStyle(.titleAndIcon)
+                        }
+                    }
                     Text(lastScannedText)
                         .font(.callout.monospaced())
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Spacer(minLength: 0)
             }
 
-            HStack(spacing: 8) {
-                toggleChip("Auto-Enter", isOn: $autoEnter,
-                           hint: "When on, the Return key is sent after each scanned text.")
-                toggleChip("Auto-Tab", isOn: $autoTab,
-                           hint: "When on, the Tab key is sent after each scanned text.")
-                Spacer(minLength: 0)
-                if !connectionManager.services.isEmpty {
-                    Button {
-                        showMacSwitcher = true
-                    } label: {
-                        Image(systemName: "desktopcomputer")
-                            .font(.title2)
-                    }
-                    .accessibilityLabel("Choose Mac")
-                    .accessibilityHint("Shows the list of found Macs to connect or switch.")
-                }
+            if !connectionManager.services.isEmpty {
                 Button {
-                    showClearConfirmation = true
+                    showMacSwitcher = true
                 } label: {
-                    Image(systemName: "arrow.counterclockwise")
+                    Image(systemName: "desktopcomputer")
                         .font(.title2)
                 }
-                .disabled(sentRegistry.isEmpty)
-                .accessibilityLabel("Clear history")
-                .accessibilityHint("Forgets all codes already sent, so they can be sent automatically again.")
-                .confirmationDialog(
-                    "Clear scan history?",
-                    isPresented: $showClearConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button("Clear history", role: .destructive) {
-                        clearHistory()
-                    }
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text("After this, all codes will be sent automatically again.")
-                }
-                Button {
-                    showHelp = true
-                } label: {
-                    Image(systemName: "questionmark.circle")
-                        .font(.title2)
-                }
-                .accessibilityLabel("Help")
-                .accessibilityHint("Opens help, pairing management and the intro.")
+                .accessibilityLabel("Choose Mac")
+                .accessibilityHint("Shows the list of found Macs to connect or switch.")
             }
-            .font(.subheadline)
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.title2)
+            }
+            .accessibilityLabel("Settings")
+            .accessibilityHint("Opens settings, help and pairing management.")
         }
+        .font(.subheadline)
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
-    /// Kompakte Schalter-Gruppe: Label sitzt direkt am Switch und darf bei
-    /// wenig Breite kürzen/schrumpfen. WICHTIG: Kein `.fixedSize()` auf der
-    /// Gruppe — eine unschrumpfbare Zeile, die breiter ist als der Platz,
-    /// drückt sonst den umgebenden VStack über die Bildschirmränder hinaus
-    /// (die Overlays „kleben" dann trotz `.padding(.horizontal)` an den Kanten).
-    private func toggleChip(_ title: String, isOn: Binding<Bool>, hint: LocalizedStringKey) -> some View {
-        HStack(spacing: 5) {
-            Text(title)
-                .lineLimit(1)
-                .minimumScaleFactor(0.65)
-                .accessibilityHidden(true)
-                .onTapGesture { isOn.wrappedValue.toggle() }
-            Toggle(title, isOn: isOn)
-                .toggleStyle(.switch)
-                .labelsHidden()
-                .fixedSize()
-                .accessibilityHint(hint)
-        }
+    // MARK: - Erkennungs-/Sende-Logik
+
+    /// Continuous-Modus: neuer Code wurde automatisch erkannt → einmal senden
+    /// (Erfolgs-Haptik übernimmt der Scanner, Setting-gesteuert).
+    private func handleAutoScan(_ text: String) {
+        lastScannedText = text
+        sentRegistry.insert(text)
+        connectionManager.send(text: text, autoEnter: autoEnter, autoTab: autoTab)
+        playSendSoundIfEnabled()
     }
 
-    // MARK: - Erneut senden (bereits übertragener Code)
-
-    /// Ein bereits gesendeter Code ist (weiterhin) im Sucher: Button anzeigen
-    /// bzw. dessen Ausblende-Timer verlängern (kommt entprellt, max. ~4x/s).
-    private func handleRepeatDetection(_ text: String) {
-        repeatCandidate = text
-        repeatHideTask?.cancel()
-        repeatHideTask = Task { @MainActor in
+    /// Ein Code ist (weiterhin) im Scan-Fenster — entprellt gemeldet (max. ~4x/s):
+    /// Push-to-Send → Send-Button für GENAU diesen Code zeigen/verlängern;
+    /// Continuous → „Erneut senden“-Auslöser für bereits gesendete Codes.
+    private func handleDetection(_ text: String) {
+        if sendMode == .pushToSend {
+            lastScannedText = text
+        }
+        triggerCandidate = text
+        triggerHideTask?.cancel()
+        triggerHideTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(2.5))
             guard !Task.isCancelled else { return }
-            repeatCandidate = nil
+            triggerCandidate = nil
         }
     }
 
-    /// Deutlicher Auslöser: sendet den bereits übertragenen Code bewusst erneut.
+    /// Push-to-Send: runder Auslöser im Shutter-Stil (Markengelb), unten mittig
+    /// über der Bedienleiste. Gedrückt HALTEN (~0,45 s) sendet den aktuell
+    /// erkannten Code genau einmal; Halten wiederholt nicht (Cooldown + Einmal-
+    /// Auslösung in HoldTriggerButton).
+    private func sendButton(for payload: String) -> some View {
+        HoldTriggerButton(
+            isEnabled: !sendCooldownActive,
+            action: { pushSend(payload) },
+            onTooShort: { flashHoldHint() }
+        ) { isPressed, progress in
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.35), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(Self.accent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .fill(Self.accent)
+                    .padding(7)
+                    .brightness(isPressed ? -0.06 : 0)
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+            .frame(width: 78, height: 78)
+        }
+        .opacity(sendCooldownActive ? 0.5 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: sendCooldownActive)
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(Text("Send: \(payload)"))
+        .accessibilityHint("Sends the code currently detected in the scan window to the Mac once.")
+    }
+
+    /// Push-to-Send: sendet den aktuell erkannten Code GENAU EINMAL.
+    /// Haptik/Ton je nach Setting; Fehler-Haptik, wenn kein Mac verbunden ist.
+    private func pushSend(_ payload: String) {
+        guard !sendCooldownActive else { return }
+        lastScannedText = payload
+
+        var didSend = false
+        if case .connected = connectionManager.state {
+            sentRegistry.insert(payload)
+            connectionManager.send(text: payload, autoEnter: autoEnter, autoTab: autoTab)
+            didSend = true
+        }
+        if sendHaptics {
+            UINotificationFeedbackGenerator().notificationOccurred(didSend ? .success : .error)
+        }
+        if didSend {
+            playSendSoundIfEnabled()
+        }
+        startSendCooldown()
+    }
+
+    /// Continuous-Modus: deutlicher Auslöser, der den bereits übertragenen Code
+    /// bewusst erneut sendet — ebenfalls per Gedrückthalten.
     private func resendButton(for payload: String) -> some View {
-        Button {
-            resend(payload)
-        } label: {
+        HoldTriggerButton(
+            isEnabled: !sendCooldownActive,
+            action: { resend(payload) },
+            onTooShort: { flashHoldHint() }
+        ) { isPressed, progress in
             HStack(spacing: 12) {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 34))
@@ -431,37 +513,90 @@ struct ContentView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
-            .background(.yellow, in: Capsule())
+            .background {
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Self.accent)
+                    // Sichtbarer Hold-Fortschritt: die Kapsel „füllt sich".
+                    GeometryReader { geo in
+                        Rectangle()
+                            .fill(.white.opacity(0.45))
+                            .frame(width: geo.size.width * progress)
+                    }
+                }
+                .clipShape(Capsule())
+            }
+            .brightness(isPressed ? -0.04 : 0)
         }
-        .buttonStyle(.plain)
-        .scaleEffect(resendCooldownActive ? 0.96 : 1.0)
-        .opacity(resendCooldownActive ? 0.6 : 1.0)
-        .disabled(resendCooldownActive)
-        .animation(.easeOut(duration: 0.15), value: resendCooldownActive)
+        .opacity(sendCooldownActive ? 0.6 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: sendCooldownActive)
         .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(Text("Send again: \(payload)"))
         .accessibilityHint("Sends the already-transmitted code to the Mac again.")
-        .accessibilityAddTraits(.isButton)
     }
 
     private func resend(_ payload: String) {
-        guard !resendCooldownActive else { return }
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        guard !sendCooldownActive else { return }
         lastScannedText = payload
         connectionManager.send(text: payload, autoEnter: autoEnter, autoTab: autoTab)
+        if sendHaptics {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+        playSendSoundIfEnabled()
+        startSendCooldown()
+    }
 
-        // Cooldown wie beim Scannen: 1 s keine erneute Auslösung.
-        resendCooldownActive = true
+    /// Cooldown gegen Doppel-Trigger (~0,9 s), gilt für Send- UND Resend-Auslöser.
+    private func startSendCooldown() {
+        sendCooldownActive = true
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1))
-            resendCooldownActive = false
+            try? await Task.sleep(for: .milliseconds(900))
+            sendCooldownActive = false
+        }
+    }
+
+    /// Kurzer, dezenter System-Ton beim Senden (Setting `sendSound`, Default AUS).
+    /// AudioServices respektiert den Lautlos-Schalter von sich aus.
+    private func playSendSoundIfEnabled() {
+        guard sendSound else { return }
+        AudioServicesPlaySystemSound(1057) // dezentes „Tock“
+    }
+
+    /// „Zum Senden halten“-Hinweis: erscheint nach einem zu kurzen Tap auf den
+    /// Auslöser und blendet sich nach ~1,8 s wieder aus.
+    private var holdHintLabel: some View {
+        Text("Hold to send")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial, in: Capsule())
+            .transition(.opacity.combined(with: .scale(scale: 0.9)))
+    }
+
+    private func flashHoldHint() {
+        withAnimation(.easeOut(duration: 0.2)) {
+            showHoldHint = true
+        }
+        holdHintTask?.cancel()
+        holdHintTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.8))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.35)) {
+                showHoldHint = false
+            }
         }
     }
 
     private func clearHistory() {
         sentRegistry.clear()
-        repeatHideTask?.cancel()
-        repeatCandidate = nil
+        // Im Continuous-Modus ist der „Erneut senden“-Auslöser damit
+        // gegenstandslos; im Push-Modus baut sich der Send-Button über die
+        // nächste Erkennung (≤ 0,25 s) ohnehin neu auf.
+        if sendMode == .continuous {
+            triggerHideTask?.cancel()
+            triggerCandidate = nil
+        }
     }
 
     // MARK: - Auswahl / Wechsel bei mehreren Macs
@@ -567,12 +702,23 @@ struct ContentView: View {
         activateScanner()
     }
 
-    /// Macht den Scanner sichtbar (Hilfe-Sheet schließen) und setzt den
+    /// Macht den Scanner sichtbar (Settings-Sheet schließen) und setzt den
     /// Scan-Cooldown zurück, damit sofort gescannt werden kann.
     private func activateScanner() {
-        showHelp = false
+        showSettings = false
         cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
         scanResetToken += 1
+    }
+
+    /// Nur Simulator + aktivierte Layout-Preview: lehnt Pairing-Angebote
+    /// automatisch ab, damit Screenshots die Scanner-UI zeigen statt des
+    /// Pairing-Sheets (im Netz gefundene echte Macs würden es sonst öffnen).
+    private func autoDeclinePairingForLayoutPreview(_ service: ConnectionManager.DiscoveredService?) {
+        #if targetEnvironment(simulator)
+        guard Self.simulatorLayoutPreview, let service else { return }
+        connectionManager.pendingPairingService = nil
+        connectionManager.declinePairing(for: service)
+        #endif
     }
 
     // MARK: - Laufzeitstart (nach Onboarding)

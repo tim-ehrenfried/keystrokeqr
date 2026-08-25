@@ -2,6 +2,26 @@ import SwiftUI
 import AVFoundation
 import UIKit
 
+/// Quadratisches Scan-Fenster (Region of Interest): volle Bildschirmbreite,
+/// horizontal zentriert, Zentrum bei ~43 % der Bildschirmhöhe (etwas oberhalb
+/// der Mitte). Wird von ScannerView (AVCaptureMetadataOutput.rectOfInterest)
+/// UND vom SwiftUI-Overlay (Abdunkelung + Eckklammern) identisch verwendet —
+/// beide rechnen auf denselben Vollbild-Koordinaten (ignoresSafeArea).
+enum ScanRegion {
+    /// Vertikales Zentrum des Fensters als Anteil der Bildschirmhöhe.
+    static let centerYFraction: CGFloat = 0.43
+    /// Eckenradius des sichtbaren Ausschnitts.
+    static let cornerRadius: CGFloat = 24
+
+    /// 1:1-Ausschnitt in Vollbild-Koordinaten der übergebenen Größe.
+    static func rect(in size: CGSize) -> CGRect {
+        let side = min(size.width, size.height)
+        let centerY = size.height * centerYFraction
+        let y = max(0, min(centerY - side / 2, size.height - side))
+        return CGRect(x: (size.width - side) / 2, y: y, width: side, height: side)
+    }
+}
+
 /// Bildschirmfüllender Kamera-Sucher mit Barcode-Erkennung.
 ///
 /// - Erkennt QR + gängige 1D/2D-Barcodes via `AVCaptureMetadataOutput`.
@@ -22,9 +42,13 @@ struct ScannerView: UIViewRepresentable {
     var shouldAutoSend: (String) -> Bool = { _ in true }
     /// Bereits gesendeter Code ist (weiterhin) im Bild — entprellt gemeldet
     /// (max. ~4x/s), damit die UI ihren Auslöser-Button anzeigen/verlängern kann.
+    /// Im Push-to-Send-Modus (`shouldAutoSend` liefert immer false) meldet
+    /// dieser Kanal JEDEN aktuell erkannten Code — er speist den Send-Button.
     var onRepeatDetection: (String) -> Void = { _ in }
     /// Steuert Start/Stop der Capture-Session (App aktiv/inaktiv).
     var isActive: Bool
+    /// Gate für die Erfolgs-Haptik beim Auto-Senden (Setting „Haptik beim Senden“).
+    var playScanHaptics: Bool = true
     /// Ändert sich der Wert, wird der Scan-Cooldown sofort zurückgesetzt
     /// (Schnellstart via Deep-Link / App Intent).
     var resetToken: Int = 0
@@ -40,6 +64,9 @@ struct ScannerView: UIViewRepresentable {
         let view = PreviewView()
         view.videoPreviewLayer.videoGravity = .resizeAspectFill
         view.backgroundColor = .black
+        view.onLayout = { [weak coordinator = context.coordinator] in
+            coordinator?.updateRectOfInterest()
+        }
         context.coordinator.configure(previewView: view)
 
         let tap = UITapGestureRecognizer(
@@ -60,6 +87,7 @@ struct ScannerView: UIViewRepresentable {
         context.coordinator.shouldAutoSend = shouldAutoSend
         context.coordinator.onRepeatDetection = onRepeatDetection
         context.coordinator.onRunningChanged = onRunningChanged
+        context.coordinator.playScanHaptics = playScanHaptics
         context.coordinator.setActive(isActive)
         if context.coordinator.resetToken != resetToken {
             context.coordinator.resetToken = resetToken
@@ -79,6 +107,13 @@ struct ScannerView: UIViewRepresentable {
         var videoPreviewLayer: AVCaptureVideoPreviewLayer {
             layer as! AVCaptureVideoPreviewLayer
         }
+        /// Nach jedem Layout-Durchlauf aufgerufen — der Coordinator rechnet dann
+        /// das Scan-Fenster (`ScanRegion`) neu in `rectOfInterest` um.
+        var onLayout: (() -> Void)?
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            onLayout?()
+        }
     }
 
     // MARK: - Coordinator
@@ -89,6 +124,7 @@ struct ScannerView: UIViewRepresentable {
         var shouldAutoSend: (String) -> Bool = { _ in true }
         var onRepeatDetection: (String) -> Void = { _ in }
         var onRunningChanged: ((Bool) -> Void)?
+        var playScanHaptics = true
         /// Zuletzt verarbeiteter Reset-Token (siehe `ScannerView.resetToken`).
         var resetToken = 0
 
@@ -98,6 +134,7 @@ struct ScannerView: UIViewRepresentable {
         private var isRunning = false
         private weak var previewView: PreviewView?
         private var videoDevice: AVCaptureDevice?
+        private var metadataOutput: AVCaptureMetadataOutput?
         private var subjectAreaObserver: NSObjectProtocol?
 
         /// Bis zu diesem Zeitpunkt werden erkannte Codes ignoriert (1-s-Cooldown).
@@ -178,6 +215,30 @@ struct ScannerView: UIViewRepresentable {
         private func notifyRunning(_ running: Bool) {
             DispatchQueue.main.async { [weak self] in
                 self?.onRunningChanged?(running)
+                // Nach dem Session-Start ist die Preview-Layer-Zuordnung gültig —
+                // jetzt (und bei jedem Layout) das Scan-Fenster als ROI setzen.
+                if running {
+                    self?.updateRectOfInterest()
+                }
+            }
+        }
+
+        /// Begrenzung der Erkennung auf das Scan-Fenster (`ScanRegion`):
+        /// rechnet das Fenster von Layer- in normalisierte Capture-Koordinaten
+        /// um (`metadataOutputRectConverted(fromLayerRect:)`) — das geht erst,
+        /// wenn Session UND Layout stehen; bis dahin liefert die Umrechnung ein
+        /// leeres Rechteck und wir versuchen es beim nächsten Auslöser erneut.
+        /// Main-Thread (Layer/Bounds); das Setzen selbst auf der sessionQueue.
+        func updateRectOfInterest() {
+            guard let previewView, let output = metadataOutput,
+                  previewView.bounds.width > 0 else { return }
+            let layerRect = ScanRegion.rect(in: previewView.bounds.size)
+            let converted = previewView.videoPreviewLayer
+                .metadataOutputRectConverted(fromLayerRect: layerRect)
+            guard converted.width > 0, converted.height > 0,
+                  converted.width.isFinite, converted.height.isFinite else { return }
+            sessionQueue.async {
+                output.rectOfInterest = converted
             }
         }
 
@@ -223,6 +284,7 @@ struct ScannerView: UIViewRepresentable {
                 output.availableMetadataObjectTypes.contains($0)
             }
             session.commitConfiguration()
+            metadataOutput = output
 
             videoDevice = device
             configureDevice(device)
@@ -397,8 +459,10 @@ struct ScannerView: UIViewRepresentable {
                 // Neuer Code: exakt 1 Sekunde Cooldown, keine weitere Verarbeitung.
                 cooldownUntil = now.addingTimeInterval(1.0)
 
-                // Haptisches Feedback + Sucher kurz visuell einfrieren.
-                feedbackGenerator.notificationOccurred(.success)
+                // Haptisches Feedback (Setting-gesteuert) + Sucher kurz einfrieren.
+                if playScanHaptics {
+                    feedbackGenerator.notificationOccurred(.success)
+                }
                 freezePreview(for: 1.0)
 
                 onScan(text)
