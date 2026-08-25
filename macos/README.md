@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.12.0
+- **Version:** 0.13.0
 
 ## Voraussetzungen
 
@@ -177,12 +177,30 @@ Statussymbol der Bedienungshilfen).
 
 ## Willkommen / Onboarding (Erst-Start)
 
-Beim **allerersten Start** zeigt die App einmalig ein gestyltes Willkommens-
-fenster: kurz, was die App tut (iPhone scannt → Mac tippt), ein Hinweis auf die
-nötige **Bedienungshilfen**-Berechtigung mit Button „Bedienungshilfen öffnen…"
-sowie „Gerät koppeln…". Ob es schon gezeigt wurde, merkt sich die App in
-UserDefaults (`didCompleteHostOnboarding`). Jederzeit erneut aufrufbar über den
-grauen **„Einführung"**-Button oben rechts im KeystrokeQR-Fenster.
+Beim **allerersten Start** führt die App einmalig durch einen kleinen
+Einrichtungsassistenten (dunkler KeystrokeQR-Look). Gesamtfluss:
+
+**Willkommen → Funktionsweise → Bedienungshilfen (live geprüft) → „Gerät
+koppeln" → „Erfolgreich! Los geht's" → Kontrollpanel.**
+
+- Der **Bedienungshilfen-Status wird live geprüft** — analog zum Kontrollzentrum:
+  solange das Fenster aktiv ist, pollt ein Timer (~1,2 s) `AXIsProcessTrusted()`
+  und aktualisiert zusätzlich **sofort**, sobald das Fenster den Fokus bekommt
+  (der Nutzer kommt evtl. gerade aus den Systemeinstellungen zurück). Nicht
+  erteilt → roter Hinweis + Button „Bedienungshilfen öffnen…"; **erteilt → grüner
+  Erfolgs-Zustand „Bedienungshilfen aktiviert ✓"**, der Button verschwindet.
+- Die **Abschluss-Aktion ist „Gerät koppeln"** (öffnet den bestehenden
+  Pairing-Flow) — solange die Bedienungshilfen **nicht** erteilt sind, ist sie
+  **deaktiviert** und ein Hinweis erklärt, warum. Ein generischer „Los geht's"-
+  Abschluss-Button gibt es nicht mehr.
+- **Nach erfolgreichem Koppeln** zeigt der Assistent einen kurzen Erfolgs-Schritt
+  „Erfolgreich gekoppelt!" mit **„Los geht's"** — dieser schließt das Onboarding
+  und **springt ins Kontrollpanel**. (Wird außerhalb des Onboardings gekoppelt,
+  bleibt es beim bestehenden Auto-Close des Pairing-Fensters — kein Sprung.)
+
+Ob das Onboarding schon durchlaufen wurde, merkt sich die App in UserDefaults
+(`didCompleteHostOnboarding`). Jederzeit erneut aufrufbar über den grauen
+**„Einführung"**-Button oben rechts im KeystrokeQR-Fenster.
 
 ## Tippgeschwindigkeit
 

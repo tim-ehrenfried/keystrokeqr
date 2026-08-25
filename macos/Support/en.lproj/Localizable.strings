@@ -125,4 +125,8 @@
 "onboarding.body" = "Scan a QR or barcode with the KeystrokeQR app on your iPhone — this Mac types the text into whatever field is focused, right where your cursor is.";
 "onboarding.accessibility.title" = "Accessibility permission required";
 "onboarding.accessibility.body" = "To type for you, KeystrokeQR Host needs Accessibility access in System Settings › Privacy & Security.";
+"onboarding.accessibility.granted" = "Accessibility enabled ✓";
+"onboarding.pair.needsAccessibility" = "Grant Accessibility above first, so this Mac can type for you.";
+"onboarding.success.title" = "Successfully paired!";
+"onboarding.success.body" = "Your iPhone is connected. Scan a QR or barcode and this Mac types it into the focused field.";
 "onboarding.done" = "Get started";

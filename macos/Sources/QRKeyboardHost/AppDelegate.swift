@@ -178,18 +178,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func openPairingWindow() {
+        presentPairing(onPaired: nil)
+    }
+
+    /// Öffnet das Pairing-Fenster. `onPaired` wird nach erfolgreichem Koppeln (und
+    /// automatischem Schließen des Pairing-Fensters) aufgerufen — nur der
+    /// Onboarding-Fluss nutzt das, um zum Erfolgs-Schritt zu springen. Wird das
+    /// Pairing aus dem Kontrollpanel gestartet, bleibt `onPaired` `nil` (nur der
+    /// bestehende Auto-Close, kein erzwungener Sprung).
+    private func presentPairing(onPaired: (() -> Void)?) {
         let controller = pairingWindowController ?? PairingWindowController(coordinator: pairingCoordinator)
         pairingWindowController = controller
+        controller.onPaired = onPaired
         controller.start()
     }
 
     private func showOnboarding() {
         let controller = onboardingWindowController ?? OnboardingWindowController(
             onOpenAccessibility: { [weak self] in self?.openAccessibilitySettings() },
-            onPairDevice: { [weak self] in self?.openPairingWindow() }
+            onPairDevice: { [weak self] in
+                // Aus dem Onboarding gestartet: bei Erfolg zum Erfolgs-Schritt.
+                self?.presentPairing(onPaired: { [weak self] in
+                    self?.onboardingWindowController?.showPairingSuccess()
+                })
+            },
+            onFinish: { [weak self] in self?.finishOnboardingAndOpenPanel() }
         )
         onboardingWindowController = controller
         controller.present()
+    }
+
+    /// Abschluss des Onboardings („Los geht’s“): als erledigt markieren, das
+    /// Onboarding-Fenster schließen und zum Kontrollpanel springen.
+    private func finishOnboardingAndOpenPanel() {
+        HostSettings.didCompleteOnboarding = true
+        onboardingWindowController?.close()
+        openControlPanel()
     }
 
     /// Entfernt ein Gerät: PSK aus der Keychain löschen UND die evtl. gerade

@@ -251,9 +251,19 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         sections.alignment = .leading
         sections.spacing = 20
         sections.setCustomSpacing(20, after: header)
+        // Allseitig gleicher Außenrand (auch oben/unten) — symmetrisches
+        // Content-Padding.
         sections.edgeInsets = NSEdgeInsets(
-            top: 20, left: Self.homeEdgeInset, bottom: Self.homeEdgeInset, right: Self.homeEdgeInset)
+            top: Self.homeEdgeInset, left: Self.homeEdgeInset,
+            bottom: Self.homeEdgeInset, right: Self.homeEdgeInset)
         sections.translatesAutoresizingMaskIntoConstraints = false
+        // Feste Gesamtbreite = linker Rand + Spalte + Spaltenabstand + Spalte +
+        // rechter Rand (= Self.homeWidth). Ohne diese explizite Breite bestimmt
+        // `fittingSize` die Fensterbreite allein aus dem breitesten Teilinhalt
+        // (den beiden Spalten) und verschluckt bei `.leading`-Ausrichtung den
+        // rechten Rand — die rechte Karte klebte dann bündig an der Fensterkante.
+        // Hilfe/Über setzen aus demselben Grund bereits eine feste Breite.
+        sections.widthAnchor.constraint(equalToConstant: Self.homeWidth).isActive = true
         return sections
     }
 

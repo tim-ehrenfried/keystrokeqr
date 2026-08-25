@@ -24,6 +24,13 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
     private var countdownTimer: Timer?
     private var isFinished = false
 
+    /// Optional: wird nach **erfolgreichem** Pairing aufgerufen — und zwar erst,
+    /// nachdem sich dieses Fenster automatisch geschlossen hat. Nur der
+    /// Onboarding-Fluss setzt das, um zum Erfolgs-Schritt („Los geht’s“ →
+    /// Kontrollpanel) zu springen. Außerhalb des Onboardings bleibt es `nil`
+    /// (dann nur der bestehende Auto-Close, kein erzwungener Sprung).
+    var onPaired: (() -> Void)?
+
     init(coordinator: PairingCoordinator) {
         self.coordinator = coordinator
         let window = NSWindow(
@@ -201,8 +208,11 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             statusLabel.textColor = .systemGreen
             statusLabel.stringValue = L("pairing.successShort")
             // Automatisch schließen (~1,5 s), damit der Nutzer den Erfolg sieht.
+            // Danach ggf. den Onboarding-Erfolgs-Schritt anstoßen.
+            let paired = onPaired
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.close()
+                paired?()
             }
 
         case .wrongCodeNewIssued(let newOTP):

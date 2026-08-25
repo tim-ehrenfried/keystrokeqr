@@ -3,6 +3,17 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.13.0] – 2026-08-25 (nur macOS)
+
+### Fixed
+- **macOS – Panel schnitt rechts ab**: Die Home-Ansicht hatte keinen rechten Rand (Karte lag bündig an der Fensterkante). Jetzt feste, symmetrische Innenränder (links = rechts = oben = unten), Fensterbreite inkl. rechtem Rand berechnet.
+
+### Changed
+- **macOS – Einrichtungsassistent gestrafft**:
+  - Der Bedienungshilfen-Status wird jetzt **live geprüft** (Timer + beim Zurückkehren ins Fenster) und wird bei Erteilung grün („Bedienungshilfen aktiviert ✓") — ohne Neustart.
+  - Ist die Berechtigung erteilt, verschwindet der „Bedienungshilfen öffnen…"-Button; die Abschluss-Aktion ist statt „Los geht's" direkt **„Gerät koppeln"** (bis zur Erteilung deaktiviert, mit Hinweis).
+  - Nach erfolgreichem Koppeln zeigt der Assistent kurz **„Erfolgreich gekoppelt!"** mit **„Los geht's"** und springt dann ins Kontrollpanel. Koppeln außerhalb des Assistenten verhält sich unverändert (nur Auto-Close, kein Sprung).
+
 ## [0.12.0] – 2026-08-25
 
 ### Changed

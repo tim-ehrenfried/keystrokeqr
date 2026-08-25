@@ -125,4 +125,8 @@
 "onboarding.body" = "Scanne mit der KeystrokeQR-App auf deinem iPhone einen QR- oder Barcode — dieser Mac tippt den Text in das gerade fokussierte Feld, genau an deiner Cursor-Position.";
 "onboarding.accessibility.title" = "Bedienungshilfen-Berechtigung nötig";
 "onboarding.accessibility.body" = "Um für dich zu tippen, benötigt KeystrokeQR Host Zugriff auf die Bedienungshilfen unter Systemeinstellungen › Datenschutz & Sicherheit.";
+"onboarding.accessibility.granted" = "Bedienungshilfen aktiviert ✓";
+"onboarding.pair.needsAccessibility" = "Erteile oben zuerst die Bedienungshilfen, damit dieser Mac für dich tippen kann.";
+"onboarding.success.title" = "Erfolgreich gekoppelt!";
+"onboarding.success.body" = "Dein iPhone ist verbunden. Scanne einen QR- oder Barcode, und dieser Mac tippt ihn in das fokussierte Feld.";
 "onboarding.done" = "Los geht’s";
