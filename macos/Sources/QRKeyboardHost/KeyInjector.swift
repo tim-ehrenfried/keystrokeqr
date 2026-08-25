@@ -14,7 +14,7 @@ final class KeyInjector: @unchecked Sendable {
     private static let keyCodeReturn: CGKeyCode = 36
     private static let keyCodeTab: CGKeyCode = 48
 
-    private let queue = DispatchQueue(label: "de.timehrenfried.qr-keyboard-host.injector")
+    private let queue = DispatchQueue(label: "de.timehrenfried.keystrokeqr.host.injector")
     private var didPromptForAccessibility = false
 
     /// Aktueller Accessibility-Status (ohne Prompt).

@@ -3,23 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>de</string>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>de</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>QRKeyboardHost</string>
 	<key>CFBundleIdentifier</key>
-	<string>de.timehrenfried.qr-keyboard-host</string>
+	<string>de.timehrenfried.keystrokeqr.host</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>QR Keyboard Host</string>
+	<string>KeystrokeQR Host</string>
 	<key>CFBundleDisplayName</key>
-	<string>QR Keyboard Host</string>
+	<string>KeystrokeQR Host</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.0</string>
+	<string>0.7.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
@@ -27,12 +32,12 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>QR Keyboard Host stellt einen lokalen Dienst bereit, damit sich das iPhone im selben Netzwerk verbinden kann.</string>
+	<string>KeystrokeQR Host provides a local service so your iPhone on the same network can connect.</string>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_qr-keyboard._tcp</string>
+		<string>_keystrokeqr._tcp</string>
 	</array>
 	<key>NSHumanReadableCopyright</key>
-	<string>Open Source – QR-Keyboard</string>
+	<string>Open Source – KeystrokeQR</string>
 </dict>
 </plist>

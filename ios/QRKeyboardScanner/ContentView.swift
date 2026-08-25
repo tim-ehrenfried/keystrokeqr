@@ -21,6 +21,9 @@ struct ContentView: View {
 
     @AppStorage("autoEnter") private var autoEnter = false
     @AppStorage("autoTab") private var autoTab = false
+    /// Merkt sich, ob das erste Onboarding einmal durchlaufen wurde.
+    @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
+    @State private var showOnboarding = false
 
     @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var lastScannedText: String?
@@ -107,14 +110,27 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .task {
-            requestCameraAccessIfNeeded()
-            connectionManager.start()
+            // Beim allerersten Start zuerst das Onboarding zeigen; Kamera-/
+            // Netzwerk-Berechtigungen werden erst danach (bzw. kontextuell im
+            // Onboarding) angefragt, damit die Prompts nicht ungeklärt auftauchen.
+            if didCompleteOnboarding {
+                beginRuntime()
+            } else {
+                showOnboarding = true
+            }
             #if targetEnvironment(simulator)
             if Self.simulatorLayoutPreview {
                 lastScannedText = "Freiburg Wirtschaft Touristik und Messe GmbH & Co. KG"
                 repeatCandidate = "Freiburg Wirtschaft Tour…"
             }
             #endif
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView {
+                didCompleteOnboarding = true
+                showOnboarding = false
+                beginRuntime()
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -155,7 +171,7 @@ struct ContentView: View {
             VStack(spacing: 14) {
                 ProgressView()
                     .tint(.white)
-                Text("Kamera wird gestartet …")
+                Text("Starting camera…")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -169,13 +185,13 @@ struct ContentView: View {
     private var statusText: String {
         switch connectionManager.state {
         case .idle, .browsing:
-            return "Suche Mac …"
+            return String(localized: "Searching for Mac…")
         case .connecting:
-            return "Verbinde …"
+            return String(localized: "Connecting…")
         case .connected(let name):
-            return "Verbunden mit \(name)"
+            return String(localized: "Connected to \(name)")
         case .disconnected:
-            return "Getrennt – suche erneut …"
+            return String(localized: "Disconnected – searching again…")
         }
     }
 
@@ -203,7 +219,7 @@ struct ContentView: View {
     }
 
     private var accessibilityWarning: some View {
-        Label("Mac: Bedienungshilfen-Berechtigung fehlt", systemImage: "exclamationmark.triangle.fill")
+        Label("Mac: Accessibility permission missing", systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.black)
             .padding(.horizontal, 14)
@@ -216,7 +232,7 @@ struct ContentView: View {
         Button {
             connectionManager.outdatedHostDetected = false
         } label: {
-            Label("Gefundener Mac läuft mit veralteter App – bitte aktualisieren", systemImage: "exclamationmark.triangle.fill")
+            Label("Found Mac is running an outdated app – please update", systemImage: "exclamationmark.triangle.fill")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 14)
@@ -233,7 +249,7 @@ struct ContentView: View {
         VStack(spacing: 12) {
             if let lastScannedText {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Zuletzt gescannt")
+                    Text("Last scanned")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Text(lastScannedText)
@@ -255,18 +271,18 @@ struct ContentView: View {
                         .font(.title2)
                 }
                 .disabled(sentRegistry.isEmpty)
-                .accessibilityLabel("Verlauf leeren")
+                .accessibilityLabel("Clear history")
                 .confirmationDialog(
-                    "Scan-Verlauf leeren?",
+                    "Clear scan history?",
                     isPresented: $showClearConfirmation,
                     titleVisibility: .visible
                 ) {
-                    Button("Verlauf leeren", role: .destructive) {
+                    Button("Clear history", role: .destructive) {
                         clearHistory()
                     }
-                    Button("Abbrechen", role: .cancel) { }
+                    Button("Cancel", role: .cancel) { }
                 } message: {
-                    Text("Danach werden alle Codes wieder automatisch gesendet.")
+                    Text("After this, all codes will be sent automatically again.")
                 }
                 Button {
                     showHelp = true
@@ -274,7 +290,7 @@ struct ContentView: View {
                     Image(systemName: "questionmark.circle")
                         .font(.title2)
                 }
-                .accessibilityLabel("Hilfe")
+                .accessibilityLabel("Help")
             }
             .font(.subheadline)
         }
@@ -324,7 +340,7 @@ struct ContentView: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 34))
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Erneut senden")
+                    Text("Send again")
                         .font(.headline)
                     Text(payload)
                         .font(.caption.monospaced())
@@ -344,7 +360,7 @@ struct ContentView: View {
         .opacity(resendCooldownActive ? 0.6 : 1.0)
         .disabled(resendCooldownActive)
         .animation(.easeOut(duration: 0.15), value: resendCooldownActive)
-        .accessibilityHint("Sendet den bereits übertragenen Code noch einmal an den Mac.")
+        .accessibilityHint("Sends the already-transmitted code to the Mac again.")
     }
 
     private func resend(_ payload: String) {
@@ -379,7 +395,7 @@ struct ContentView: View {
                     Label(service.name, systemImage: "desktopcomputer")
                 }
             }
-            .navigationTitle("Mac auswählen")
+            .navigationTitle("Choose Mac")
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium])
@@ -387,11 +403,11 @@ struct ContentView: View {
 
     // MARK: - Schnellstart (Deep-Link / App Intent)
 
-    /// Behandelt `qrkeyboard://scan` (Widget, Kontrollzentrum, Shortcuts).
+    /// Behandelt `keystrokeqr://scan` (Widget, Kontrollzentrum, Shortcuts).
     /// Robust: unbekannte Hosts/Pfade werden ignoriert; läuft die App bereits,
     /// wird nur der Scanner sichtbar gemacht und der Cooldown zurückgesetzt.
     private func handleDeepLink(_ url: URL) {
-        guard url.scheme?.lowercased() == "qrkeyboard" else { return }
+        guard url.scheme?.lowercased() == "keystrokeqr" else { return }
         let target = (url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))).lowercased()
         guard target.isEmpty || target == "scan" else { return }
         activateScanner()
@@ -403,6 +419,15 @@ struct ContentView: View {
         showHelp = false
         cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
         scanResetToken += 1
+    }
+
+    // MARK: - Laufzeitstart (nach Onboarding)
+
+    /// Startet Kamera-Berechtigung + Bonjour-Discovery. Auf dem ersten Start
+    /// erst nach Abschluss des Onboardings, sonst direkt beim App-Start.
+    private func beginRuntime() {
+        requestCameraAccessIfNeeded()
+        connectionManager.start()
     }
 
     // MARK: - Kamera-Berechtigung

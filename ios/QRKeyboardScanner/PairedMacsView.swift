@@ -12,7 +12,7 @@ struct PairedMacsView: View {
         NavigationStack {
             List {
                 if macs.isEmpty {
-                    Text("Noch kein Mac gekoppelt. Öffne auf dem Mac das Menü „Gerät koppeln…“.")
+                    Text("No Mac paired yet. On the Mac, open the “Pair Device…” menu.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else {
@@ -21,22 +21,22 @@ struct PairedMacsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(mac.hostName)
                                     .font(.headline)
-                                Text("Gekoppelt: \(mac.pairedAt.formatted(date: .abbreviated, time: .shortened))")
+                                Text("Paired: \(mac.pairedAt.formatted(date: .abbreviated, time: .shortened))")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
                         .onDelete(perform: delete)
                     } footer: {
-                        Text("Entkoppeln löscht den gemeinsamen Schlüssel auf diesem iPhone; eine laufende Verbindung zu diesem Mac wird sofort getrennt. Um wieder zu verbinden, ist erneutes Pairing am Mac nötig.")
+                        Text("Unpairing deletes the shared key on this iPhone; any active connection to this Mac is disconnected immediately. To connect again, pair once more on the Mac.")
                     }
                 }
             }
-            .navigationTitle("Gekoppelte Macs")
+            .navigationTitle("Paired Macs")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Fertig") { dismiss() }
+                    Button("Done") { dismiss() }
                 }
                 if !macs.isEmpty {
                     ToolbarItem(placement: .topBarLeading) {

@@ -21,7 +21,7 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Gerät koppeln"
+        window.title = L("pairing.window.title")
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
@@ -34,7 +34,7 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
     private func buildUI() {
         guard let content = window?.contentView else { return }
 
-        let title = NSTextField(labelWithString: "Code in der iPhone-App eingeben:")
+        let title = NSTextField(labelWithString: L("pairing.prompt"))
         title.font = .systemFont(ofSize: 12)
         title.alignment = .center
         title.textColor = .secondaryLabelColor
@@ -75,7 +75,7 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
         }
         let otp = coordinator.startSession()
         otpLabel.stringValue = Self.formatted(otp)
-        statusLabel.stringValue = "Warte auf iPhone …"
+        statusLabel.stringValue = L("pairing.waiting")
         statusLabel.textColor = .labelColor
         tick()
         countdownTimer?.invalidate()
@@ -89,7 +89,9 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
 
     private func tick() {
         let remaining = coordinator.remainingSeconds
-        countdownLabel.stringValue = remaining > 0 ? "gültig für \(remaining) s" : "Code abgelaufen"
+        countdownLabel.stringValue = remaining > 0
+            ? String(format: L("pairing.countdown.valid"), remaining)
+            : L("pairing.countdown.expired")
         if remaining <= 0 {
             countdownTimer?.invalidate()
         }
@@ -99,11 +101,11 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
         switch event {
         case .paired(let name):
             statusLabel.textColor = .systemGreen
-            statusLabel.stringValue = "„\(name)“ erfolgreich gekoppelt."
+            statusLabel.stringValue = String(format: L("pairing.success"), name)
             countdownTimer?.invalidate()
         case .failed(let reason):
             statusLabel.textColor = .systemRed
-            statusLabel.stringValue = "Pairing fehlgeschlagen (\(reason))."
+            statusLabel.stringValue = String(format: L("pairing.failed"), reason)
         }
     }
 

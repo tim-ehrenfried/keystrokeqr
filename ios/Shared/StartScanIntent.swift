@@ -4,7 +4,7 @@ import Foundation
 extension Notification.Name {
     /// Wird gepostet, wenn der Scanner in den Vordergrund soll
     /// (App Intent / Deep-Link) — ContentView reagiert darauf.
-    static let startScanRequested = Notification.Name("de.timehrenfried.qr-keyboard-scanner.startScanRequested")
+    static let startScanRequested = Notification.Name("de.timehrenfried.keystrokeqr.startScanRequested")
 }
 
 /// App Intent: bringt die App in den Vordergrund und aktiviert den Scanner.
@@ -17,8 +17,8 @@ extension Notification.Name {
 /// wird vom System im App-Prozess ausgeführt — ist der Intent-Typ nur in der
 /// Extension bekannt, tut der Button auf dem Sperrbildschirm sichtbar nichts.
 struct StartScanIntent: AppIntent {
-    static let title: LocalizedStringResource = "QR-Code scannen"
-    static let description = IntentDescription("Öffnet den QR-Keyboard-Scanner und macht die Kamera scharf.")
+    static let title: LocalizedStringResource = "Scan QR Code"
+    static let description = IntentDescription("Opens the KeystrokeQR scanner and readies the camera.")
     static let openAppWhenRun: Bool = true
 
     @MainActor

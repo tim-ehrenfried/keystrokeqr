@@ -7,11 +7,12 @@ aufs iPhone bringen möchte), findet alles in [SETUP.md](SETUP.md).
 ## 1. macOS-App herunterladen
 
 1. Neueste Version laden:
-   **[github.com/tim-ehrenfried/qr-keyboard/releases/latest](https://github.com/tim-ehrenfried/qr-keyboard/releases/latest)**
-   → unter *Assets* die Datei **`QR-Keyboard-Host-macOS.zip`** anklicken.
-2. Das Zip im Downloads-Ordner doppelklicken (falls macOS es nicht schon
-   automatisch entpackt hat) → es erscheint **„QR Keyboard Host.app"**.
-3. Die App in den Ordner **Programme** ziehen (Finder → Gehe zu → Programme).
+   **[github.com/tim-ehrenfried/keystrokeqr/releases/latest](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)**
+   → unter *Assets* die Datei **`KeystrokeQR-Host-macOS.dmg`** anklicken.
+2. Die geladene **`KeystrokeQR-Host-macOS.dmg`** doppelklicken → ein Fenster öffnet
+   sich mit **„KeystrokeQR Host.app"** und einem **Programme**-Ordner daneben.
+3. Die App per Drag & Drop auf den **Programme**-Ordner im selben Fenster ziehen.
+   Danach das DMG auswerfen (im Finder auf ⏏ neben dem Volume).
 
 Voraussetzung: **macOS 13 (Ventura) oder neuer**.
 
@@ -24,7 +25,7 @@ deshalb mit einer Warnung. Zwei Wege, das einmalig freizugeben:
 **Weg A — Rechtsklick:**
 
 1. Im Ordner *Programme* mit **Rechtsklick** (bzw. ctrl-Klick) auf
-   „QR Keyboard Host" → **Öffnen**.
+   „KeystrokeQR Host" → **Öffnen**.
 2. Im Dialog erneut **Öffnen** bestätigen.
    (Ab macOS 15 Sequoia ggf. zusätzlich: *Systemeinstellungen → Datenschutz &
    Sicherheit* → ganz unten bei der blockierten App **„Dennoch öffnen"**.)
@@ -32,7 +33,7 @@ deshalb mit einer Warnung. Zwei Wege, das einmalig freizugeben:
 **Weg B — Terminal (Quarantäne-Attribut entfernen):**
 
 ```bash
-xattr -d com.apple.quarantine "/Applications/QR Keyboard Host.app"
+xattr -d com.apple.quarantine "/Applications/KeystrokeQR Host.app"
 ```
 
 Danach startet die App normal per Doppelklick.
@@ -48,8 +49,8 @@ macOS-Berechtigung **Bedienungshilfen**:
 
 1. App starten → in der Menüleiste erscheint ein QR-Symbol.
 2. *Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen* →
-   Schalter bei **„QR Keyboard Host"** aktivieren.
-   (Fehlt der Eintrag: unten **+** → im Ordner Programme „QR Keyboard Host.app"
+   Schalter bei **„KeystrokeQR Host"** aktivieren.
+   (Fehlt der Eintrag: unten **+** → im Ordner Programme „KeystrokeQR Host.app"
    auswählen. Der Menüpunkt **„Bedienungshilfen öffnen…"** in der App führt
    direkt dorthin.)
 3. App einmal beenden und neu starten — im Menü steht dann
@@ -59,7 +60,7 @@ Außerdem, falls macOS danach fragt bzw. die Firewall aktiv ist:
 
 - **Lokales Netzwerk** für die App erlauben (Abfrage ab macOS 15).
 - *Systemeinstellungen → Netzwerk → Firewall → Optionen* → eingehende
-  Verbindungen für „QR Keyboard Host" erlauben.
+  Verbindungen für „KeystrokeQR Host" erlauben.
 
 Ausführliche Schritte mit Troubleshooting: [SETUP.md](SETUP.md).
 

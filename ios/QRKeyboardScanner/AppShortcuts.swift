@@ -3,18 +3,19 @@ import AppIntents
 // StartScanIntent selbst liegt in Shared/StartScanIntent.swift und ist
 // Mitglied beider Targets (App + Widget-Extension) — siehe Hinweis dort.
 
-/// Stellt die deutschen Siri-/Spotlight-Phrasen bereit (nur App-Target).
+/// Stellt die Siri-/Spotlight-Phrasen bereit (nur App-Target). Basissprache
+/// Englisch; `\(.applicationName)` löst zum Anzeigenamen „KeystrokeQR" auf.
 struct QRKeyboardScannerShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: StartScanIntent(),
             phrases: [
-                "Scanne QR-Code mit \(.applicationName)",
-                "QR-Code scannen mit \(.applicationName)",
-                "Starte den Scanner in \(.applicationName)",
-                "Scanne einen Barcode mit \(.applicationName)"
+                "Scan QR Code with \(.applicationName)",
+                "Scan a QR code with \(.applicationName)",
+                "Start the scanner in \(.applicationName)",
+                "Scan a barcode with \(.applicationName)"
             ],
-            shortTitle: "QR-Code scannen",
+            shortTitle: "Scan QR Code",
             systemImageName: "qrcode.viewfinder"
         )
     }

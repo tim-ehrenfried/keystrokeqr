@@ -1,0 +1,4 @@
+/* KeystrokeQR Host — lokalisierte Info.plist-Schlüssel (Deutsch). */
+"CFBundleName" = "KeystrokeQR Host";
+"CFBundleDisplayName" = "KeystrokeQR Host";
+"NSLocalNetworkUsageDescription" = "KeystrokeQR Host stellt einen lokalen Dienst bereit, damit sich dein iPhone im selben Netzwerk verbinden kann.";

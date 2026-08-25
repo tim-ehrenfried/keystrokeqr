@@ -12,10 +12,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pairingWindowController: PairingWindowController?
     private var server: ScanServer?
 
-    private let connectionItem = NSMenuItem(title: "Warte auf Verbindung", action: nil, keyEquivalent: "")
-    private let portItem = NSMenuItem(title: "Port: – · Dienst: –", action: nil, keyEquivalent: "")
-    private let accessibilityItem = NSMenuItem(title: "Bedienungshilfen: –", action: nil, keyEquivalent: "")
-    private let pairedHeaderItem = NSMenuItem(title: "Gekoppelte Geräte", action: nil, keyEquivalent: "")
+    private let connectionItem = NSMenuItem(title: L("menu.status.waiting"), action: nil, keyEquivalent: "")
+    private let portItem = NSMenuItem(title: L("menu.port.placeholder"), action: nil, keyEquivalent: "")
+    private let accessibilityItem = NSMenuItem(title: L("menu.accessibility.placeholder"), action: nil, keyEquivalent: "")
+    private let pairedHeaderItem = NSMenuItem(title: L("menu.pairedDevices.header"), action: nil, keyEquivalent: "")
     private let mainMenu = NSMenu()
 
     private var lastState = ScanServer.State()
@@ -45,11 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let button = item.button {
             let image = NSImage(
                 systemSymbolName: "qrcode.viewfinder",
-                accessibilityDescription: "QR Keyboard Host"
+                accessibilityDescription: L("app.name")
             )
             image?.isTemplate = true // korrekt in Light & Dark Mode
             button.image = image
-            button.toolTip = "QR Keyboard Host"
+            button.toolTip = L("app.name")
         }
 
         mainMenu.delegate = self
@@ -65,7 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainMenu.addItem(accessibilityItem)
 
         let openAXItem = NSMenuItem(
-            title: "Bedienungshilfen öffnen…",
+            title: L("menu.accessibility.open"),
             action: #selector(openAccessibilitySettings),
             keyEquivalent: ""
         )
@@ -75,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainMenu.addItem(NSMenuItem.separator())
 
         let pairItem = NSMenuItem(
-            title: "Gerät koppeln…",
+            title: L("menu.pairDevice"),
             action: #selector(openPairingWindow),
             keyEquivalent: ""
         )
@@ -89,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainMenu.addItem(NSMenuItem.separator())
 
         let quitItem = NSMenuItem(
-            title: "Beenden",
+            title: L("menu.quit"),
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -110,20 +110,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         lastState = state
         let pairedCount = crypto.pairedDevices().count
         if pairedCount == 0 {
-            connectionItem.title = "Kein Gerät gekoppelt"
+            connectionItem.title = L("menu.status.noDevice")
         } else {
-            connectionItem.title = "\(pairedCount) gekoppelt · \(state.activeSessionCount) verbunden"
+            connectionItem.title = String(
+                format: L("menu.status.pairedConnected"),
+                pairedCount, state.activeSessionCount
+            )
         }
 
         let portText = state.port.map(String.init) ?? "–"
-        portItem.title = "Port: \(portText) · Dienst: \(state.serviceName)"
+        portItem.title = String(format: L("menu.port.format"), portText, state.serviceName)
     }
 
     private func updateAccessibilityItem() {
         if KeyInjector.isTrusted() {
-            accessibilityItem.title = "Bedienungshilfen: ✓ erteilt"
+            accessibilityItem.title = L("menu.accessibility.granted")
         } else {
-            accessibilityItem.title = "Bedienungshilfen: ✗ nicht erteilt"
+            accessibilityItem.title = L("menu.accessibility.denied")
         }
     }
 
@@ -153,7 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let submenu = NSMenu()
 
             let dateItem = NSMenuItem(
-                title: "Gekoppelt: \(formatter.string(from: device.pairedAt))",
+                title: String(format: L("menu.device.pairedAt"), formatter.string(from: device.pairedAt)),
                 action: nil, keyEquivalent: ""
             )
             dateItem.isEnabled = false
@@ -161,7 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             submenu.addItem(NSMenuItem.separator())
 
             let removeItem = NSMenuItem(
-                title: "Entfernen",
+                title: L("menu.device.remove"),
                 action: #selector(removeDevice(_:)),
                 keyEquivalent: ""
             )

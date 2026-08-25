@@ -1,7 +1,7 @@
-# QR-Keyboard
+# KeystrokeQR
 
-[![CI](https://github.com/tim-ehrenfried/qr-keyboard/actions/workflows/ci.yml/badge.svg)](https://github.com/tim-ehrenfried/qr-keyboard/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tim-ehrenfried/qr-keyboard)](https://github.com/tim-ehrenfried/qr-keyboard/releases/latest)
+[![CI](https://github.com/tim-ehrenfried/keystrokeqr/actions/workflows/ci.yml/badge.svg)](https://github.com/tim-ehrenfried/keystrokeqr/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tim-ehrenfried/keystrokeqr)](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow.svg)](LICENSE)
 
 **Scanne einen QR-/Barcode mit dem iPhone — der Text wird sofort an der Cursor-Position auf deinem Mac eingetippt.**
@@ -24,19 +24,19 @@ Ein zweiteiliges Open-Source-System, das komplett **lokal im WLAN** funktioniert
 |---|---|---|
 | **macOS-Host** (Menüleisten-App) | [`macos/`](macos/) | Swift, Network.framework, CGEvent |
 | **iOS-Scanner** (Client) | [`ios/`](ios/) | SwiftUI, AVFoundation, Network.framework |
-| **Protokoll-Spezifikation** | [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | Bonjour `_qr-keyboard._tcp` + WebSocket/JSON |
+| **Protokoll-Spezifikation** | [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | Bonjour `_keystrokeqr._tcp` + WebSocket/JSON |
 
 ## So funktioniert es
 
-1. Die **Mac-App** startet einen lokalen WebSocket-Server (Port 8080, automatischer Fallback) und macht ihn per **Bonjour** (`_qr-keyboard._tcp`) im WLAN auffindbar.
+1. Die **Mac-App** startet einen lokalen WebSocket-Server (Port 8080, automatischer Fallback) und macht ihn per **Bonjour** (`_keystrokeqr._tcp`) im WLAN auffindbar.
 2. Die **iPhone-App** findet den Mac automatisch — ohne IP-Eingabe — und verbindet sich.
 3. Jeder erkannte QR-/Barcode wird mit haptischem Feedback sofort an den Mac gesendet (1 s Scan-Cooldown gegen Doppel-Scans).
 4. Der Mac tippt den Text als **echte Tastaturanschläge** (CGEvent, Unicode-sicher, layout-unabhängig) in das aktuell fokussierte Fenster — optional gefolgt von **Tab** und/oder **Enter** (in der iPhone-App umschaltbar).
 
 ## Download
 
-Die fertige macOS-App gibt es auf der **[Releases-Seite](https://github.com/tim-ehrenfried/qr-keyboard/releases/latest)**
-(`QR-Keyboard-Host-macOS.zip`, ad-hoc-signiert). Installations- und
+Die fertige macOS-App gibt es auf der **[Releases-Seite](https://github.com/tim-ehrenfried/keystrokeqr/releases/latest)**
+(`KeystrokeQR-Host-macOS.dmg`, ad-hoc-signiert). Installations- und
 Gatekeeper-Hinweise für Endnutzer ohne Xcode: **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 ## Schnellstart
@@ -45,12 +45,12 @@ Gatekeeper-Hinweise für Endnutzer ohne Xcode: **[docs/INSTALL.md](docs/INSTALL.
 
 ```bash
 cd macos
-make app        # baut „QR Keyboard Host.app"
-open dist/"QR Keyboard Host.app"
+make app        # baut „KeystrokeQR Host.app"
+open dist/"KeystrokeQR Host.app"
 ```
 
 ⚠️ **Einmalig nötig:** Bedienungshilfen-Berechtigung erteilen, sonst kann die App nicht tippen:
-**Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → „QR Keyboard Host" aktivieren.**
+**Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → „KeystrokeQR Host" aktivieren.**
 Details: [macos/README.md](macos/README.md)
 
 ### iPhone

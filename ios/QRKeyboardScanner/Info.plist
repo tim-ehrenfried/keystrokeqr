@@ -2,14 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>KeystrokeQR</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>de.timehrenfried.qr-keyboard-scanner</string>
+			<string>de.timehrenfried.keystrokeqr</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>qrkeyboard</string>
+				<string>keystrokeqr</string>
 			</array>
 		</dict>
 	</array>
@@ -19,12 +21,12 @@
 		<string>LaunchBackground</string>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Die Kamera wird zum Scannen von QR- und Barcodes benötigt. Der gescannte Inhalt wird an deinen Mac im lokalen WLAN gesendet.</string>
+	<string>The camera is used to scan QR and barcodes. The scanned content is sent to your Mac on the local network.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Die App sucht deinen Mac im lokalen WLAN (Bonjour) und sendet gescannte Codes direkt an ihn. Ohne diese Berechtigung kann kein Mac gefunden werden.</string>
+	<string>The app finds your Mac on the local network (Bonjour) and sends scanned codes directly to it. Without this permission no Mac can be found.</string>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_qr-keyboard._tcp</string>
+		<string>_keystrokeqr._tcp</string>
 	</array>
 </dict>
 </plist>

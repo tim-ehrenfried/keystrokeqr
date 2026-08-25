@@ -86,7 +86,7 @@ struct EncFrameMessage: Codable {
     }
 }
 
-/// Verwaltet Bonjour-Discovery (`_qr-keyboard._tcp`) und die verschlüsselte
+/// Verwaltet Bonjour-Discovery (`_keystrokeqr._tcp`) und die verschlüsselte
 /// WebSocket-Verbindung zum Mac-Host via Network.framework, gemäß
 /// docs/PROTOCOL-v2.md. Der Port kommt IMMER aus der Bonjour-Auflösung
 /// (NWEndpoint.service), niemals hartkodiert.
@@ -128,7 +128,7 @@ final class ConnectionManager: ObservableObject {
     private var connection: NWConnection?
     private var isActive = false
     private var reconnectAttempts = 0
-    private let queue = DispatchQueue(label: "de.timehrenfried.qr-keyboard-scanner.network")
+    private let queue = DispatchQueue(label: "de.timehrenfried.keystrokeqr.network")
 
     // Sitzungs-Kryptozustand der aktuellen Verbindung.
     private var sessionKey: SymmetricKey?
@@ -176,7 +176,7 @@ final class ConnectionManager: ObservableObject {
         let parameters = NWParameters()
         parameters.includePeerToPeer = true
         let newBrowser = NWBrowser(
-            for: .bonjour(type: "_qr-keyboard._tcp", domain: nil),
+            for: .bonjour(type: "_keystrokeqr._tcp", domain: nil),
             using: parameters
         )
         newBrowser.browseResultsChangedHandler = { [weak self] results, _ in

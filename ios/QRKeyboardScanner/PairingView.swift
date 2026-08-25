@@ -26,7 +26,7 @@ struct PairingView: View {
                         .foregroundStyle(.yellow)
                     Text(service.name)
                         .font(.headline)
-                    Text("Neuer Mac — bitte einmalig koppeln.")
+                    Text("New Mac — pair it once.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -34,7 +34,7 @@ struct PairingView: View {
                 .padding(.top, 12)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Code aus dem Mac-Menü „Gerät koppeln…“ eingeben:")
+                    Text("Enter the code from the Mac menu “Pair Device…”:")
                         .font(.subheadline)
                     TextField("000000", text: $otp)
                         .keyboardType(.numberPad)
@@ -63,7 +63,7 @@ struct PairingView: View {
                         if isPairing {
                             ProgressView()
                         } else {
-                            Text("Koppeln")
+                            Text("Pair")
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -74,11 +74,11 @@ struct PairingView: View {
                 Spacer()
             }
             .padding(24)
-            .navigationTitle("Mac koppeln")
+            .navigationTitle("Pair Mac")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { cancel() }
+                    Button("Cancel") { cancel() }
                 }
             }
             .onAppear { otpFieldFocused = true }
@@ -113,17 +113,17 @@ struct PairingView: View {
     private static func message(for error: ConnectionManager.PairingError) -> String {
         switch error {
         case .badOTP:
-            return "Falscher Code. Am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen."
+            return String(localized: "Wrong code. On the Mac, generate a new code via “Pair Device…”.")
         case .expired:
-            return "Der Code ist abgelaufen (90 s). Am Mac einen neuen Code erzeugen."
+            return String(localized: "The code has expired (90 s). Generate a new code on the Mac.")
         case .closed:
-            return "Das Pairing-Fenster am Mac ist geschlossen."
+            return String(localized: "The pairing window on the Mac is closed.")
         case .connectionFailed:
-            return "Verbindung zum Mac fehlgeschlagen. Bitte erneut versuchen."
+            return String(localized: "Connection to the Mac failed. Please try again.")
         case .notFound:
-            return "Mac nicht gefunden."
+            return String(localized: "Mac not found.")
         case .invalidResponse:
-            return "Unerwartete Antwort vom Mac."
+            return String(localized: "Unexpected response from the Mac.")
         }
     }
 }

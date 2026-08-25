@@ -1,0 +1,29 @@
+/* KeystrokeQR Host — Deutsch (zusätzliche Lokalisierung). Siehe docs/BRANDING.md. */
+
+/* App */
+"app.name" = "KeystrokeQR Host";
+
+/* Menüleiste */
+"menu.status.waiting" = "Warte auf Verbindung";
+"menu.status.noDevice" = "Kein Gerät gekoppelt";
+"menu.status.pairedConnected" = "%1$d gekoppelt · %2$d verbunden";
+"menu.port.placeholder" = "Port: – · Dienst: –";
+"menu.port.format" = "Port: %1$@ · Dienst: %2$@";
+"menu.accessibility.placeholder" = "Bedienungshilfen: –";
+"menu.accessibility.granted" = "Bedienungshilfen: ✓ erteilt";
+"menu.accessibility.denied" = "Bedienungshilfen: ✗ nicht erteilt";
+"menu.accessibility.open" = "Bedienungshilfen öffnen…";
+"menu.pairedDevices.header" = "Gekoppelte Geräte";
+"menu.pairDevice" = "Gerät koppeln…";
+"menu.device.pairedAt" = "Gekoppelt: %@";
+"menu.device.remove" = "Entfernen";
+"menu.quit" = "Beenden";
+
+/* Pairing-Fenster */
+"pairing.window.title" = "Gerät koppeln";
+"pairing.prompt" = "Code in der iPhone-App eingeben:";
+"pairing.waiting" = "Warte auf iPhone …";
+"pairing.countdown.valid" = "gültig für %d s";
+"pairing.countdown.expired" = "Code abgelaufen";
+"pairing.success" = "„%@“ erfolgreich gekoppelt.";
+"pairing.failed" = "Pairing fehlgeschlagen (%@).";

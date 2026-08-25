@@ -1,4 +1,4 @@
-# QR-Keyboard – Netzwerkprotokoll (v1)
+# KeystrokeQR – Netzwerkprotokoll (v1)
 
 > **Historisch — seit v0.6.0 abgelöst durch [PROTOCOL-v2.md](PROTOCOL-v2.md)**
 > (Pairing + Ende-zu-Ende-Verschlüsselung, harter Schnitt: v1-Hosts/-Clients
@@ -11,7 +11,7 @@ Verbindliche Spezifikation für beide Komponenten (macOS-Host & iOS-Client).
 
 ## Discovery (Bonjour/mDNS)
 
-- **Service-Typ:** `_qr-keyboard._tcp`
+- **Service-Typ:** `_keystrokeqr._tcp`
 - **Domain:** `local.`
 - **Service-Name:** Hostname des Macs (z. B. „Tims MacBook Pro")
 - **Port:** `8080` (fest; fällt der Port aus, wählt der Host automatisch einen freien Port — der Client nutzt IMMER den via Bonjour aufgelösten Port, niemals hartkodiert 8080)

@@ -59,12 +59,12 @@ private extension SymmetricKey {
 }
 
 /// Persistente Identität + gekoppelte Macs in der Keychain
-/// (Service `de.timehrenfried.qr-keyboard-scanner`), gemäß docs/PROTOCOL-v2.md.
+/// (Service `de.timehrenfried.keystrokeqr`), gemäß docs/PROTOCOL-v2.md.
 /// Threadsicher (NSLock) — wird sowohl vom `ConnectionManager` (MainActor)
 /// als auch von der Pairing-/Verwaltungs-UI genutzt.
 final class CryptoManager: @unchecked Sendable {
 
-    static let keychainService = "de.timehrenfried.qr-keyboard-scanner"
+    static let keychainService = "de.timehrenfried.keystrokeqr"
     private static let accountIdentity = "identity"
     private static let accountPairedMacs = "paired-macs"
 

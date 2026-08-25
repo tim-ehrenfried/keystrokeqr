@@ -16,10 +16,10 @@ struct QRScanControlWidget: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "QRScanControl") {
             ControlWidgetButton(action: StartScanIntent()) {
-                Label("QR scannen", systemImage: "qrcode.viewfinder")
+                Label("Scan QR", systemImage: "qrcode.viewfinder")
             }
         }
-        .displayName("QR-Code scannen")
-        .description("Öffnet den QR-Keyboard-Scanner.")
+        .displayName("Scan QR Code")
+        .description("Opens the KeystrokeQR scanner.")
     }
 }

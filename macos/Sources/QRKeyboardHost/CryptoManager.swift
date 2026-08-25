@@ -59,12 +59,15 @@ private extension SymmetricKey {
 }
 
 /// Persistente Identität + gekoppelte Geräte in der Keychain
-/// (Service `de.timehrenfried.qr-keyboard-host`), gemäß docs/PROTOCOL-v2.md.
+/// (Service `de.timehrenfried.keystrokeqr.host`), gemäß docs/PROTOCOL-v2.md.
+/// Hinweis: reiner String-Wechsel beim Rebrand v0.7.0 — Items unter dem alten
+/// Service (`de.timehrenfried.qr-keyboard-host`) werden NICHT migriert; Nutzer
+/// koppeln einmalig neu (siehe docs/BRANDING.md).
 /// Threadsicher (NSLock) — wird sowohl vom `ScanServer` (eigene Queue) als
 /// auch von AppKit-UI (Main Thread: Menü, Pairing-Fenster) genutzt.
 final class CryptoManager: @unchecked Sendable {
 
-    static let keychainService = "de.timehrenfried.qr-keyboard-host"
+    static let keychainService = "de.timehrenfried.keystrokeqr.host"
     private static let accountIdentity = "identity"
     private static let accountPairedDevices = "paired-devices"
 

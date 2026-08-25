@@ -93,7 +93,7 @@ struct ScannerView: UIViewRepresentable {
         var resetToken = 0
 
         private let session = AVCaptureSession()
-        private let sessionQueue = DispatchQueue(label: "de.timehrenfried.qr-keyboard-scanner.capture")
+        private let sessionQueue = DispatchQueue(label: "de.timehrenfried.keystrokeqr.capture")
         private var isConfigured = false
         private var isRunning = false
         private weak var previewView: PreviewView?
@@ -593,15 +593,15 @@ struct CameraDeniedView: View {
             Image(systemName: "camera.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.gray)
-            Text("Kein Kamerazugriff")
+            Text("No camera access")
                 .font(.title2.bold())
                 .foregroundStyle(.white)
-            Text("Zum Scannen von Codes benötigt die App Zugriff auf die Kamera. Bitte erlaube den Zugriff in den Einstellungen.")
+            Text("The app needs access to the camera to scan codes. Please allow access in Settings.")
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
             if let url = URL(string: UIApplication.openSettingsURLString) {
-                Link("Einstellungen öffnen", destination: url)
+                Link("Open Settings", destination: url)
                     .buttonStyle(.borderedProminent)
             }
         }

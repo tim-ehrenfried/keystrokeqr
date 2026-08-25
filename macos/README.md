@@ -1,20 +1,27 @@
-# QR Keyboard Host (macOS)
+# KeystrokeQR Host (macOS)
 
-Menüleisten-App des Open-Source-Systems **QR-Keyboard**: empfängt QR-Scans vom
+Menüleisten-App des Open-Source-Systems **KeystrokeQR**: empfängt QR-Scans vom
 iPhone (per WebSocket im lokalen Netz, Bonjour-Discovery) und tippt den
 gescannten Text als echte Tastaturanschläge in das aktuell fokussierte Fenster —
 optional gefolgt von Tab und/oder Enter.
 
 Protokoll: siehe [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)
-(Bonjour `_qr-keyboard._tcp`, Port 8080 mit Fallback auf freien Port,
+(Bonjour `_keystrokeqr._tcp`, Port 8080 mit Fallback auf freien Port,
 JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 (einmaliges OTP-Pairing) und Ende-zu-Ende verschlüsselt — siehe
-[`../SECURITY.md`](../SECURITY.md).
+[`../SECURITY.md`](../SECURITY.md). Namen/IDs sind in
+[`../docs/BRANDING.md`](../docs/BRANDING.md) verbindlich festgelegt.
+
+- **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
+- **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
+- **Version:** 0.7.0
 
 ## Voraussetzungen
 
 - macOS 13 (Ventura) oder neuer
-- Xcode bzw. Swift-Toolchain (Swift 5.9+)
+- Xcode bzw. Swift-Toolchain (Swift 5.9+; getestet mit Swift 6.3)
+- Für Icon/DMG-Erzeugung: ImageMagick 7 (`magick`) sowie `sips`/`iconutil`
+  (Teil von macOS)
 
 ## Bauen
 
@@ -23,25 +30,73 @@ cd macos
 make app
 ```
 
-Das erzeugt das App-Bundle **`dist/QR Keyboard Host.app`** (Release-Build,
-ad-hoc-signiert). Das Bundle ist wichtig, damit macOS die
+Das erzeugt das App-Bundle **`dist/KeystrokeQR Host.app`** (Release-Build,
+ad-hoc-signiert) inklusive Lokalisierungen (`Contents/Resources/en.lproj` +
+`de.lproj`). Das Bundle ist wichtig, damit macOS die
 Bedienungshilfen-Berechtigung sauber **pro App** zuordnen kann.
 
 Weitere Targets:
 
-| Target       | Wirkung                                   |
-| ------------ | ----------------------------------------- |
-| `make build` | nur das Release-Binary bauen              |
-| `make app`   | App-Bundle unter `dist/` erzeugen         |
-| `make run`   | Bundle bauen und starten                  |
-| `make clean` | Build-Artefakte und `dist/` entfernen     |
+| Target       | Wirkung                                                   |
+| ------------ | --------------------------------------------------------- |
+| `make build` | nur das Release-Binary bauen                              |
+| `make icon`  | App-Icon `Support/AppIcon.icns` neu erzeugen (ImageMagick) |
+| `make app`   | App-Bundle unter `dist/` erzeugen                         |
+| `make dmg`   | gestyltes `dist/KeystrokeQR-Host.dmg` bauen               |
+| `make run`   | Bundle bauen und starten                                  |
+| `make clean` | Build-Artefakte, `dist/` und Hintergrundbild entfernen    |
+
+Mit Apple-Developer-Account statt ad-hoc signieren:
+
+```sh
+make app SIGN_IDENTITY="Developer ID Application: Tim Ehrenfried (TEAMID)"
+```
+
+(verfügbare Identitäten: `security find-identity -v -p codesigning`)
+
+## DMG-Installer (`make dmg`)
+
+`make dmg` erzeugt ein gestyltes Disk-Image **`dist/KeystrokeQR-Host.dmg`** mit
+Hintergrundbild (dunkel, „KeystrokeQR Host" + Pfeil „→ In Programme ziehen"),
+dem App-Icon links und einem **/Applications-Symlink** rechts.
+
+- Ist `create-dmg` (Homebrew: `brew install create-dmg`) installiert, wird es
+  bevorzugt genutzt und setzt Fenstergröße + Icon-Positionen direkt.
+- Sonst greift der `hdiutil`-Fallback. Er legt App, `/Applications`-Symlink und
+  Hintergrundbild (`.background/background.png`) ins Volume und **versucht** das
+  Feinstyling (Icon-Positionen, Fenster) per Finder-AppleScript.
+
+> **Einschränkung (Headless/CI):** Das Finder-AppleScript-Styling benötigt eine
+> GUI-/Finder-Session. Läuft `make dmg` ohne (z. B. in GitHub Actions), wird das
+> Styling übersprungen — das DMG ist trotzdem voll funktionsfähig (App +
+> `/Applications`-Symlink + Hintergrundbild), nur ohne vorgesetzte
+> Icon-Koordinaten. Für ein pixelgenau gestyltes DMG `make dmg` lokal bzw. mit
+> installiertem `create-dmg` ausführen.
+
+Das DMG wird ad-hoc bzw. mit `SIGN_IDENTITY` signiert (Notarisierung ist nicht
+Teil dieses Targets).
+
+## Internationalisierung (i18n)
+
+Alle nutzersichtbaren Host-Strings (Menüpunkte, Statuszeilen, Pairing-Fenster
+inkl. Countdown/Fehlermeldungen) sind lokalisiert. **Basissprache/Development
+Language ist Englisch (`en`)**, zusätzlich Deutsch (`de`).
+
+- Quellen: `Support/en.lproj/Localizable.strings` und
+  `Support/de.lproj/Localizable.strings` (plus `InfoPlist.strings` für die
+  Berechtigungsdialoge). `make app` kopiert sie nach
+  `Contents/Resources/<lang>.lproj/`.
+- Im Code läuft der Zugriff über die Hilfsfunktion `L(_:)`
+  (`NSLocalizedString`, Tabelle `Localizable`) — siehe
+  `Sources/QRKeyboardHost/Localization.swift`.
+- Die angezeigte Sprache folgt der Systemeinstellung des Nutzers.
 
 ## Starten
 
 ```sh
 make run
 # oder:
-open "dist/QR Keyboard Host.app"
+open "dist/KeystrokeQR Host.app"
 ```
 
 Die App erscheint als QR-Symbol in der Menüleiste (kein Dock-Icon). Das Menü
@@ -74,10 +129,10 @@ Schritt für Schritt:
    Menü der App: **„Bedienungshilfen öffnen…"**.
 2. Es öffnen sich die **Systemeinstellungen → Datenschutz & Sicherheit →
    Bedienungshilfen**.
-3. Falls **„QR Keyboard Host"** bereits in der Liste steht: den **Schalter
+3. Falls **„KeystrokeQR Host"** bereits in der Liste steht: den **Schalter
    aktivieren**.
 4. Falls die App noch nicht in der Liste steht: unten auf **„+"** klicken,
-   zum Ordner `macos/dist/` navigieren und **„QR Keyboard Host.app"**
+   zum Ordner `macos/dist/` navigieren und **„KeystrokeQR Host.app"**
    auswählen, dann den Schalter aktivieren.
 5. Ggf. mit dem Administrator-Passwort bestätigen.
 6. Die App **neu starten** (Menüleiste → Beenden, dann erneut öffnen), damit
@@ -90,6 +145,11 @@ Schritt für Schritt:
 > und die App wie oben beschrieben **neu hinzufügen** bzw. den Schalter
 > erneut aktivieren.
 
+> **Hinweis zum Rebrand (v0.7.0):** Bundle-ID, Keychain-Service und
+> Bonjour-Service-Typ haben sich geändert. Bestehende Kopplungen aus v0.6.x
+> müssen einmalig **neu** durchgeführt werden (siehe
+> [`../docs/BRANDING.md`](../docs/BRANDING.md)).
+
 ## Lokales Netzwerk
 
 Ab macOS 15 (Sequoia) kann macOS zusätzlich eine Freigabe für das **lokale
@@ -101,11 +161,12 @@ Mac nicht per Bonjour.
 - WebSocket-Server via `Network.framework` (`NWListener` + WebSocket-Options,
   `autoReplyPing`), fester Port **8080**, bei Belegung automatisch ein freier
   Port (der iOS-Client nutzt immer den via Bonjour aufgelösten Port).
-- Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT-Record `v=2`.
+- Bonjour-Advertising als `_keystrokeqr._tcp` mit TXT-Record `v=2`.
 - Jede Verbindung durchläuft entweder das OTP-Pairing (nur bei geöffnetem
   „Gerät koppeln…"-Fenster) oder den Sitzungs-Handshake für bereits
   gekoppelte Geräte; danach ausschließlich ChaChaPoly-verschlüsselte Frames
-  (Curve25519 + HKDF-SHA256, Identität + PSKs in der Keychain). Details:
+  (Curve25519 + HKDF-SHA256, Identität + PSKs in der Keychain, Service
+  `de.timehrenfried.keystrokeqr.host`). Details:
   [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md).
 - Mehrere iPhones können gleichzeitig verbunden sein; Scans werden strikt
   sequenziell getippt (Reihenfolge: Text → Tab → Enter).

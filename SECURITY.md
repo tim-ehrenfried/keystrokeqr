@@ -1,6 +1,6 @@
 # Sicherheit (Security Policy)
 
-QR-Keyboard ist ein bewusst einfaches, rein lokales Peer-to-Peer-System: Ein iPhone
+KeystrokeQR ist ein bewusst einfaches, rein lokales Peer-to-Peer-System: Ein iPhone
 scannt Codes, ein Mac tippt den Inhalt als Tastaturanschläge. Diese Einfachheit hat
 sicherheitsrelevante Konsequenzen — dieses Dokument beschreibt sie offen.
 
@@ -11,8 +11,8 @@ verschlüsselt (X25519 + HKDF-SHA256 + ChaChaPoly). Nur explizit am Mac
 gekoppelte iPhones können noch Keystrokes auslösen.** Details im Protokoll:
 [docs/PROTOCOL-v2.md](docs/PROTOCOL-v2.md).
 
-Der macOS-Host („QR Keyboard Host") startet einen WebSocket-Server und macht ihn
-per Bonjour (`_qr-keyboard._tcp`, TXT `v=2`) im lokalen Netz auffindbar. Jede
+Der macOS-Host („KeystrokeQR Host") startet einen WebSocket-Server und macht ihn
+per Bonjour (`_keystrokeqr._tcp`, TXT `v=2`) im lokalen Netz auffindbar. Jede
 Verbindung durchläuft entweder das Pairing (Phase 1, nur bei geöffnetem
 Pairing-Fenster + korrektem OTP) oder den Sitzungs-Handshake für bereits
 gekoppelte Geräte (Phase 2); danach ausschließlich AEAD-verschlüsselte Frames.
@@ -22,7 +22,7 @@ gekoppelte Geräte (Phase 2); danach ausschließlich AEAD-verschlüsselte Frames
 | **1. Keystroke-Injection durch beliebige LAN-Geräte** | **Geschlossen (v0.6.0)** | Ein nicht gekoppeltes Gerät kennt keine gültige `deviceID`/kein PSK → `session_hello` scheitert mit `not_paired`, keine `scan`-Nachricht wird je entschlüsselt. Nur Geräte, die den 6-stelligen OTP am physischen Mac-Bildschirm abgetippt haben, sind je gekoppelt worden. |
 | **2. DoS durch übergroße Payloads** | Begrenzt (unverändert) | Der Host begrenzt WebSocket-Frames auf 64 KiB und `text` auf 8192 UTF-16-Einheiten (`payload_too_large`). Ein *gekoppeltes* Gerät kann weiterhin viele einzelne Scans hintereinander senden — Rate-Limiting existiert nicht. |
 | **3. Mitlesen der Scans (Sniffing)** | **Geschlossen (v0.6.0)** | Alle Nutz-Frames sind ChaChaPoly-AEAD-verschlüsselt mit einem pro Sitzung frisch via HKDF abgeleiteten Schlüssel (Perfect-Forward-Secrecy pro Sitzung über die Nonce-Kette, nicht aber für das langlebige PSK selbst — siehe Restrisiken unten). Reiner Netzverkehrs-Mitschnitt liefert nur Chiffretext. |
-| **4. Host-Spoofing** | **Geschlossen (v0.6.0)** | Ein bösartiger `_qr-keyboard._tcp`-Announcer kann zwar `session_hello` empfangen, aber ohne das clientseitige PSK keine gültige `session_ready`/`enc`-Antwort erzeugen — der Client bricht ab bzw. erkennt `not_paired` nicht vom richtigen Host. Ein Spoofer, der sich selbst als *neuer, ungekoppelter* v2- oder v1-Host ausgibt, kann zwar den Pairing-Screen bzw. die „Mac-App aktualisieren“-Meldung auslösen — ein Pairing gelingt ihm aber nur, wenn der Nutzer den am *echten* Mac-Bildschirm angezeigten OTP dort eintippt (siehe Restrisiko OTP-Entropie). |
+| **4. Host-Spoofing** | **Geschlossen (v0.6.0)** | Ein bösartiger `_keystrokeqr._tcp`-Announcer kann zwar `session_hello` empfangen, aber ohne das clientseitige PSK keine gültige `session_ready`/`enc`-Antwort erzeugen — der Client bricht ab bzw. erkennt `not_paired` nicht vom richtigen Host. Ein Spoofer, der sich selbst als *neuer, ungekoppelter* v2- oder v1-Host ausgibt, kann zwar den Pairing-Screen bzw. die „Mac-App aktualisieren“-Meldung auslösen — ein Pairing gelingt ihm aber nur, wenn der Nutzer den am *echten* Mac-Bildschirm angezeigten OTP dort eintippt (siehe Restrisiko OTP-Entropie). |
 | **5. Remote Code Execution im Host** | Nicht bekannt (unverändert) | Eingaben werden ausschließlich als JSON dekodiert (Swift `Codable`, kein `eval`, keine Shell) und als Unicode-Keystrokes ausgegeben. Es gibt keine Datei-, URL- oder Prozess-Verarbeitung von Netzwerkeingaben. |
 
 **Nicht Teil des Threat Models:** Angreifer mit lokalem Zugriff auf den Mac oder

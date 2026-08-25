@@ -1,17 +1,17 @@
 import WidgetKit
 import SwiftUI
 
-/// Statisches Widget: öffnet die App via `qrkeyboard://scan` direkt im Scanner.
+/// Statisches Widget: öffnet die App via `keystrokeqr://scan` direkt im Scanner.
 /// Familien: Sperrbildschirm (accessoryCircular/-Rectangular) + systemSmall
 /// für den Homescreen.
 struct QRScanWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "QRScanWidget", provider: ScanProvider()) { _ in
             QRScanWidgetView()
-                .widgetURL(URL(string: "qrkeyboard://scan"))
+                .widgetURL(URL(string: "keystrokeqr://scan"))
         }
-        .configurationDisplayName("QR-Code scannen")
-        .description("Startet den QR-Keyboard-Scanner direkt — auch vom Sperrbildschirm.")
+        .configurationDisplayName("Scan QR Code")
+        .description("Opens the KeystrokeQR scanner directly — even from the Lock Screen.")
         .supportedFamilies([.accessoryCircular, .accessoryRectangular, .systemSmall])
     }
 }
@@ -55,9 +55,9 @@ struct QRScanWidgetView: View {
                 Image(systemName: "qrcode.viewfinder")
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Scannen")
+                    Text("Scan")
                         .font(.headline)
-                    Text("QR → Mac tippen")
+                    Text("QR → type on Mac")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -68,7 +68,7 @@ struct QRScanWidgetView: View {
             VStack(spacing: 10) {
                 Image(systemName: "qrcode.viewfinder")
                     .font(.system(size: 42, weight: .medium))
-                Text("Scannen")
+                Text("Scan")
                     .font(.headline)
             }
             .foregroundStyle(.primary)

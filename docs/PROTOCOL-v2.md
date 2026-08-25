@@ -1,4 +1,4 @@
-# QR-Keyboard – Netzwerkprotokoll v2 (Pairing + Verschlüsselung)
+# KeystrokeQR – Netzwerkprotokoll v2 (Pairing + Verschlüsselung)
 
 Verbindliche Spezifikation für die verschlüsselte, gekoppelte Variante. Löst v1 ab
 (harter Schnitt, siehe [PROTOCOL.md](PROTOCOL.md) für v1). Ziel: nur explizit
@@ -23,7 +23,7 @@ identisches Nonce-Schema — siehe unten).
 
 ## Discovery
 
-- Service-Typ `_qr-keyboard._tcp`, Port wie v1 (Bonjour-aufgelöst).
+- Service-Typ `_keystrokeqr._tcp`, Port wie v1 (Bonjour-aufgelöst).
 - **TXT-Record:** `v=2`. Ein Client, der nur `v=1` sieht, meldet „Bitte Mac-App aktualisieren".
   Ein v2-Host akzeptiert ausschließlich v2-Clients.
 
@@ -38,7 +38,7 @@ identisches Nonce-Schema — siehe unten).
 
 ## Persistenter Zustand
 
-**Mac (Keychain, Service `de.timehrenfried.qr-keyboard-host`):**
+**Mac (Keychain, Service `de.timehrenfried.keystrokeqr.host`):**
 - Eigenes langlebiges Identitäts-Keypair (Curve25519), einmalig erzeugt.
 - Pro gekoppeltem Gerät: `deviceID` (UUID), Anzeigename, dessen Public Key, abgeleitetes
   **PSK** (32 Byte), Pairing-Datum.

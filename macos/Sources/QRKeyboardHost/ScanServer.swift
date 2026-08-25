@@ -5,13 +5,13 @@ import CryptoKit
 /// WebSocket-Server gemäß docs/PROTOCOL-v2.md:
 /// - NWListener (TCP + NWProtocolWebSocket, autoReplyPing)
 /// - Fester Port 8080, Fallback auf beliebigen freien Port
-/// - Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT `v=2`
+/// - Bonjour-Advertising als `_keystrokeqr._tcp` mit TXT `v=2`
 /// - Pro Verbindung: entweder Pairing-Handshake (Phase 1, nur im Pairing-
 ///   Fenster gültig) oder Sitzungs-Handshake (Phase 2, nur gekoppelte Geräte),
 ///   danach ausschließlich verschlüsselte `enc`-Frames.
 final class ScanServer: @unchecked Sendable {
 
-    static let serviceType = "_qr-keyboard._tcp"
+    static let serviceType = "_keystrokeqr._tcp"
     static let preferredPort: UInt16 = 8080
 
     /// DoS-Schutz: maximale Größe eines WebSocket-Frames in Bytes.
@@ -29,7 +29,7 @@ final class ScanServer: @unchecked Sendable {
     /// UI-Callback; wird auf DispatchQueue.main aufgerufen.
     var onStateChange: (@Sendable (State) -> Void)?
 
-    private let queue = DispatchQueue(label: "de.timehrenfried.qr-keyboard-host.server")
+    private let queue = DispatchQueue(label: "de.timehrenfried.keystrokeqr.host.server")
     private let injector: KeyInjector
     private let crypto: CryptoManager
     private let pairingCoordinator: PairingCoordinator
@@ -42,7 +42,7 @@ final class ScanServer: @unchecked Sendable {
         self.injector = injector
         self.crypto = crypto
         self.pairingCoordinator = pairingCoordinator
-        self.serviceName = Host.current().localizedName ?? "QR Keyboard Host"
+        self.serviceName = Host.current().localizedName ?? "KeystrokeQR Host"
         self.state.serviceName = serviceName
     }
 

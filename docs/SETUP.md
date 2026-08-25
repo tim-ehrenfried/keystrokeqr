@@ -18,12 +18,12 @@ Diese Anleitung führt einmal komplett durch: Account aktivieren → iOS-App auf
 
 1. Projekt öffnen:
    ```bash
-   open /Users/timehrenfried/DEV/TOOLS/qr-keyboard/ios/QRKeyboardScanner.xcodeproj
+   open /Users/timehrenfried/DEV/TOOLS/keystrokeqr/ios/QRKeyboardScanner.xcodeproj
    ```
 2. Im Navigator das Projekt **QRKeyboardScanner** anklicken → Target **QRKeyboardScanner** → Tab **Signing & Capabilities**:
    - ✅ *Automatically manage signing*
    - **Team**: dein Developer-Team wählen.
-   - Meldet Xcode eine Bundle-ID-Kollision, die ID leicht abwandeln (z. B. `de.timehrenfried.qr-keyboard-scanner2`).
+   - Meldet Xcode eine Bundle-ID-Kollision, die ID leicht abwandeln (z. B. `de.timehrenfried.keystrokeqr2`).
    - Dasselbe **auch für das Widget-Target `QRKeyboardScannerWidgets`** (gleiches Team; Bundle-ID der Extension muss mit der App-ID beginnen).
 3. iPhone per **USB-Kabel** an den Mac (beim ersten Mal), am iPhone **„Diesem Computer vertrauen"** bestätigen.
 4. Am iPhone den **Entwicklermodus** aktivieren: *Einstellungen → Datenschutz & Sicherheit → Entwicklermodus* → einschalten → Neustart → nach dem Neustart bestätigen. (Der Schalter erscheint erst, wenn das iPhone einmal mit Xcode verbunden war.)
@@ -32,21 +32,21 @@ Diese Anleitung führt einmal komplett durch: Account aktivieren → iOS-App auf
 6. Beim ersten Start auf dem iPhone zwei Dialoge **erlauben**:
    - **Kamera** (für den Scanner)
    - **Lokales Netzwerk** (für die Bonjour-Suche nach dem Mac — ohne das findet die App den Mac nicht!)
-   - Falls versehentlich abgelehnt: *Einstellungen → Apps → QR Keyboard Scanner* → beides einschalten.
+   - Falls versehentlich abgelehnt: *Einstellungen → Apps → KeystrokeQR* → beides einschalten.
 
 ## 3. Mac-App bauen, starten, freischalten
 
 1. Bauen und starten:
    ```bash
-   cd /Users/timehrenfried/DEV/TOOLS/qr-keyboard/macos && make run
+   cd /Users/timehrenfried/DEV/TOOLS/keystrokeqr/macos && make run
    ```
    (Mit aktivem Dev-Account optional stabil signieren, dann übersteht die Berechtigung auch Rebuilds:
    `make app SIGN_IDENTITY="Apple Development: <dein Name> (TEAMID)"` — Identitäten anzeigen mit `security find-identity -v -p codesigning`.)
 2. In der Menüleiste erscheint das QR-Symbol. Menü öffnen → Accessibility-Status prüfen.
 3. **Bedienungshilfen freischalten** (zwingend fürs Tippen):
-   *Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen* → Schalter bei **„QR Keyboard Host"** aktivieren (fehlt der Eintrag: unten **+** → `macos/dist/QR Keyboard Host.app` auswählen).
+   *Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen* → Schalter bei **„KeystrokeQR Host"** aktivieren (fehlt der Eintrag: unten **+** → `macos/dist/KeystrokeQR Host.app` auswählen).
 4. Fragt macOS (ab macOS 15) nach **„Lokales Netzwerk"** für die App → erlauben.
-5. Firewall aktiv? *Systemeinstellungen → Netzwerk → Firewall → Optionen* → eingehende Verbindungen für „QR Keyboard Host" erlauben.
+5. Firewall aktiv? *Systemeinstellungen → Netzwerk → Firewall → Optionen* → eingehende Verbindungen für „KeystrokeQR Host" erlauben.
 
 ## 4. Einmaliges Koppeln (Pairing, seit v0.6.0 Pflicht)
 
@@ -75,7 +75,7 @@ auslösen kann (Details: [PROTOCOL-v2.md](PROTOCOL-v2.md), Sicherheitsbewertung:
 
 Die App bringt ein Lock-Screen-Widget, eine iOS-18-Steuerung und einen Kurzbefehl mit:
 
-- **Sperrbildschirm-Widget:** Sperrbildschirm gedrückt halten → **Anpassen** → Sperrbildschirm → Widget-Bereich unter der Uhr antippen → **QR Keyboard Scanner** → Widget hinzufügen. Antippen startet direkt den Scanner.
+- **Sperrbildschirm-Widget:** Sperrbildschirm gedrückt halten → **Anpassen** → Sperrbildschirm → Widget-Bereich unter der Uhr antippen → **KeystrokeQR** → Widget hinzufügen. Antippen startet direkt den Scanner.
 - **iOS 18 – Schnelltasten unten ersetzen:** Beim Anpassen des Sperrbildschirms die Taschenlampen-/Kamera-Taste antippen (−), dann **+** → Steuerung **„QR scannen"** wählen. Auch im **Kontrollzentrum** platzierbar (Kontrollzentrum öffnen → + oben links → Steuerung hinzufügen).
 - **Action Button (iPhone 15 Pro / 16):** *Einstellungen → Action Button* → **Kurzbefehl** → „Scanne QR-Code" wählen.
 - **Siri/Spotlight:** „Scanne QR-Code" funktioniert direkt als Siri-Phrase und in der Kurzbefehle-App als Baustein für eigene Automationen.

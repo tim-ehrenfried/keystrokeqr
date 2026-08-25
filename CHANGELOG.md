@@ -3,6 +3,18 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.7.0] – 2026-08-25
+
+### Changed
+- **Rebrand auf „KeystrokeQR"**: iOS-App → **KeystrokeQR**, macOS-Menüleisten-App → **KeystrokeQR Host**. Bundle-IDs neu: `de.timehrenfried.keystrokeqr` (App), `.widgets` (Widget), `.host` (Mac). Bonjour-Service-Typ `_qr-keyboard._tcp` → `_keystrokeqr._tcp`, URL-Scheme `qrkeyboard://` → `keystrokeqr://`, Keychain-Services angepasst. GitHub-Repo + lokaler Ordner → `keystrokeqr`. Verbindliche Namensspec: [docs/BRANDING.md](docs/BRANDING.md).
+  - **Breaking**: wegen geänderter Service-Typen/Bundle-IDs müssen bestehende v0.6.x-Kopplungen einmal neu durchgeführt und die Apps gemeinsam aktualisiert werden.
+
+### Added
+- **Internationalisierung (i18n)**: Englisch als Basissprache, Deutsch zusätzlich — beide Apps vollständig lokalisiert (iOS via String Catalog `Localizable.xcstrings`/`InfoPlist.xcstrings`, 103 Keys; macOS via `en.lproj`/`de.lproj`).
+- **iOS – First-Run-Onboarding**: vierseitiger Einführungsflow (Willkommen / Funktionsweise / Berechtigungen mit kontextuellem Kamera-Prompt / Kopplung), einmalig beim ersten Start, erneut aufrufbar über die Hilfe.
+- **macOS – gestylter DMG-Installer**: `make dmg` erzeugt `KeystrokeQR-Host.dmg` (Fenster-Hintergrundbild, App + /Applications-Symlink); der Release-Workflow lädt `KeystrokeQR-Host-macOS.dmg` als Asset hoch (löst das ZIP ab).
+- **Neue App-Icons** (iOS + macOS) im KeystrokeQR-Motiv (QR-Viewfinder + Keystroke-/Tasten-Akzent, gelbe Scan-Linie), stilistisch konsistent über beide Plattformen.
+
 ## [0.6.1] – 2026-08-25
 
 ### Fixed

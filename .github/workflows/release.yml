@@ -16,23 +16,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: App-Bundle bauen (ad-hoc-signiert)
+      - name: Gestyltes DMG bauen (ad-hoc-signiert)
         working-directory: macos
-        run: make app
+        run: make dmg
 
-      - name: Bundle verifizieren
+      - name: Bundle & DMG verifizieren
         working-directory: macos
         run: |
-          test -x "dist/QR Keyboard Host.app/Contents/MacOS/QRKeyboardHost"
-          test -f "dist/QR Keyboard Host.app/Contents/Resources/AppIcon.icns"
-          codesign --verify --verbose=2 "dist/QR Keyboard Host.app"
-
-      - name: Zip-Archiv erstellen
-        working-directory: macos
-        run: ditto -c -k --keepParent "dist/QR Keyboard Host.app" "QR-Keyboard-Host-macOS.zip"
+          test -x "dist/KeystrokeQR Host.app/Contents/MacOS/QRKeyboardHost"
+          test -f "dist/KeystrokeQR Host.app/Contents/Resources/AppIcon.icns"
+          test -f "dist/KeystrokeQR Host.app/Contents/Resources/en.lproj/Localizable.strings"
+          test -f "dist/KeystrokeQR Host.app/Contents/Resources/de.lproj/Localizable.strings"
+          codesign --verify --verbose=2 "dist/KeystrokeQR Host.app"
+          test -f "dist/KeystrokeQR-Host.dmg"
+          # Release-Asset auf den gewünschten Namen bringen.
+          cp "dist/KeystrokeQR-Host.dmg" "KeystrokeQR-Host-macOS.dmg"
 
       - name: GitHub-Release anlegen
         uses: softprops/action-gh-release@v2
         with:
-          files: macos/QR-Keyboard-Host-macOS.zip
+          files: macos/KeystrokeQR-Host-macOS.dmg
           generate_release_notes: true
