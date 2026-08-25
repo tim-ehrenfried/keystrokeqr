@@ -46,6 +46,16 @@ struct HelpView: View {
                     .font(.callout)
                 }
 
+                Section("Schnellstart vom Sperrbildschirm") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("**Sperrbildschirm-Widget:** Sperrbildschirm gedrückt halten → **Anpassen** → Sperrbildschirm wählen → Widget-Bereich antippen → **QR-Keyboard Scanner** hinzufügen. Antippen startet den Scanner direkt.")
+                        Text("**iOS 18 – Schnelltasten:** Beim Anpassen des Sperrbildschirms eine der beiden unteren Schnelltasten (Taschenlampe/Kamera) durch **„QR-Code scannen“** ersetzen. Dieselbe Steuerung lässt sich auch ins **Kontrollzentrum** legen.")
+                        Text("**Action Button (iPhone 15 Pro und neuer):** Einstellungen → **Action Button** → **Kurzbefehl** → Aktion **„QR-Code scannen“** wählen.")
+                        Text("**Siri/Spotlight:** „Scanne QR-Code mit QR-Keyboard Scanner“ sagen oder in Spotlight nach „Scannen“ suchen.")
+                    }
+                    .font(.callout)
+                }
+
                 Section("Problembehebung") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("**Kein Mac gefunden?**")

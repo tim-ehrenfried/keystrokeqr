@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.2.0] – 2026-08-25
+
+### Added
+- **iOS – Schnellstart vom Sperrbildschirm**: Widget-Extension `QRKeyboardScannerWidgets` mit Lock-Screen-Widget (accessoryCircular/-Rectangular, systemSmall) via Deep-Link `qrkeyboard://scan`; iOS-18-ControlWidget für Sperrbildschirm-Schnelltasten und Kontrollzentrum; App Intent „QR-Code scannen" + App Shortcuts (Siri, Spotlight, Kurzbefehle-App, Action Button); URL-Scheme `qrkeyboard` mit robustem `.onOpenURL`-Handler inkl. Cooldown-Reset.
+- **Doku**: `docs/SETUP.md` — Schritt-für-Schritt vom Apple-Developer-Account bis zum laufenden System (Signing, Entwicklermodus, Berechtigungen, Sperrbildschirm-Einrichtung, Troubleshooting); In-App-Hilfe und READMEs entsprechend erweitert.
+
+### Changed
+- **macOS – Makefile**: neue Variable `SIGN_IDENTITY` (Standard ad-hoc) für stabile Signatur mit Developer-Zertifikat; Signierung mit Hardened Runtime (`--options runtime`).
+
 ## [0.1.0] – 2026-08-25
 
 ### Added

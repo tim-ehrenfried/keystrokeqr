@@ -11,6 +11,9 @@ struct ContentView: View {
     @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var lastScannedText: String?
     @State private var showHelp = false
+    /// Wird erhöht, wenn der Scanner (Deep-Link/App Intent) sofort scharf sein
+    /// soll — setzt in der ScannerView den Cooldown zurück.
+    @State private var scanResetToken = 0
 
     var body: some View {
         ZStack {
@@ -23,7 +26,8 @@ struct ContentView: View {
                         lastScannedText = text
                         connectionManager.send(text: text, autoEnter: autoEnter, autoTab: autoTab)
                     },
-                    isActive: scenePhase == .active
+                    isActive: scenePhase == .active,
+                    resetToken: scanResetToken
                 )
                 .ignoresSafeArea()
             case .denied, .restricted:
@@ -56,6 +60,12 @@ struct ContentView: View {
             } else {
                 connectionManager.stop()
             }
+        }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .startScanRequested)) { _ in
+            activateScanner()
         }
         .sheet(isPresented: $showHelp) {
             HelpView()
@@ -166,6 +176,26 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium])
+    }
+
+    // MARK: - Schnellstart (Deep-Link / App Intent)
+
+    /// Behandelt `qrkeyboard://scan` (Widget, Kontrollzentrum, Shortcuts).
+    /// Robust: unbekannte Hosts/Pfade werden ignoriert; läuft die App bereits,
+    /// wird nur der Scanner sichtbar gemacht und der Cooldown zurückgesetzt.
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme?.lowercased() == "qrkeyboard" else { return }
+        let target = (url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))).lowercased()
+        guard target.isEmpty || target == "scan" else { return }
+        activateScanner()
+    }
+
+    /// Macht den Scanner sichtbar (Hilfe-Sheet schließen) und setzt den
+    /// Scan-Cooldown zurück, damit sofort gescannt werden kann.
+    private func activateScanner() {
+        showHelp = false
+        cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        scanResetToken += 1
     }
 
     // MARK: - Kamera-Berechtigung

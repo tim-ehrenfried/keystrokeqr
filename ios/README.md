@@ -52,3 +52,29 @@ xcodebuild -project QRKeyboardScanner.xcodeproj \
   Macs gefunden werden.
 - Meldet der Mac `accessibility_denied`, zeigt die App einen deutlichen Hinweis
   („Mac: Bedienungshilfen-Berechtigung fehlt“).
+
+## Schnellstart vom Sperrbildschirm
+
+Die App bringt eine Widget-Extension (`QRKeyboardScannerWidgets`) und App
+Intents mit; alle Wege öffnen die App direkt im Scanner (Deep-Link
+`qrkeyboard://scan`):
+
+- **Sperrbildschirm-Widget (iOS 17+):** Sperrbildschirm gedrückt halten →
+  *Anpassen* → Sperrbildschirm → Widget-Bereich antippen → **QR-Keyboard
+  Scanner** hinzufügen (rund oder rechteckig). Zusätzlich gibt es ein kleines
+  Homescreen-Widget.
+- **Sperrbildschirm-Schnelltasten / Kontrollzentrum (iOS 18+):** Beim
+  Anpassen des Sperrbildschirms eine der unteren Schnelltasten
+  (Taschenlampe/Kamera) durch die Steuerung **„QR-Code scannen“** ersetzen —
+  oder die Steuerung ins Kontrollzentrum legen (Control Widget).
+- **Action Button (iPhone 15 Pro+):** Einstellungen → *Action Button* →
+  *Kurzbefehl* → **„QR-Code scannen“**.
+- **Siri/Spotlight/Shortcuts:** Der App Intent „QR-Code scannen“ steht in der
+  Shortcuts-App bereit; Siri-Phrase z. B. „Scanne QR-Code mit QR-Keyboard
+  Scanner“.
+
+Technik: URL-Scheme `qrkeyboard` (`qrkeyboard://scan`), `StartScanIntent`
+(AppIntent, `openAppWhenRun`) + `AppShortcutsProvider` im App-Target, Widget-
+Extension mit Lock-Screen-/Homescreen-Widget (`.widgetURL`) und iOS-18-
+ControlWidget (Bundle-ID `de.timehrenfried.qr-keyboard-scanner.widgets`,
+Deployment iOS 17, ControlWidget `@available(iOS 18)`-gated).

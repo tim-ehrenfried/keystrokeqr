@@ -13,6 +13,9 @@ struct ScannerView: UIViewRepresentable {
     var onScan: (String) -> Void
     /// Steuert Start/Stop der Capture-Session (App aktiv/inaktiv).
     var isActive: Bool
+    /// Ändert sich der Wert, wird der Scan-Cooldown sofort zurückgesetzt
+    /// (Schnellstart via Deep-Link / App Intent).
+    var resetToken: Int = 0
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onScan: onScan)
@@ -28,6 +31,10 @@ struct ScannerView: UIViewRepresentable {
     func updateUIView(_ uiView: PreviewView, context: Context) {
         context.coordinator.onScan = onScan
         context.coordinator.setActive(isActive)
+        if context.coordinator.resetToken != resetToken {
+            context.coordinator.resetToken = resetToken
+            context.coordinator.resetCooldown()
+        }
     }
 
     static func dismantleUIView(_ uiView: PreviewView, coordinator: Coordinator) {
@@ -66,8 +73,17 @@ struct ScannerView: UIViewRepresentable {
             .pdf417, .dataMatrix, .aztec, .interleaved2of5, .itf14, .upce
         ]
 
+        /// Zuletzt verarbeiteter Reset-Token (siehe `ScannerView.resetToken`).
+        var resetToken = 0
+
         init(onScan: @escaping (String) -> Void) {
             self.onScan = onScan
+        }
+
+        /// Hebt Cooldown und Preview-Freeze sofort auf (MainActor/Main-Thread).
+        func resetCooldown() {
+            cooldownUntil = .distantPast
+            previewView?.videoPreviewLayer.connection?.isEnabled = true
         }
 
         func configure(previewView: PreviewView) {
