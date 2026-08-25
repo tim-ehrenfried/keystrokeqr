@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.5.1] – 2026-08-25
+
+### Fixed
+- **iOS – Overlay-Randabstand endgültig**: Die Bedienleisten-Zeile lief wegen der nicht schrumpfbaren Toggles (`.fixedSize()`) über die Bildschirmbreite hinaus und zog Auslöser-Kapsel und Leiste randlos — Toggles jetzt als Chip mit skalier-/kürzbarem Label, Zeilen-Spacing reduziert. Im Simulator pixelgenau verifiziert (16 pt Seitenränder, 12 pt über dem Home-Indicator).
+- Versehentliche Ordner-Umbenennung von `ios/Shared/` rückgängig gemacht (die App hatte einen Scan-Payload in ein fokussiertes Xcode-Umbenennen-Feld getippt — Praxisbeleg für das in SECURITY.md beschriebene Injection-Risiko und den Pairing-Plan).
+
+### Added
+- `docs/PLAN-SECURITY-DISTRIBUTION.md`: Plan für TLS-PSK-Verschlüsselung + einmaliges OTP-Pairing sowie CI/CD-Distribution (App Store/TestFlight + notarisiertes DMG). Nur Planung, keine Umsetzung.
+
 ## [0.5.0] – 2026-08-25
 
 ### Added

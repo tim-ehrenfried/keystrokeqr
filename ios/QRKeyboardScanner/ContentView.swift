@@ -41,6 +41,13 @@ struct ContentView: View {
     @State private var resendCooldownActive = false
     @State private var showClearConfirmation = false
 
+    #if targetEnvironment(simulator)
+    /// Nur Simulator: blendet Auslöser-Kapsel + „Zuletzt gescannt" dauerhaft
+    /// mit Dummy-Daten ein, um das Overlay-Layout ohne Kamera zu prüfen.
+    /// Zum Verifizieren auf `true` setzen — im Normalzustand deaktiviert.
+    private static let simulatorLayoutPreview = false
+    #endif
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -99,6 +106,12 @@ struct ContentView: View {
         .task {
             requestCameraAccessIfNeeded()
             connectionManager.start()
+            #if targetEnvironment(simulator)
+            if Self.simulatorLayoutPreview {
+                lastScannedText = "Freiburg Wirtschaft Touristik und Messe GmbH & Co. KG"
+                repeatCandidate = "Freiburg Wirtschaft Tour…"
+            }
+            #endif
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -204,12 +217,10 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            HStack(spacing: 16) {
-                Toggle("Auto-Enter", isOn: $autoEnter)
-                    .fixedSize()
-                Toggle("Auto-Tab", isOn: $autoTab)
-                    .fixedSize()
-                Spacer()
+            HStack(spacing: 8) {
+                toggleChip("Auto-Enter", isOn: $autoEnter)
+                toggleChip("Auto-Tab", isOn: $autoTab)
+                Spacer(minLength: 0)
                 Button {
                     showClearConfirmation = true
                 } label: {
@@ -238,11 +249,29 @@ struct ContentView: View {
                 }
                 .accessibilityLabel("Hilfe")
             }
-            .toggleStyle(.switch)
             .font(.subheadline)
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    /// Kompakte Schalter-Gruppe: Label sitzt direkt am Switch und darf bei
+    /// wenig Breite kürzen/schrumpfen. WICHTIG: Kein `.fixedSize()` auf der
+    /// Gruppe — eine unschrumpfbare Zeile, die breiter ist als der Platz,
+    /// drückt sonst den umgebenden VStack über die Bildschirmränder hinaus
+    /// (die Overlays „kleben" dann trotz `.padding(.horizontal)` an den Kanten).
+    private func toggleChip(_ title: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 5) {
+            Text(title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .accessibilityHidden(true)
+                .onTapGesture { isOn.wrappedValue.toggle() }
+            Toggle(title, isOn: isOn)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .fixedSize()
+        }
     }
 
     // MARK: - Erneut senden (bereits übertragener Code)
