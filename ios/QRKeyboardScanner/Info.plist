@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Die Kamera wird zum Scannen von QR- und Barcodes benötigt. Der gescannte Inhalt wird an deinen Mac im lokalen WLAN gesendet.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Die App sucht deinen Mac im lokalen WLAN (Bonjour) und sendet gescannte Codes direkt an ihn. Ohne diese Berechtigung kann kein Mac gefunden werden.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_qr-keyboard._tcp</string>
+	</array>
+</dict>
+</plist>
