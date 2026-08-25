@@ -47,7 +47,14 @@ Bei Fehler (z. B. Accessibility-Berechtigung fehlt):
 { "type": "ack", "ok": false, "error": "accessibility_denied" }
 ```
 
-Fehlercodes: `accessibility_denied`, `invalid_message`.
+Fehlercodes: `accessibility_denied`, `invalid_message`, `payload_too_large`.
+
+### Limits (DoS-Schutz, ab Host v0.5.0)
+
+- **WebSocket-Frame:** max. **64 KiB** (größere Frames verwirft die Transportschicht des Hosts).
+- **`text`:** max. **8192 UTF-16-Einheiten** — deckt jede reale QR-/Barcode-Kapazität ab.
+  Überschreitung → `{ "type": "ack", "ok": false, "error": "payload_too_large" }`, es wird nichts getippt.
+- Clients müssen unbekannte Fehlercodes tolerant ignorieren.
 
 ### Keepalive
 

@@ -3,6 +3,20 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.5.0] – 2026-08-25
+
+### Added
+- **iOS – Code-Outlines**: gelbe, sanft nachgeführte Rahmen um alle aktuell erkannten Codes (CAShapeLayer auf dem Preview, perspektivische Ecken via `transformedMetadataObject`, Fade-out beim Verlassen des Bilds) — wie beim System-QR-Scanner.
+- **iOS – Hilfe „Über"-Abschnitt**: App-Version/Build dynamisch, © 2026 Tim Ehrenfried, Kontakt mail@tim-ehrenfried.de, GitHub-Link.
+- **App-Icons** für iOS (Asset Catalog, 1024er Single-Size) und macOS (AppIcon.icns im Bundle): dunkler Verlauf, weißes QR-Viewfinder-Motiv, gelbe Scan-Linie.
+- **GitHub-Infrastruktur**: CI-Workflow (macOS-Host-Build + iOS-Simulator-Build) und Release-Workflow (Tag `v*` → `QR-Keyboard-Host-macOS.zip` als GitHub-Release), `SECURITY.md` (Threat Model, Empfehlungen, Responsible Disclosure), `docs/INSTALL.md` (Endnutzer-Installation inkl. Gatekeeper).
+
+### Fixed
+- **iOS – Layout**: Overlays (Status, Auslöser, Bedienleiste) klebten randlos an den Bildschirmkanten; jetzt durchgängige 16-pt-Margins, Bedienleiste als abgerundete Karte, Safe-Area/Home-Indicator respektiert.
+
+### Security
+- **macOS – DoS-Schutz**: WebSocket-Frames auf 64 KiB und `text` auf 8192 UTF-16-Einheiten begrenzt; Überschreitung → neues Ack `payload_too_large` statt minutenlangem „Volltippen" (PROTOCOL.md ergänzt).
+
 ## [0.4.0] – 2026-08-25
 
 ### Added

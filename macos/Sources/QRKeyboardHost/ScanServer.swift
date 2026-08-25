@@ -11,6 +11,14 @@ final class ScanServer: @unchecked Sendable {
     static let serviceType = "_qr-keyboard._tcp"
     static let preferredPort: UInt16 = 8080
 
+    /// DoS-Schutz: maximale Größe eines WebSocket-Frames in Bytes.
+    /// Größere Frames verwirft Network.framework, bevor sie die App erreichen.
+    static let maximumMessageSize = 65_536
+    /// DoS-Schutz: maximale Länge von `text` in UTF-16-Einheiten. Deckt jede
+    /// reale QR-/Barcode-Kapazität ab (QR max. ~7089 Zeichen numerisch);
+    /// verhindert, dass ein bösartiger Client den Mac minutenlang „volltippt".
+    static let maximumTextLength = 8_192
+
     /// Zustand für die UI. Wird immer auf dem Main Thread gemeldet.
     struct State: Sendable {
         var connectionCount: Int = 0
@@ -61,6 +69,7 @@ final class ScanServer: @unchecked Sendable {
 
         let wsOptions = NWProtocolWebSocket.Options()
         wsOptions.autoReplyPing = true
+        wsOptions.maximumMessageSize = Self.maximumMessageSize
         parameters.defaultProtocolStack.applicationProtocols.insert(wsOptions, at: 0)
 
         let newListener: NWListener
@@ -189,6 +198,14 @@ final class ScanServer: @unchecked Sendable {
         guard let scan = try? JSONDecoder().decode(ScanMessage.self, from: data),
               scan.type == "scan" else {
             send(AckMessage(ok: false, error: ProtocolError.invalidMessage.rawValue),
+                 on: connection)
+            return
+        }
+
+        // Längenlimit (DoS-Schutz): übergroße Payloads werden abgelehnt,
+        // statt den Mac minutenlang mit Keystrokes zu fluten.
+        guard scan.text.utf16.count <= Self.maximumTextLength else {
+            send(AckMessage(ok: false, error: ProtocolError.payloadTooLarge.rawValue),
                  on: connection)
             return
         }

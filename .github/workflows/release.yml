@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-macos:
+    name: macOS-App bauen & Release veröffentlichen
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: App-Bundle bauen (ad-hoc-signiert)
+        working-directory: macos
+        run: make app
+
+      - name: Bundle verifizieren
+        working-directory: macos
+        run: |
+          test -x "dist/QR Keyboard Host.app/Contents/MacOS/QRKeyboardHost"
+          test -f "dist/QR Keyboard Host.app/Contents/Resources/AppIcon.icns"
+          codesign --verify --verbose=2 "dist/QR Keyboard Host.app"
+
+      - name: Zip-Archiv erstellen
+        working-directory: macos
+        run: ditto -c -k --keepParent "dist/QR Keyboard Host.app" "QR-Keyboard-Host-macOS.zip"
+
+      - name: GitHub-Release anlegen
+        uses: softprops/action-gh-release@v2
+        with:
+          files: macos/QR-Keyboard-Host-macOS.zip
+          generate_release_notes: true

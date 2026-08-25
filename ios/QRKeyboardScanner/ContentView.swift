@@ -80,14 +80,19 @@ struct ContentView: View {
                 if connectionManager.hostAccessibilityDenied {
                     accessibilityWarning
                 }
-                Spacer()
+                Spacer(minLength: 0)
                 if let repeatCandidate {
                     resendButton(for: repeatCandidate)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 controlBar
             }
-            .padding()
+            // Kamera bleibt Vollbild (ignoresSafeArea), aber alle Overlays
+            // respektieren die Safe Area: durchgängig 16 pt Seitenabstand,
+            // unten zusätzlich Abstand über dem Home-Indicator.
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
             .animation(.spring(duration: 0.3), value: repeatCandidate)
         }
         .preferredColorScheme(.dark)
@@ -237,7 +242,7 @@ struct ContentView: View {
             .font(.subheadline)
         }
         .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
     // MARK: - Erneut senden (bereits übertragener Code)

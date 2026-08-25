@@ -22,6 +22,8 @@ app: build
 	mkdir -p "$(BUNDLE)/Contents/MacOS"
 	cp "$(RELEASE_BIN)" "$(BUNDLE)/Contents/MacOS/$(BINARY)"
 	cp Support/Info.plist "$(BUNDLE)/Contents/Info.plist"
+	mkdir -p "$(BUNDLE)/Contents/Resources"
+	cp Support/AppIcon.icns "$(BUNDLE)/Contents/Resources/AppIcon.icns"
 	codesign --force --options runtime --sign "$(SIGN_IDENTITY)" "$(BUNDLE)"
 	@echo "Bundle erstellt: $(BUNDLE)"
 

@@ -30,4 +30,5 @@ struct AckMessage: Encodable {
 enum ProtocolError: String {
     case accessibilityDenied = "accessibility_denied"
     case invalidMessage = "invalid_message"
+    case payloadTooLarge = "payload_too_large"
 }

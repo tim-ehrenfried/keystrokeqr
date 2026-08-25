@@ -117,6 +117,16 @@ struct ScannerView: UIViewRepresentable {
         /// Zoom-Faktor zu Beginn einer Pinch-Geste.
         private var pinchStartZoom: CGFloat = 1.0
 
+        // Gelbe Outlines um alle aktuell sichtbaren Codes (wie der
+        // System-Scanner): CAShapeLayer direkt über dem Preview-Layer —
+        // performant, kein SwiftUI-Redraw pro Frame. Ein Layer pro Code,
+        // Pfad-Updates animieren implizit; verschwundene Codes faden nach
+        // ~0,3 s aus.
+        private var outlineLayers: [String: CAShapeLayer] = [:]
+        private var outlineLastSeen: [String: Date] = [:]
+        private var outlineCleanupTimer: Timer?
+        private let outlineTimeout: TimeInterval = 0.3
+
         /// Alle unterstützten Symbologien laut Aufgabenstellung.
         private static let desiredTypes: [AVMetadataObject.ObjectType] = [
             .qr, .ean8, .ean13, .code128, .code39, .code93,
@@ -131,6 +141,7 @@ struct ScannerView: UIViewRepresentable {
             if let subjectAreaObserver {
                 NotificationCenter.default.removeObserver(subjectAreaObserver)
             }
+            outlineCleanupTimer?.invalidate()
         }
 
         func configure(previewView: PreviewView) {
@@ -153,6 +164,7 @@ struct ScannerView: UIViewRepresentable {
                     self.session.stopRunning()
                     self.isRunning = false
                     self.notifyRunning(false)
+                    DispatchQueue.main.async { self.removeAllOutlines() }
                 }
             }
         }
@@ -370,6 +382,11 @@ struct ScannerView: UIViewRepresentable {
             from connection: AVCaptureConnection
         ) {
             let now = Date()
+
+            // Outlines immer aktualisieren — für ALLE sichtbaren Codes,
+            // unabhängig von Cooldown und Sent-Status.
+            updateOutlines(for: metadataObjects, at: now)
+
             guard now >= cooldownUntil else { return }
             guard let object = metadataObjects
                 .compactMap({ $0 as? AVMetadataMachineReadableCodeObject })
@@ -405,6 +422,153 @@ struct ScannerView: UIViewRepresentable {
                 lastRepeatNotified = now
                 onRepeatDetection(text)
             }
+        }
+
+        // MARK: Code-Outlines (Main-Thread)
+
+        private func updateOutlines(for objects: [AVMetadataObject], at now: Date) {
+            guard let previewView else { return }
+            let previewLayer = previewView.videoPreviewLayer
+
+            for object in objects {
+                guard let code = object as? AVMetadataMachineReadableCodeObject,
+                      let transformed = previewLayer.transformedMetadataObject(for: code)
+                        as? AVMetadataMachineReadableCodeObject,
+                      transformed.corners.count >= 4 else { continue }
+
+                // Stabiler Schlüssel pro Code: Payload, sonst Symbologie.
+                let key = code.stringValue ?? "type:\(code.type.rawValue)"
+                let path = Self.roundedOutlinePath(corners: transformed.corners).cgPath
+
+                if let shape = outlineLayers[key] {
+                    // Pfad-Änderungen animieren bei Standalone-Layern implizit
+                    // (~0,25 s) → sanftes Nachführen der Position.
+                    shape.path = path
+                } else {
+                    let shape = Self.makeOutlineLayer()
+                    shape.path = path
+                    previewLayer.addSublayer(shape)
+                    outlineLayers[key] = shape
+                }
+                outlineLastSeen[key] = now
+            }
+
+            if !outlineLastSeen.isEmpty, outlineCleanupTimer == nil {
+                outlineCleanupTimer = Timer.scheduledTimer(
+                    withTimeInterval: 0.1,
+                    repeats: true
+                ) { [weak self] _ in
+                    self?.cleanupOutlines()
+                }
+            }
+        }
+
+        /// Entfernt Outlines von Codes, die das Bild verlassen haben
+        /// (kurzes Fade-out, dann Layer weg).
+        private func cleanupOutlines() {
+            let now = Date()
+            for (key, lastSeen) in outlineLastSeen
+            where now.timeIntervalSince(lastSeen) > outlineTimeout {
+                if let shape = outlineLayers[key] {
+                    Self.fadeOutAndRemove(shape)
+                }
+                outlineLayers.removeValue(forKey: key)
+                outlineLastSeen.removeValue(forKey: key)
+            }
+            if outlineLastSeen.isEmpty {
+                outlineCleanupTimer?.invalidate()
+                outlineCleanupTimer = nil
+            }
+        }
+
+        private func removeAllOutlines() {
+            for shape in outlineLayers.values {
+                shape.removeFromSuperlayer()
+            }
+            outlineLayers.removeAll()
+            outlineLastSeen.removeAll()
+            outlineCleanupTimer?.invalidate()
+            outlineCleanupTimer = nil
+        }
+
+        private static func makeOutlineLayer() -> CAShapeLayer {
+            let shape = CAShapeLayer()
+            shape.strokeColor = UIColor.systemYellow.cgColor
+            shape.fillColor = UIColor.systemYellow.withAlphaComponent(0.08).cgColor
+            shape.lineWidth = 3
+            shape.lineJoin = .round
+            shape.lineCap = .round
+            shape.shadowColor = UIColor.systemYellow.cgColor
+            shape.shadowOpacity = 0.55
+            shape.shadowRadius = 4
+            shape.shadowOffset = .zero
+            return shape
+        }
+
+        private static func fadeOutAndRemove(_ shape: CAShapeLayer) {
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                shape.removeFromSuperlayer()
+            }
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 1
+            fade.toValue = 0
+            fade.duration = 0.3
+            fade.fillMode = .forwards
+            fade.isRemovedOnCompletion = false
+            shape.add(fade, forKey: "fadeOut")
+            CATransaction.commit()
+        }
+
+        /// Abgerundeter Pfad durch die (perspektivisch verzerrten) vier Ecken.
+        private static func roundedOutlinePath(
+            corners: [CGPoint],
+            radius: CGFloat = 6
+        ) -> UIBezierPath {
+            let path = UIBezierPath()
+            let count = corners.count
+            guard count >= 3 else { return path }
+
+            for index in 0..<count {
+                let current = corners[index]
+                let previous = corners[(index - 1 + count) % count]
+                let next = corners[(index + 1) % count]
+
+                let toPrevious = unitVector(from: current, to: previous)
+                let toNext = unitVector(from: current, to: next)
+                // Radius nie größer als die halbe kürzere Kante.
+                let maxRadius = min(
+                    radius,
+                    distance(current, previous) / 2,
+                    distance(current, next) / 2
+                )
+                let start = CGPoint(
+                    x: current.x + toPrevious.dx * maxRadius,
+                    y: current.y + toPrevious.dy * maxRadius
+                )
+                let end = CGPoint(
+                    x: current.x + toNext.dx * maxRadius,
+                    y: current.y + toNext.dy * maxRadius
+                )
+                if index == 0 {
+                    path.move(to: start)
+                } else {
+                    path.addLine(to: start)
+                }
+                path.addQuadCurve(to: end, controlPoint: current)
+            }
+            path.close()
+            return path
+        }
+
+        private static func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
+            hypot(b.x - a.x, b.y - a.y)
+        }
+
+        private static func unitVector(from: CGPoint, to: CGPoint) -> CGVector {
+            let length = distance(from, to)
+            guard length > 0 else { return CGVector(dx: 0, dy: 0) }
+            return CGVector(dx: (to.x - from.x) / length, dy: (to.y - from.y) / length)
         }
 
         /// Friert das Vorschaubild ein, indem die Preview-Connection kurz

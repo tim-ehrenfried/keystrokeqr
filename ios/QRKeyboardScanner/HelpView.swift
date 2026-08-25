@@ -4,6 +4,13 @@ import SwiftUI
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
 
+    /// Version + Build dynamisch aus dem Bundle, z. B. „0.5.0 (1)".
+    private static var appVersionString: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -71,6 +78,29 @@ struct HelpView: View {
                         Text("• Stelle sicher, dass am Mac das gewünschte Eingabefeld fokussiert ist.")
                     }
                     .font(.callout)
+                }
+
+                Section("Über") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("QR-Keyboard Scanner")
+                            .font(.headline)
+                        Text("Version \(Self.appVersionString)")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        Text("© 2026 Tim Ehrenfried")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let mailURL = URL(string: "mailto:mail@tim-ehrenfried.de") {
+                        Link(destination: mailURL) {
+                            Label("mail@tim-ehrenfried.de", systemImage: "envelope")
+                        }
+                    }
+                    if let repoURL = URL(string: "https://github.com/tim-ehrenfried/qr-keyboard") {
+                        Link(destination: repoURL) {
+                            Label("Open Source auf GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                        }
+                    }
                 }
             }
             .navigationTitle("Hilfe")

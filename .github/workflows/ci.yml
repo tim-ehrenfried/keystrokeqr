@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  macos-host:
+    name: macOS-Host (swift build + make app)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Swift-Version anzeigen
+        run: swift --version
+
+      - name: SwiftPM-Build
+        working-directory: macos
+        run: swift build -c release
+
+      - name: App-Bundle bauen (make app)
+        working-directory: macos
+        run: make app
+
+      - name: Bundle verifizieren
+        working-directory: macos
+        run: |
+          test -x "dist/QR Keyboard Host.app/Contents/MacOS/QRKeyboardHost"
+          test -f "dist/QR Keyboard Host.app/Contents/Resources/AppIcon.icns"
+          plutil -lint "dist/QR Keyboard Host.app/Contents/Info.plist"
+          codesign --verify --verbose=2 "dist/QR Keyboard Host.app"
+
+  ios-scanner:
+    name: iOS-Scanner (Simulator-Build)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode-Version anzeigen
+        run: xcodebuild -version
+
+      - name: Simulator-Build (ohne Codesigning)
+        run: >
+          xcodebuild
+          -project ios/QRKeyboardScanner.xcodeproj
+          -scheme QRKeyboardScanner
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          build
+          CODE_SIGNING_ALLOWED=NO
