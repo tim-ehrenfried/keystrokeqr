@@ -1,5 +1,12 @@
 # QR-Keyboard – Netzwerkprotokoll (v1)
 
+> **Historisch — seit v0.6.0 abgelöst durch [PROTOCOL-v2.md](PROTOCOL-v2.md)**
+> (Pairing + Ende-zu-Ende-Verschlüsselung, harter Schnitt: v1-Hosts/-Clients
+> sind mit v2-Gegenstellen nicht kompatibel). Dieses Dokument bleibt als
+> Referenz für die (unverschlüsselte) Nutzlast erhalten — Abschnitt
+> „Nachrichten“ unten (`scan`/`ack`) gilt inhaltlich unverändert als Klartext
+> **innerhalb** der v2-`enc`-Frames.
+
 Verbindliche Spezifikation für beide Komponenten (macOS-Host & iOS-Client).
 
 ## Discovery (Bonjour/mDNS)

@@ -3,7 +3,9 @@
 SwiftUI-App für iPhone (iOS 17+, Portrait), die QR- und Barcodes scannt und den
 Inhalt per WebSocket an die QR-Keyboard-Mac-App im lokalen WLAN sendet. Der Mac
 wird automatisch via Bonjour (`_qr-keyboard._tcp`) gefunden; der Port kommt
-immer aus der Bonjour-Auflösung. Protokoll: siehe [`../docs/PROTOCOL.md`](../docs/PROTOCOL.md).
+immer aus der Bonjour-Auflösung. Seit v0.6.0 ist die Verbindung Ende-zu-Ende
+verschlüsselt und erfordert ein einmaliges Pairing (OTP-Code am Mac) — siehe
+[`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md) (Protokoll v1: [`../docs/PROTOCOL.md`](../docs/PROTOCOL.md)).
 
 ## Build & Run
 
@@ -65,6 +67,11 @@ xcodebuild -project QRKeyboardScanner.xcodeproj \
   Macs gefunden werden.
 - Meldet der Mac `accessibility_denied`, zeigt die App einen deutlichen Hinweis
   („Mac: Bedienungshilfen-Berechtigung fehlt“).
+- **Pairing (seit v0.6.0):** Wird ein neuer, verschlüsselter Mac (`v=2`)
+  gefunden, erscheint automatisch ein Pairing-Screen (6-stelliger OTP vom
+  Mac-Menü „Gerät koppeln…“). Nach Erfolg verbindet sich die App automatisch
+  und Ende-zu-Ende verschlüsselt; „Gekoppelte Macs verwalten“ (Hilfe) erlaubt
+  das Entkoppeln. Reine v1-Hosts zeigen den Hinweis „Mac-App aktualisieren“.
 
 ## Schnellstart vom Sperrbildschirm
 

@@ -84,6 +84,9 @@ struct ContentView: View {
 
             VStack(spacing: 12) {
                 statusCapsule
+                if connectionManager.outdatedHostDetected {
+                    outdatedHostWarning
+                }
                 if connectionManager.hostAccessibilityDenied {
                     accessibilityWarning
                 }
@@ -128,10 +131,19 @@ struct ContentView: View {
             activateScanner()
         }
         .sheet(isPresented: $showHelp) {
-            HelpView()
+            HelpView(connectionManager: connectionManager)
         }
         .sheet(isPresented: $connectionManager.showServicePicker) {
             servicePicker
+        }
+        .sheet(item: $connectionManager.pendingPairingService) { service in
+            PairingView(connectionManager: connectionManager, service: service)
+        }
+        .onChange(of: connectionManager.notPairedServiceName) { _, serviceName in
+            guard let serviceName,
+                  let service = connectionManager.services.first(where: { $0.name == serviceName }) else { return }
+            connectionManager.pendingPairingService = service
+            connectionManager.notPairedServiceName = nil
         }
     }
 
@@ -198,6 +210,21 @@ struct ContentView: View {
             .padding(.vertical, 10)
             .background(.yellow, in: RoundedRectangle(cornerRadius: 12))
             .multilineTextAlignment(.center)
+    }
+
+    private var outdatedHostWarning: some View {
+        Button {
+            connectionManager.outdatedHostDetected = false
+        } label: {
+            Label("Gefundener Mac läuft mit veralteter App – bitte aktualisieren", systemImage: "exclamationmark.triangle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.orange, in: RoundedRectangle(cornerRadius: 12))
+                .multilineTextAlignment(.center)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Bedienleiste unten
@@ -346,7 +373,8 @@ struct ContentView: View {
         NavigationStack {
             List(connectionManager.services) { service in
                 Button {
-                    connectionManager.connect(to: service)
+                    connectionManager.showServicePicker = false
+                    connectionManager.selectService(service)
                 } label: {
                     Label(service.name, systemImage: "desktopcomputer")
                 }

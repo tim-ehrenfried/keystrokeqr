@@ -5,9 +5,11 @@ iPhone (per WebSocket im lokalen Netz, Bonjour-Discovery) und tippt den
 gescannten Text als echte Tastaturanschläge in das aktuell fokussierte Fenster —
 optional gefolgt von Tab und/oder Enter.
 
-Protokoll: siehe [`../docs/PROTOCOL.md`](../docs/PROTOCOL.md)
+Protokoll: siehe [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md)
 (Bonjour `_qr-keyboard._tcp`, Port 8080 mit Fallback auf freien Port,
-JSON-Nachrichten über WebSocket).
+JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
+(einmaliges OTP-Pairing) und Ende-zu-Ende verschlüsselt — siehe
+[`../SECURITY.md`](../SECURITY.md).
 
 ## Voraussetzungen
 
@@ -45,9 +47,14 @@ open "dist/QR Keyboard Host.app"
 Die App erscheint als QR-Symbol in der Menüleiste (kein Dock-Icon). Das Menü
 zeigt:
 
-- **Verbindungsstatus** („Warte auf Verbindung" / „N Gerät(e) verbunden")
+- **Kopplungs-/Verbindungsstatus** („Kein Gerät gekoppelt" / „N gekoppelt · M verbunden")
 - **Port und Bonjour-Dienstname** (der Hostname des Macs)
 - **Bedienungshilfen-Status** (✓/✗) mit Direktlink in die Systemeinstellungen
+- **„Gerät koppeln…"** — öffnet ein Fenster mit einem 6-stelligen, 90 s
+  gültigen Code fürs Pairing eines neuen iPhones (siehe
+  [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md))
+- **Gekoppelte Geräte** — pro Gerät ein Untermenü mit Kopplungsdatum und
+  „Entfernen" (löscht den gemeinsamen Schlüssel und trennt laufende Sitzungen)
 - **Beenden**
 
 Optional kann die App zu **Anmeldeobjekte** hinzugefügt werden
@@ -94,7 +101,12 @@ Mac nicht per Bonjour.
 - WebSocket-Server via `Network.framework` (`NWListener` + WebSocket-Options,
   `autoReplyPing`), fester Port **8080**, bei Belegung automatisch ein freier
   Port (der iOS-Client nutzt immer den via Bonjour aufgelösten Port).
-- Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT-Record `v=1`.
+- Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT-Record `v=2`.
+- Jede Verbindung durchläuft entweder das OTP-Pairing (nur bei geöffnetem
+  „Gerät koppeln…"-Fenster) oder den Sitzungs-Handshake für bereits
+  gekoppelte Geräte; danach ausschließlich ChaChaPoly-verschlüsselte Frames
+  (Curve25519 + HKDF-SHA256, Identität + PSKs in der Keychain). Details:
+  [`../docs/PROTOCOL-v2.md`](../docs/PROTOCOL-v2.md).
 - Mehrere iPhones können gleichzeitig verbunden sein; Scans werden strikt
   sequenziell getippt (Reihenfolge: Text → Tab → Enter).
 - Text-Injektion erfolgt Unicode-basiert über `CGEvent` und ist damit

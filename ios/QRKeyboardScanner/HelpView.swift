@@ -2,7 +2,9 @@ import SwiftUI
 
 /// In-App-Anleitung (Sheet), deutsch.
 struct HelpView: View {
+    @ObservedObject var connectionManager: ConnectionManager
     @Environment(\.dismiss) private var dismiss
+    @State private var showPairedMacs = false
 
     /// Version + Build dynamisch aus dem Bundle, z. B. „0.5.0 (1)".
     private static var appVersionString: String {
@@ -29,6 +31,23 @@ struct HelpView: View {
                         Text("Der Mac hat die **Bedienungshilfen-Berechtigung** erteilt — nur damit kann er Tastatureingaben simulieren.")
                     } icon: {
                         Image(systemName: "accessibility")
+                    }
+                }
+
+                Section("Einmaliges Koppeln (Pairing)") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Seit Version 0.6.0 ist die Verbindung **verschlüsselt und gekoppelt** — nur ausdrücklich gekoppelte iPhones können Tastatureingaben auf dem Mac auslösen.")
+                        Text("1. Am Mac im Menü das QR-Symbol öffnen → **„Gerät koppeln…“**.")
+                        Text("2. Der Mac zeigt einen **6-stelligen Code** (90 Sekunden gültig).")
+                        Text("3. Findet das iPhone einen neuen Mac, erscheint automatisch der Pairing-Screen — Code eintippen, **Koppeln** antippen.")
+                        Text("4. Das Pairing ist **einmalig**: Der gemeinsame Schlüssel wird sicher im Schlüsselbund gespeichert und bei jeder künftigen Verbindung automatisch verwendet.")
+                    }
+                    .font(.callout)
+
+                    Button {
+                        showPairedMacs = true
+                    } label: {
+                        Label("Gekoppelte Macs verwalten", systemImage: "lock.desktopcomputer")
                     }
                 }
 
@@ -76,6 +95,12 @@ struct HelpView: View {
                         Text("**Verbunden, aber es wird nichts getippt?**")
                         Text("• Meist fehlt die Bedienungshilfen-Berechtigung auf dem Mac (siehe oben) — die App zeigt dann einen Hinweis an.")
                         Text("• Stelle sicher, dass am Mac das gewünschte Eingabefeld fokussiert ist.")
+                        Divider()
+                        Text("**„Bitte Mac-App aktualisieren“?**")
+                        Text("• Der gefundene Mac läuft noch mit der alten, unverschlüsselten Version. Auf dem Mac die neue Version installieren (mind. 0.6.0).")
+                        Divider()
+                        Text("**Pairing schlägt fehl / Code falsch?**")
+                        Text("• Codes sind nur 90 Sekunden gültig und **einmalig** — am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen und zügig eintippen.")
                     }
                     .font(.callout)
                 }
@@ -110,10 +135,13 @@ struct HelpView: View {
                     Button("Fertig") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showPairedMacs) {
+                PairedMacsView(connectionManager: connectionManager)
+            }
         }
     }
 }
 
 #Preview {
-    HelpView()
+    HelpView(connectionManager: ConnectionManager())
 }

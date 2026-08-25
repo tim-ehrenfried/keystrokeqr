@@ -1,27 +1,27 @@
 import Foundation
 import Network
+import CryptoKit
 
-/// WebSocket-Server gemäß docs/PROTOCOL.md (v1):
+/// WebSocket-Server gemäß docs/PROTOCOL-v2.md:
 /// - NWListener (TCP + NWProtocolWebSocket, autoReplyPing)
 /// - Fester Port 8080, Fallback auf beliebigen freien Port
-/// - Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT `v=1`
-/// - Mehrere gleichzeitige Clients; Scans werden sequenziell getippt.
+/// - Bonjour-Advertising als `_qr-keyboard._tcp` mit TXT `v=2`
+/// - Pro Verbindung: entweder Pairing-Handshake (Phase 1, nur im Pairing-
+///   Fenster gültig) oder Sitzungs-Handshake (Phase 2, nur gekoppelte Geräte),
+///   danach ausschließlich verschlüsselte `enc`-Frames.
 final class ScanServer: @unchecked Sendable {
 
     static let serviceType = "_qr-keyboard._tcp"
     static let preferredPort: UInt16 = 8080
 
     /// DoS-Schutz: maximale Größe eines WebSocket-Frames in Bytes.
-    /// Größere Frames verwirft Network.framework, bevor sie die App erreichen.
     static let maximumMessageSize = 65_536
-    /// DoS-Schutz: maximale Länge von `text` in UTF-16-Einheiten. Deckt jede
-    /// reale QR-/Barcode-Kapazität ab (QR max. ~7089 Zeichen numerisch);
-    /// verhindert, dass ein bösartiger Client den Mac minutenlang „volltippt".
+    /// DoS-Schutz: maximale Länge von `text` in UTF-16-Einheiten.
     static let maximumTextLength = 8_192
 
     /// Zustand für die UI. Wird immer auf dem Main Thread gemeldet.
     struct State: Sendable {
-        var connectionCount: Int = 0
+        var activeSessionCount: Int = 0
         var port: UInt16? = nil
         var serviceName: String = ""
     }
@@ -31,13 +31,17 @@ final class ScanServer: @unchecked Sendable {
 
     private let queue = DispatchQueue(label: "de.timehrenfried.qr-keyboard-host.server")
     private let injector: KeyInjector
+    private let crypto: CryptoManager
+    private let pairingCoordinator: PairingCoordinator
     private var listener: NWListener?
-    private var connections: [ObjectIdentifier: NWConnection] = [:]
+    private var connections: [ObjectIdentifier: ConnectionContext] = [:]
     private var state = State()
     private let serviceName: String
 
-    init(injector: KeyInjector) {
+    init(injector: KeyInjector, crypto: CryptoManager, pairingCoordinator: PairingCoordinator) {
         self.injector = injector
+        self.crypto = crypto
+        self.pairingCoordinator = pairingCoordinator
         self.serviceName = Host.current().localizedName ?? "QR Keyboard Host"
         self.state.serviceName = serviceName
     }
@@ -53,10 +57,52 @@ final class ScanServer: @unchecked Sendable {
             guard let self else { return }
             self.listener?.cancel()
             self.listener = nil
-            for connection in self.connections.values {
-                connection.cancel()
+            for context in self.connections.values {
+                context.connection.cancel()
             }
             self.connections.removeAll()
+        }
+    }
+
+    /// Trennt alle aktiven Sitzungen eines (gerade entkoppelten) Geräts.
+    func disconnectDevice(_ deviceID: UUID) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            for context in self.connections.values where context.deviceID == deviceID {
+                context.connection.cancel()
+            }
+        }
+    }
+
+    // MARK: - Verbindungskontext
+
+    /// Zustand einer einzelnen TCP/WebSocket-Verbindung. Frisch verbundene
+    /// Clients starten in `.awaitingHello` und entscheiden per erster
+    /// Nachricht (`pair_hello` oder `session_hello`), welche Phase folgt.
+    /// Ausschließlich auf `queue` (der seriellen Server-Queue) gelesen/geschrieben.
+    private final class ConnectionContext: @unchecked Sendable {
+        enum Phase {
+            case awaitingHello
+            case pairingChallengeSent
+            case sessionActive
+        }
+
+        let connection: NWConnection
+        var phase: Phase = .awaitingHello
+
+        // Pairing (Phase 1)
+        var pendingClientPub: Data?
+        var pendingDeviceName: String?
+
+        // Sitzung (Phase 2)
+        var sessionKey: SymmetricKey?
+        var deviceID: UUID?
+        var deviceName: String?
+        var sendSeq: UInt64 = 0
+        var lastRecvSeq: UInt64?
+
+        init(connection: NWConnection) {
+            self.connection = connection
         }
     }
 
@@ -91,10 +137,9 @@ final class ScanServer: @unchecked Sendable {
             return
         }
 
-        // Bonjour-Advertising: Service-Name = Hostname des Macs, TXT v=1.
-        // TXT-Record im Standardformat: Längenbyte + "v=1".
+        // Bonjour-Advertising: Service-Name = Hostname des Macs, TXT v=2.
         var txtData = Data()
-        let entry = Data("v=1".utf8)
+        let entry = Data("v=2".utf8)
         txtData.append(UInt8(entry.count))
         txtData.append(entry)
         newListener.service = NWListener.Service(
@@ -145,7 +190,8 @@ final class ScanServer: @unchecked Sendable {
 
     private func accept(_ connection: NWConnection) {
         let id = ObjectIdentifier(connection)
-        connections[id] = connection
+        let context = ConnectionContext(connection: connection)
+        connections[id] = context
 
         connection.stateUpdateHandler = { [weak self] newState in
             guard let self else { return }
@@ -192,26 +238,157 @@ final class ScanServer: @unchecked Sendable {
         }
     }
 
-    // MARK: - Nachrichten
+    // MARK: - Nachrichten-Dispatch
 
     private func handleMessage(_ data: Data, on connection: NWConnection) {
-        guard let scan = try? JSONDecoder().decode(ScanMessage.self, from: data),
+        guard let ctx = connections[ObjectIdentifier(connection)] else { return }
+        guard let envelope = try? JSONDecoder().decode(MessageEnvelope.self, from: data) else {
+            connection.cancel()
+            return
+        }
+
+        switch envelope.type {
+        case "pair_hello":
+            handlePairHello(data, context: ctx)
+        case "pair_confirm":
+            handlePairConfirm(data, context: ctx)
+        case "session_hello":
+            handleSessionHello(data, context: ctx)
+        case "enc":
+            handleEncFrame(data, context: ctx)
+        default:
+            connection.cancel()
+        }
+    }
+
+    // MARK: - Phase 1: Pairing
+
+    private func handlePairHello(_ data: Data, context ctx: ConnectionContext) {
+        guard ctx.phase == .awaitingHello,
+              let msg = try? JSONDecoder().decode(PairHelloMessage.self, from: data),
+              msg.type == "pair_hello",
+              let clientPub = Data(base64Encoded: msg.clientPub),
+              !msg.deviceName.isEmpty else {
+            sendPairError(.badOTP, on: ctx.connection)
+            ctx.connection.cancel()
+            return
+        }
+        guard pairingCoordinator.isOpen else {
+            sendPairError(.pairingClosed, on: ctx.connection)
+            ctx.connection.cancel()
+            return
+        }
+
+        ctx.pendingClientPub = clientPub
+        ctx.pendingDeviceName = msg.deviceName
+        ctx.phase = .pairingChallengeSent
+        send(PairChallengeMessage(hostPub: crypto.identityPublicKey.base64EncodedString()), on: ctx.connection)
+    }
+
+    private func handlePairConfirm(_ data: Data, context ctx: ConnectionContext) {
+        guard ctx.phase == .pairingChallengeSent,
+              let clientPub = ctx.pendingClientPub,
+              let deviceName = ctx.pendingDeviceName,
+              let msg = try? JSONDecoder().decode(PairConfirmMessage.self, from: data),
+              msg.type == "pair_confirm",
+              let macData = Data(base64Encoded: msg.mac),
+              let shared = try? crypto.sharedSecret(withPeerPublicKey: clientPub) else {
+            sendPairError(.badOTP, on: ctx.connection)
+            ctx.connection.cancel()
+            return
+        }
+
+        let hostPub = crypto.identityPublicKey
+        let confirmKey = crypto.deriveConfirmKey(shared: shared, clientPub: clientPub, hostPub: hostPub)
+
+        if let errorCode = pairingCoordinator.attemptConfirm(mac: macData, confirmKey: confirmKey) {
+            sendPairError(rawValue: errorCode, on: ctx.connection)
+            pairingCoordinator.onEvent?(.failed(reason: errorCode))
+            ctx.connection.cancel()
+            return
+        }
+
+        let psk = crypto.derivePSK(shared: shared, clientPub: clientPub, hostPub: hostPub)
+        let deviceID = crypto.addDevice(name: deviceName, clientPublicKey: clientPub, psk: psk)
+        send(PairOkMessage(deviceID: deviceID.uuidString, hostName: serviceName), on: ctx.connection)
+        pairingCoordinator.onEvent?(.paired(name: deviceName))
+
+        // Bewusste Design-Entscheidung (siehe PROTOCOL-v2.md): Nach `pair_ok`
+        // schließt der Host die Pairing-Verbindung; der Client verbindet sich
+        // für Phase 2 regulär neu (mit dem frisch gespeicherten PSK).
+        ctx.connection.cancel()
+    }
+
+    // MARK: - Phase 2: Sitzung
+
+    private func handleSessionHello(_ data: Data, context ctx: ConnectionContext) {
+        guard ctx.phase == .awaitingHello,
+              let msg = try? JSONDecoder().decode(SessionHelloMessage.self, from: data),
+              msg.type == "session_hello",
+              let deviceUUID = UUID(uuidString: msg.deviceID),
+              let clientNonce = Data(base64Encoded: msg.nonce) else {
+            sendSessionError(.badSession, on: ctx.connection)
+            ctx.connection.cancel()
+            return
+        }
+
+        guard let device = crypto.device(for: deviceUUID) else {
+            sendSessionError(.notPaired, on: ctx.connection)
+            ctx.connection.cancel()
+            return
+        }
+
+        var generator = SystemRandomNumberGenerator()
+        let hostNonce = Data((0..<16).map { _ in UInt8.random(in: 0...255, using: &generator) })
+
+        let psk = CryptoManager.symmetricKey(fromDeviceRecord: device.psk)
+        let sessionKey = CryptoManager.deriveSessionKey(psk: psk, clientNonce: clientNonce, hostNonce: hostNonce)
+
+        ctx.sessionKey = sessionKey
+        ctx.deviceID = deviceUUID
+        ctx.deviceName = device.name
+        ctx.phase = .sessionActive
+
+        send(SessionReadyMessage(nonce: hostNonce.base64EncodedString()), on: ctx.connection)
+        publishState()
+    }
+
+    private func handleEncFrame(_ data: Data, context ctx: ConnectionContext) {
+        guard ctx.phase == .sessionActive, let sessionKey = ctx.sessionKey else {
+            ctx.connection.cancel()
+            return
+        }
+        guard let msg = try? JSONDecoder().decode(EncFrameMessage.self, from: data),
+              msg.type == "enc",
+              let ct = Data(base64Encoded: msg.ct) else {
+            ctx.connection.cancel()
+            return
+        }
+        // Replay-Schutz: seq muss streng monoton steigen.
+        if let last = ctx.lastRecvSeq, msg.seq <= last {
+            ctx.connection.cancel()
+            return
+        }
+        guard let plaintext = try? SecureFrame.open(
+            ct, key: sessionKey, prefix: FrameDirection.clientToHost, seq: msg.seq
+        ) else {
+            // AEAD-Öffnen-Fehler → Frame verwerfen, Sitzung beenden (Spec).
+            ctx.connection.cancel()
+            return
+        }
+        ctx.lastRecvSeq = msg.seq
+
+        guard let scan = try? JSONDecoder().decode(ScanMessage.self, from: plaintext),
               scan.type == "scan" else {
-            send(AckMessage(ok: false, error: ProtocolError.invalidMessage.rawValue),
-                 on: connection)
+            sendEncrypted(AckMessage(ok: false, error: ProtocolError.invalidMessage.rawValue), context: ctx)
             return
         }
 
-        // Längenlimit (DoS-Schutz): übergroße Payloads werden abgelehnt,
-        // statt den Mac minutenlang mit Keystrokes zu fluten.
         guard scan.text.utf16.count <= Self.maximumTextLength else {
-            send(AckMessage(ok: false, error: ProtocolError.payloadTooLarge.rawValue),
-                 on: connection)
+            sendEncrypted(AckMessage(ok: false, error: ProtocolError.payloadTooLarge.rawValue), context: ctx)
             return
         }
 
-        // Scans werden vom KeyInjector strikt sequenziell abgearbeitet
-        // (serielle Queue); das Ack folgt nach Abschluss des Tippens.
         injector.perform(
             text: scan.text,
             autoTab: scan.autoTab ?? false,
@@ -222,30 +399,58 @@ final class ScanServer: @unchecked Sendable {
                 ? AckMessage(ok: true)
                 : AckMessage(ok: false, error: ProtocolError.accessibilityDenied.rawValue)
             self.queue.async {
-                self.send(ack, on: connection)
+                self.sendEncrypted(ack, context: ctx)
             }
         }
     }
 
-    private func send(_ ack: AckMessage, on connection: NWConnection) {
+    // MARK: - Senden
+
+    private func send<T: Encodable>(_ message: T, on connection: NWConnection) {
+        let data = encodeMessage(message)
         let metadata = NWProtocolWebSocket.Metadata(opcode: .text)
-        let context = NWConnection.ContentContext(identifier: "ack", metadata: [metadata])
+        let context = NWConnection.ContentContext(identifier: "msg", metadata: [metadata])
         connection.send(
-            content: ack.jsonData(),
+            content: data,
             contentContext: context,
             isComplete: true,
             completion: .contentProcessed { error in
                 if let error {
-                    NSLog("QRKeyboardHost: Ack-Sendefehler: %@", String(describing: error))
+                    NSLog("QRKeyboardHost: Sendefehler: %@", String(describing: error))
                 }
             }
         )
     }
 
+    private func sendPairError(_ error: ProtocolErrorV2, on connection: NWConnection) {
+        sendPairError(rawValue: error.rawValue, on: connection)
+    }
+
+    private func sendPairError(rawValue: String, on connection: NWConnection) {
+        send(PairErrorMessage(error: rawValue), on: connection)
+    }
+
+    private func sendSessionError(_ error: ProtocolErrorV2, on connection: NWConnection) {
+        send(SessionErrorMessage(error: error.rawValue), on: connection)
+    }
+
+    private func sendEncrypted(_ ack: AckMessage, context ctx: ConnectionContext) {
+        guard let sessionKey = ctx.sessionKey else { return }
+        let plaintext = ack.jsonData()
+        let seq = ctx.sendSeq
+        ctx.sendSeq += 1
+        guard let ct = try? SecureFrame.seal(
+            plaintext, key: sessionKey, prefix: FrameDirection.hostToClient, seq: seq
+        ) else { return }
+        send(EncFrameMessage(seq: seq, ct: ct.base64EncodedString()), on: ctx.connection)
+    }
+
     // MARK: - UI-Status
 
     private func publishState() {
-        state.connectionCount = connections.values.filter { $0.state == .ready }.count
+        state.activeSessionCount = connections.values.filter {
+            $0.phase == .sessionActive && $0.connection.state == .ready
+        }.count
         let snapshot = state
         if let onStateChange {
             DispatchQueue.main.async {

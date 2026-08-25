@@ -48,13 +48,30 @@ Diese Anleitung führt einmal komplett durch: Account aktivieren → iOS-App auf
 4. Fragt macOS (ab macOS 15) nach **„Lokales Netzwerk"** für die App → erlauben.
 5. Firewall aktiv? *Systemeinstellungen → Netzwerk → Firewall → Optionen* → eingehende Verbindungen für „QR Keyboard Host" erlauben.
 
-## 4. Erster End-to-End-Test
+## 4. Einmaliges Koppeln (Pairing, seit v0.6.0 Pflicht)
+
+Seit v0.6.0 ist die Verbindung Ende-zu-Ende verschlüsselt und **gekoppelt** —
+ein iPhone muss dem Mac einmalig bekannt gemacht werden, bevor es Tastatureingaben
+auslösen kann (Details: [PROTOCOL-v2.md](PROTOCOL-v2.md), Sicherheitsbewertung:
+[../SECURITY.md](../SECURITY.md)).
 
 1. Mac und iPhone im **selben WLAN** (WARP/VPN am Mac kann mDNS stören — im Zweifel kurz deaktivieren).
-2. iOS-App öffnen → Status-Kapsel wechselt auf **„Verbunden mit \<Mac-Name\>"**; Menüleisten-Icon am Mac zeigt „1 Gerät verbunden".
-3. Am Mac den Cursor in ein Textfeld setzen (TextEdit reicht), am iPhone einen QR-Code scannen → Text erscheint sofort am Cursor. Toggles **Auto-Enter/Auto-Tab** nach Bedarf.
+2. Am Mac in der Menüleiste das QR-Symbol öffnen → **„Gerät koppeln…“**. Ein
+   Fenster mit einem **6-stelligen Code** erscheint (90 Sekunden gültig).
+3. Am iPhone die App öffnen. Wird der Mac zum ersten Mal gefunden, erscheint
+   automatisch der Pairing-Screen: Code eintippen → **„Koppeln“**.
+4. Nach erfolgreichem Pairing verbindet sich die App automatisch neu — die
+   Status-Kapsel wechselt auf **„Verbunden mit \<Mac-Name\>"**; das Mac-Menü
+   zeigt „1 gekoppelt · 1 verbunden“ und listet das iPhone unter den
+   gekoppelten Geräten (mit „Entfernen“-Option).
+5. Das Pairing ist **einmalig** — bei künftigen Starts verbindet sich die App
+   automatisch mit dem gespeicherten Schlüssel, ohne erneuten Code.
 
-## 5. Schnellstart vom Sperrbildschirm
+## 5. Erster End-to-End-Test
+
+1. Am Mac den Cursor in ein Textfeld setzen (TextEdit reicht), am iPhone einen QR-Code scannen → Text erscheint sofort am Cursor. Toggles **Auto-Enter/Auto-Tab** nach Bedarf.
+
+## 6. Schnellstart vom Sperrbildschirm
 
 Die App bringt ein Lock-Screen-Widget, eine iOS-18-Steuerung und einen Kurzbefehl mit:
 
@@ -71,3 +88,6 @@ Die App bringt ein Lock-Screen-Widget, eine iOS-18-Steuerung und einen Kurzbefeh
 | Mac tippt nicht | Bedienungshilfen-Berechtigung fehlt/verfallen → Eintrag in den Systemeinstellungen entfernen und neu erteilen (passiert nach Rebuilds bei ad-hoc-Signatur). |
 | „Untrusted Developer" am iPhone | Nur beim kostenlosen Personal Team: *Einstellungen → Allgemein → VPN & Geräteverwaltung* → Entwickler vertrauen. |
 | App verschwindet nach 7 Tagen | Kostenloses Team im Einsatz — nach Account-Aktivierung in Xcode das richtige Team wählen und neu installieren. |
+| „Bitte Mac-App aktualisieren" | Der gefundene Mac läuft noch mit v1 (vor 0.6.0) — Mac-App neu bauen/installieren. |
+| Pairing schlägt mit „Falscher Code" fehl | Code ist nur 90 s **und nur ein Versuch** gültig — am Mac im Menü „Gerät koppeln…" einen neuen Code erzeugen. |
+| Nach Pairing weiterhin „not_paired" | Das Gerät wurde am Mac zwischenzeitlich entfernt (Menü → Gerät → „Entfernen") — App bietet dann automatisch erneutes Pairing an. |

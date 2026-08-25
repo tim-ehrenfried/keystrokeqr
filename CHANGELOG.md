@@ -3,6 +3,19 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.6.0] – 2026-08-25
+
+### Added
+- **Ende-zu-Ende-Verschlüsselung + Geräte-Pairing (Protokoll v2)**: Jede Verbindung ist jetzt verschlüsselt und beidseitig authentifiziert. Ein iPhone muss einmalig gekoppelt werden — der Mac zeigt im Menü unter „Gerät koppeln…" einen 6-stelligen OTP (90 s), den das iPhone einmalig einträgt. Dahinter: Curve25519-Schlüsselaustausch mit OTP-HMAC-Bestätigung → langlebiger PSK (beidseitig im Keychain, nie über das Netz), pro Sitzung ein frischer HKDF-Sessionkey, alle Scan-/Ack-Frames als ChaChaPoly-AEAD mit Replay-Schutz (CryptoKit). Spezifikation: [docs/PROTOCOL-v2.md](docs/PROTOCOL-v2.md).
+- **Mac – Geräteverwaltung**: Menü listet gekoppelte iPhones (mit Pairing-Datum) samt „Entfernen" (widerruft PSK sofort, trennt laufende Sitzung); Status „N gekoppelt · M verbunden".
+- **iOS – Pairing-UI**: Setup-/Pairing-Screen (Mac wählen, OTP eingeben) und „Gekoppelte Macs verwalten"; Hinweis-Banner, wenn ein gefundener Mac noch v1 (< 0.6.0) läuft.
+
+### Changed
+- **Breaking**: Protokoll v2 löst v1 ab (Bonjour-TXT `v=2`); ein v2-Host akzeptiert nur v2-Clients und umgekehrt. Mac- und iOS-App gemeinsam aktualisieren.
+
+### Security
+- Schließt die offenen SECURITY.md-Findings **LAN-Keystroke-Injection**, **Klartext-Sniffing** und **Host-Spoofing** (nur gekoppelte, per PSK authentifizierte Geräte kommen durch). Restrisiko der OTP-Entropie (~20 bit, ein Versuch pro 90-s-Fenster) dokumentiert.
+
 ## [0.5.1] – 2026-08-25
 
 ### Fixed
