@@ -25,6 +25,12 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
     private let onFinish: () -> Void
 
     private static let contentWidth: CGFloat = 384
+    private static let edgeInset: CGFloat = 28
+    /// Volle Fensterbreite inkl. BEIDER Ränder. Wird als expliziter widthAnchor auf
+    /// die Seiten-Stacks gelegt — sonst schrumpft `fittingSize` (bei .centerX) auf
+    /// die Kartenbreite und die Karte klebt bündig an beiden Fensterkanten
+    /// (derselbe Effekt wie zuvor im Kontrollpanel).
+    private static let pageWidth: CGFloat = contentWidth + 2 * edgeInset
 
     // Bedienungshilfen-Karte (live aktualisiert).
     private let axIcon = NSImageView()
@@ -110,9 +116,12 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
         stack.setCustomSpacing(22, after: body)
         stack.setCustomSpacing(20, after: card)
         stack.setCustomSpacing(10, after: pairButton)
-        stack.edgeInsets = NSEdgeInsets(top: 28, left: 28, bottom: 28, right: 28)
+        stack.edgeInsets = NSEdgeInsets(top: Self.edgeInset, left: Self.edgeInset,
+                                        bottom: Self.edgeInset, right: Self.edgeInset)
         stack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+            // Explizite Fensterbreite inkl. beider Ränder (siehe pageWidth).
+            stack.widthAnchor.constraint(equalToConstant: Self.pageWidth),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 380),
             card.widthAnchor.constraint(equalToConstant: Self.contentWidth),
             pairHint.widthAnchor.constraint(lessThanOrEqualToConstant: Self.contentWidth)
@@ -213,9 +222,10 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
         stack.setCustomSpacing(14, after: icon)
         stack.setCustomSpacing(8, after: title)
         stack.setCustomSpacing(24, after: body)
-        stack.edgeInsets = NSEdgeInsets(top: 32, left: 28, bottom: 32, right: 28)
+        stack.edgeInsets = NSEdgeInsets(top: 32, left: Self.edgeInset, bottom: 32, right: Self.edgeInset)
         stack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+            stack.widthAnchor.constraint(equalToConstant: Self.pageWidth),
             body.widthAnchor.constraint(lessThanOrEqualToConstant: 360)
         ])
         return stack

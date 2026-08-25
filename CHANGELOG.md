@@ -3,6 +3,11 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.13.2] – 2026-08-25 (nur macOS)
+
+### Fixed
+- **macOS – Einführungsfenster klebte links/rechts bündig an den Kanten**: Derselbe Effekt wie zuvor im Kontrollpanel — der Seiten-Stack (`.centerX`) hatte keine explizite Breite, sodass die Fensterbreite auf die Kartenbreite schrumpfte und die Ränder wegfielen. Beide Onboarding-Seiten haben jetzt eine feste Breite inkl. beider 28-pt-Ränder.
+
 ## [0.13.1] – 2026-08-25 (nur macOS)
 
 ### Fixed
