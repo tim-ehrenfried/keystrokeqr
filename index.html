@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KeystrokeQR — Scan on iPhone, type on your Mac</title>
+  <meta name="description" content="Scan a QR or barcode with your iPhone and the text is typed instantly at your Mac's cursor. Local-only over Wi-Fi, encrypted, no cloud. Free and open source.">
+  <meta property="og:title" content="KeystrokeQR">
+  <meta property="og:description" content="Scan a QR or barcode with your iPhone — the text is typed instantly at your Mac's cursor. Local-only, encrypted, open source.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/icon.png">
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="assets/icon.png" alt="KeystrokeQR icon"> KeystrokeQR</a>
+      <nav class="nav">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="support.html">Support</a>
+        <a class="nav-gh" href="https://github.com/tim-ehrenfried/keystrokeqr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <img class="app-icon" src="assets/icon.png" alt="KeystrokeQR app icon">
+        <h1>Scan on iPhone,<br>type on your Mac</h1>
+        <p class="tagline">Point your iPhone at a QR or barcode and the text appears instantly at your Mac's cursor — as real keystrokes.</p>
+        <div class="badges">
+          <span class="badge"><b>Local-only</b> over Wi-Fi</span>
+          <span class="badge"><b>End-to-end encrypted</b></span>
+          <span class="badge"><b>No cloud</b>, no account</span>
+          <span class="badge"><b>Free</b> &amp; open source</span>
+        </div>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/tim-ehrenfried/keystrokeqr/releases/latest">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/></svg>
+            Download for Mac
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/tim-ehrenfried/keystrokeqr">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.46-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.57 5.06.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+            View on GitHub
+          </a>
+        </div>
+        <p class="hint">Latest release · macOS 13+ · iPhone app via Xcode / TestFlight (coming soon)</p>
+      </div>
+    </section>
+
+    <section class="block" id="how">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <p class="lead">Two small apps that find each other automatically on your local network. No servers, no sign-up.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="num">1</div>
+            <h3>Run the Mac app</h3>
+            <p>KeystrokeQR Host lives in your menu bar and advertises itself on your Wi-Fi. Grant Accessibility once so it can type.</p>
+          </div>
+          <div class="step">
+            <div class="num">2</div>
+            <h3>Pair your iPhone</h3>
+            <p>The iPhone finds your Mac automatically. Enter the one-time code shown on the Mac — a single, encrypted pairing.</p>
+          </div>
+          <div class="step">
+            <div class="num">3</div>
+            <h3>Scan &amp; type</h3>
+            <p>Put the cursor in any field, scan a code, and the text is typed instantly — optionally followed by Tab or Enter.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="features">
+      <div class="wrap">
+        <h2>Built to be private &amp; fast</h2>
+        <div class="features">
+          <div class="feature"><h3><span class="dot"></span>Local-only</h3><p>Everything stays on your Wi-Fi. Your scans never leave your network — there is no cloud service.</p></div>
+          <div class="feature"><h3><span class="dot"></span>Encrypted &amp; paired</h3><p>Each connection is end-to-end encrypted and only works between devices you explicitly paired.</p></div>
+          <div class="feature"><h3><span class="dot"></span>Real keystrokes</h3><p>Text is injected as genuine, layout-independent keystrokes — it works in any app and any field.</p></div>
+          <div class="feature"><h3><span class="dot"></span>QR &amp; barcodes</h3><p>QR plus common 1D/2D barcodes. A one-second cooldown prevents accidental double scans.</p></div>
+          <div class="feature"><h3><span class="dot"></span>Lock-screen shortcut</h3><p>Start the scanner from a Lock Screen widget, the Action button, Control Center or Siri.</p></div>
+          <div class="feature"><h3><span class="dot"></span>Free &amp; open source</h3><p>MIT-licensed. Read the code, build it yourself, or download the notarized-style DMG.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap" style="text-align:center">
+        <h2>Get started</h2>
+        <p class="lead">Download the Mac app and follow the setup guide.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/tim-ehrenfried/keystrokeqr/releases/latest">Download for Mac</a>
+          <a class="btn btn-secondary" href="https://github.com/tim-ehrenfried/keystrokeqr/blob/main/docs/SETUP.md">Setup guide</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div>© 2026 Tim Ehrenfried · KeystrokeQR</div>
+      <div class="links">
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/tim-ehrenfried/keystrokeqr">GitHub</a>
+        <a href="https://github.com/tim-ehrenfried/keystrokeqr/blob/main/docs/README.md">Docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — KeystrokeQR</title>
+  <meta name="description" content="KeystrokeQR privacy policy: no data collection, no cloud, everything stays on your local network.">
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="assets/icon.png" alt="KeystrokeQR icon"> KeystrokeQR</a>
+      <nav class="nav">
+        <a href="support.html">Support</a>
+        <a class="nav-gh" href="https://github.com/tim-ehrenfried/keystrokeqr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="article">
+    <div class="wrap">
+      <a class="back" href="/">← Back to KeystrokeQR</a>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: 25 August 2026</p>
+
+      <div class="callout">
+        <strong>In short:</strong> KeystrokeQR collects nothing. There are no accounts, no analytics, no tracking, and no servers we operate. Everything happens on your own devices and your local network.
+      </div>
+
+      <h2>Data we collect</h2>
+      <p>None. KeystrokeQR does not collect, store, transmit, or sell any personal data. We do not use analytics, advertising, or third-party tracking SDKs. We operate no backend service that receives your data.</p>
+
+      <h2>How the apps work</h2>
+      <ul>
+        <li><strong>Camera (iPhone):</strong> used only to detect QR and barcodes in real time, on your device. Camera frames are processed locally and are never recorded, stored, or sent anywhere.</li>
+        <li><strong>Scanned text:</strong> the decoded text is sent directly to your paired Mac over your local Wi-Fi network so it can be typed. It is not stored by the apps beyond showing you the last scan, and it never leaves your network.</li>
+        <li><strong>Local network:</strong> the apps discover each other using Bonjour and communicate peer-to-peer. There is no cloud relay.</li>
+        <li><strong>Pairing keys:</strong> when you pair a device, a cryptographic key is generated and stored in the device's system Keychain to secure future connections. It stays on your devices and is never transmitted in the clear.</li>
+      </ul>
+
+      <h2>Security</h2>
+      <p>Connections between your iPhone and Mac are end-to-end encrypted and only work between devices you have explicitly paired with a one-time code. See the <a href="https://github.com/tim-ehrenfried/keystrokeqr/blob/main/SECURITY.md">security overview</a> for details.</p>
+
+      <h2>Permissions</h2>
+      <ul>
+        <li><strong>Camera</strong> (iPhone) — to scan codes.</li>
+        <li><strong>Local Network</strong> (iPhone) — to find and connect to your Mac.</li>
+        <li><strong>Accessibility</strong> (Mac) — so the app can type the received text into the focused app. This permission is granted by you in System Settings and used solely for typing.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>KeystrokeQR is a general-purpose utility and does not target children or knowingly collect any information from anyone.</p>
+
+      <h2>Changes</h2>
+      <p>If this policy changes, the updated version will be posted on this page with a new date.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy? Email <a href="mailto:mail@tim-ehrenfried.de">mail@tim-ehrenfried.de</a>.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div>© 2026 Tim Ehrenfried · KeystrokeQR</div>
+      <div class="links">
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/tim-ehrenfried/keystrokeqr">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
