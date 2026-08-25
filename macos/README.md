@@ -14,7 +14,7 @@ JSON-Nachrichten über WebSocket). Seit v0.6.0 ist die Verbindung gekoppelt
 
 - **Bundle-ID:** `de.timehrenfried.keystrokeqr.host`
 - **Bonjour-Service-Typ:** `_keystrokeqr._tcp` (muss exakt zum iOS-Client passen)
-- **Version:** 0.9.0
+- **Version:** 0.10.0
 
 ## Voraussetzungen
 
@@ -118,7 +118,14 @@ startet.
 Seit **v0.9.0** liegen alle Funktionen gebündelt in einem gestylten Fenster im
 dunklen KeystrokeQR-Look (statt vieler Menüpunkte). Öffnen über den Menüpunkt
 **„KeystrokeQR öffnen…"**. Das Panel läuft als normales, fokussierbares Fenster,
-während die App weiterhin reine Menüleisten-App (`.accessory`) bleibt. Abschnitte:
+während die App weiterhin reine Menüleisten-App (`.accessory`) bleibt.
+
+Seit **v0.10.0** ist es **ein einziges Fenster** mit interner Navigation: „Hilfe"
+und „Über" werden als Unterseiten in denselben Rahmen geschoben (kein Scroll —
+das Fenster öffnet für jede Seite genau so groß wie ihr Inhalt und passt seine
+Größe beim Navigieren animiert an). Oben links ein **Zurück-Button** (nur auf den
+Unterseiten), oben rechts auf gleicher Höhe ein dezenter grauer
+**„Einführung"-Button**. Abschnitte der Home-Ansicht:
 
 - **Verbindung** — Bonjour-Dienstname, Port und „N gekoppelt · M verbunden".
 - **Bedienungshilfen** — großes grünes ✓ „Aktiviert" bzw. rotes ✗ „Nicht
@@ -134,20 +141,22 @@ während die App weiterhin reine Menüleisten-App (`.accessory`) bleibt. Abschni
   und in Neu-Pairing gehen kann (docs/PROTOCOL-v2.md, „Geräteverwaltung").
 - **Tippgeschwindigkeit** — Schnell / Normal / Langsam als Segmentumschalter,
   sofort wirksam (s. u.).
-- **Hilfe** und **Über** sowie „Einführung erneut anzeigen".
+- Einstiege zu den Unterseiten **Hilfe** und **Über** (die „Einführung" liegt als
+  grauer Button oben rechts).
 
-## Hilfe & Über
+## Hilfe & Über (Unterseiten)
 
-- **Hilfe** (Button im Panel) öffnet ein Fenster mit Kurzanleitung
+- **Hilfe** (Button in der Home-Ansicht) schiebt eine Unterseite mit Kurzanleitung
   (Hintergrundbetrieb, Kopplung, Bedienungshilfen, Tippgeschwindigkeit bei viel
   Text), Fehlerbehebung (iPhone findet den Mac nicht → gleiches WLAN/Firewall/VPN;
   es wird nichts getippt → Bedienungshilfen) sowie Links zum
   [GitHub-Repo](https://github.com/tim-ehrenfried/keystrokeqr) und zur
-  Dokumentation. Zweisprachig (en/de).
+  Dokumentation (als Buttons mit Icon). Zweisprachig (en/de).
 - **Über** zeigt App-Name „KeystrokeQR Host", Version/Build **dynamisch aus dem
-  Bundle**, „© 2026 Tim Ehrenfried", Kontakt (mailto:mail@tim-ehrenfried.de),
-  GitHub-Link und die MIT-Lizenz — im dunklen KeystrokeQR-Stil (kein
-  NSAboutPanel-Default).
+  Bundle**, „© 2026 Tim Ehrenfried", die MIT-Lizenz und die Links — GitHub,
+  „E-Mail schreiben" (mailto:mail@tim-ehrenfried.de) und Dokumentation — als
+  **Buttons mit SF-Symbol** (wie in der iOS-App), im dunklen KeystrokeQR-Stil
+  (kein NSAboutPanel-Default).
 
 ## Willkommen / Onboarding (Erst-Start)
 
@@ -156,7 +165,7 @@ fenster: kurz, was die App tut (iPhone scannt → Mac tippt), ein Hinweis auf di
 nötige **Bedienungshilfen**-Berechtigung mit Button „Bedienungshilfen öffnen…"
 sowie „Gerät koppeln…". Ob es schon gezeigt wurde, merkt sich die App in
 UserDefaults (`didCompleteHostOnboarding`). Jederzeit erneut aufrufbar über den
-Menüpunkt **„Einführung anzeigen"**.
+grauen **„Einführung"**-Button oben rechts im KeystrokeQR-Fenster.
 
 ## Tippgeschwindigkeit
 

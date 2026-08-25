@@ -5,10 +5,13 @@ import AppKit
 /// Statushinweise. Solange dieses Fenster offen ist, akzeptiert `ScanServer`
 /// `pair_hello` (siehe `PairingCoordinator`).
 ///
-/// Fehlerbehandlung ab v0.8.0 (docs/PROTOCOL-v2.md): Bei falschem Code erzeugt
-/// der Coordinator sofort einen neuen OTP; dieses Fenster zeigt ihn an, setzt
-/// den Countdown zurück und bleibt offen — kein roher Fehlercode im UI. Bei
-/// Erfolg kurz „Gerät gekoppelt ✓“ und automatisches Schließen nach ~1,5 s.
+/// Fehlerbehandlung ab v0.8.0/v0.9.0 (docs/PROTOCOL-v2.md): Bei falschem Code
+/// erzeugt der Coordinator sofort einen neuen OTP; dieses Fenster zeigt ihn an,
+/// setzt den Countdown zurück und bleibt offen — kein roher Fehlercode im UI.
+/// Läuft das 90-s-Fenster ab, während der Pairing-Dialog offen ist, erzeugt der
+/// Host **automatisch** einen neuen OTP und setzt den Countdown zurück (kein
+/// „Neuen Code“-Button). Bei Erfolg kurz „Gerät gekoppelt ✓“ und automatisches
+/// Schließen nach ~1,5 s.
 final class PairingWindowController: NSWindowController, NSWindowDelegate {
 
     private static let otpLifetime: Double = 90
@@ -18,13 +21,11 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
     private let countdownLabel = NSTextField(labelWithString: "")
     private let progressBar = ProgressBarView()
     private let statusLabel = NSTextField(labelWithString: "")
-    private let newCodeButton: NSButton
     private var countdownTimer: Timer?
     private var isFinished = false
 
     init(coordinator: PairingCoordinator) {
         self.coordinator = coordinator
-        self.newCodeButton = NSButton(title: L("pairing.newCode"), target: nil, action: nil)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 380, height: 430),
             styleMask: [.titled, .closable],
@@ -89,12 +90,6 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
         countdownLabel.textColor = .secondaryLabelColor
         countdownLabel.alignment = .center
 
-        newCodeButton.target = self
-        newCodeButton.action = #selector(generateNewCode)
-        newCodeButton.bezelStyle = .rounded
-        newCodeButton.controlSize = .large
-        newCodeButton.isHidden = true
-
         statusLabel.font = .systemFont(ofSize: 13, weight: .medium)
         statusLabel.textColor = .labelColor
         statusLabel.alignment = .center
@@ -109,7 +104,6 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             codeStack,
             progressBar,
             countdownLabel,
-            newCodeButton,
             statusLabel
         ])
         stack.orientation = .vertical
@@ -170,6 +164,7 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
     }
 
     private func tick() {
+        guard !isFinished else { return }
         let remaining = coordinator.remainingSeconds
         if remaining > 0 {
             countdownLabel.stringValue = String(format: L("pairing.countdown.valid"), remaining)
@@ -177,20 +172,22 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             progressBar.progress = CGFloat(remaining) / Self.otpLifetime
             progressBar.fillColor = remaining <= 10 ? .systemRed
                 : (remaining <= 30 ? .systemOrange : .systemGreen)
-            newCodeButton.isHidden = true
         } else {
-            countdownLabel.stringValue = L("pairing.countdown.expired")
-            progressBar.isHidden = true
-            newCodeButton.isHidden = false
-            countdownTimer?.invalidate()
+            // Kein „Neuen Code“-Button mehr: der Host erzeugt bei Ablauf
+            // automatisch einen frischen OTP und setzt den Countdown zurück
+            // (docs/PROTOCOL-v2.md, „Fehlerbehandlung & Wiederholung“).
+            autoRenewCode()
         }
     }
 
-    @objc private func generateNewCode() {
+    /// Erzeugt bei Ablauf automatisch einen neuen Code, setzt den Countdown
+    /// zurück und zeigt einen kurzen Hinweis.
+    private func autoRenewCode() {
+        guard !isFinished else { return }
         let otp = coordinator.regenerate()
         setOTP(otp)
-        statusLabel.stringValue = L("pairing.waiting")
-        statusLabel.textColor = .secondaryLabelColor
+        statusLabel.textColor = .systemOrange
+        statusLabel.stringValue = L("pairing.autoRenewed")
         restartCountdown()
     }
 
@@ -200,7 +197,6 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             isFinished = true
             countdownTimer?.invalidate()
             progressBar.isHidden = true
-            newCodeButton.isHidden = true
             countdownLabel.stringValue = ""
             statusLabel.textColor = .systemGreen
             statusLabel.stringValue = L("pairing.successShort")
@@ -217,10 +213,9 @@ final class PairingWindowController: NSWindowController, NSWindowDelegate {
             restartCountdown()
 
         case .expiredOrClosed:
-            // Versuch traf ein abgelaufenes/geschlossenes Fenster.
-            statusLabel.textColor = .secondaryLabelColor
-            statusLabel.stringValue = L("pairing.countdown.expired")
-            tick()
+            // Versuch traf ein abgelaufenes Fenster — automatisch neuen Code
+            // erzeugen, damit der Nutzer direkt weiterversuchen kann.
+            autoRenewCode()
         }
     }
 

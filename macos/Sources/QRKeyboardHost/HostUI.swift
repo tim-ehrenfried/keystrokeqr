@@ -84,19 +84,40 @@ enum HostUI {
         return label
     }
 
-    /// Als Link gestalteter Button (accent, unterstrichen), öffnet eine URL.
-    static func makeLinkButton(title: String, target: AnyObject, action: Selector) -> NSButton {
+    /// Button mit SF-Symbol + Label im dunklen Look (wie in der iOS-App): dezenter
+    /// Rahmen, Symbol links, kein Akzentblau. Öffnet i. d. R. eine URL.
+    static func makeIconButton(title: String, systemImage: String,
+                               target: AnyObject, action: Selector) -> NSButton {
         let button = NSButton(title: title, target: target, action: action)
-        button.isBordered = false
-        button.bezelStyle = .inline
-        button.contentTintColor = accent
-        let attributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: accent,
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .underlineStyle: NSUnderlineStyle.single.rawValue
-        ]
-        button.attributedTitle = NSAttributedString(string: title, attributes: attributes)
-        button.setButtonType(.momentaryChange)
+        button.bezelStyle = .rounded
+        button.controlSize = .large
+        let config = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+        button.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)
+        button.imagePosition = .imageLeading
+        button.imageHugsTitle = true
+        button.contentTintColor = .labelColor
+        button.keyEquivalent = ""
+        return button
+    }
+
+    /// Dezenter, grauer Navigations-/Sekundärbutton (Zurück / Einführung) — gleiche
+    /// Höhe/Baseline, kein Akzentblau. Optional mit führendem SF-Symbol.
+    static func makeToolbarButton(title: String, systemImage: String? = nil,
+                                  target: AnyObject, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: target, action: action)
+        button.bezelStyle = .rounded
+        button.controlSize = .regular
+        button.contentTintColor = .secondaryLabelColor
+        if let systemImage {
+            let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+            button.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: nil)?
+                .withSymbolConfiguration(config)
+            button.imagePosition = .imageLeading
+            button.imageHugsTitle = true
+        }
+        button.font = .systemFont(ofSize: 12, weight: .medium)
+        button.keyEquivalent = ""
         return button
     }
 }

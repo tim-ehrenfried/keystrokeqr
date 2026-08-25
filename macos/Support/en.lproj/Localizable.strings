@@ -21,6 +21,10 @@
 "menu.openPanel" = "Open KeystrokeQR…";
 "menu.quit" = "Quit";
 
+/* In-window navigation */
+"nav.back" = "Back";
+"nav.intro" = "Introduction";
+
 /* Control panel */
 "panel.window.title" = "KeystrokeQR";
 "panel.section.connection" = "Connection";
@@ -57,6 +61,7 @@
 "about.license" = "MIT License";
 "about.link.github" = "GitHub";
 "about.link.contact" = "mail@tim-ehrenfried.de";
+"about.link.docs" = "Documentation";
 
 /* Typing speed */
 "menu.typingSpeed" = "Typing Speed";
@@ -72,7 +77,7 @@
 "pairing.waiting" = "Waiting for iPhone …";
 "pairing.countdown.valid" = "valid for %d s";
 "pairing.countdown.expired" = "Code expired";
-"pairing.newCode" = "Generate new code";
+"pairing.autoRenewed" = "Code expired – a new code was generated.";
 "pairing.badOTP" = "Wrong code – a new code was generated. Please enter it again.";
 "pairing.successShort" = "Device paired ✓";
 "pairing.success" = "“%@” paired successfully.";

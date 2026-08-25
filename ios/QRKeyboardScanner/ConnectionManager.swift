@@ -118,6 +118,14 @@ final class ConnectionManager: ObservableObject {
     /// Ein v2-Host wurde gefunden, für den (noch) kein PSK vorliegt — Pairing-UI zeigen.
     /// Beschreibbar (ContentView setzt via `$`-Binding auf `nil` beim Dismiss).
     @Published var pendingPairingService: DiscoveredService?
+    /// Servicenamen, für die der Nutzer den Pairing-Screen bewusst abgebrochen hat.
+    /// Solange ein Name hier steht, bietet die automatische Discovery
+    /// (`selectService`) NICHT ungefragt erneut Pairing an — sonst poppt der Screen
+    /// sofort wieder auf, weil der ungekoppelte Mac weiterhin im Netz sichtbar ist
+    /// (der Nutzer säße fest). Pairing bleibt manuell erreichbar: aktive Mac-Wahl
+    /// (`switchTo`) räumt den Eintrag wieder aus, ebenso ein App-Neustart (der
+    /// Manager wird neu erzeugt).
+    private var declinedPairingServices: Set<String> = []
     /// Nur ein v1-Host wurde gefunden — Mac-App muss aktualisiert werden.
     @Published var outdatedHostDetected = false
     /// Host kennt unsere `deviceID` nicht (mehr) — PSK wurde lokal verworfen, neu koppeln nötig.
@@ -282,9 +290,46 @@ final class ConnectionManager: ObservableObject {
         }
         if crypto.pairedMac(forServiceName: service.name) != nil {
             connect(to: service)
-        } else {
+        } else if !declinedPairingServices.contains(service.name) {
+            // Ungekoppelter v2-Mac, den der Nutzer NICHT gerade abgelehnt hat:
+            // Pairing anbieten. Nach einem bewussten Abbruch (declinePairing)
+            // bleibt der Mac hier bewusst still, bis der Nutzer ihn aktiv wählt.
             pendingPairingService = service
         }
+    }
+
+    /// Der Nutzer hat den Pairing-Screen für diesen Mac bewusst abgebrochen.
+    /// Screen schließen UND den Mac merken, damit die automatische Discovery ihn
+    /// nicht sofort wieder zum Pairing aufpoppt. Der Mac bleibt über die
+    /// Mac-Auswahl (`switchTo`) manuell koppelbar.
+    func declinePairing(for service: DiscoveredService) {
+        declinedPairingServices.insert(service.name)
+        if pendingPairingService?.name == service.name {
+            pendingPairingService = nil
+        }
+    }
+
+    /// Manueller Wiedereinstieg ins Pairing (z. B. „Mac koppeln"-Button in der
+    /// Scanner-Ansicht oder Antippen des Macs in der Auswahlliste): hebt eine
+    /// evtl. frühere Ablehnung auf und öffnet den Pairing-Screen (bzw. verbindet,
+    /// falls bereits gekoppelt) für genau diesen Mac. Der bewusste Nutzerwunsch
+    /// überstimmt die „nicht automatisch aufpoppen"-Sperre.
+    func beginPairing(for service: DiscoveredService) {
+        guard isActive else { return }
+        declinedPairingServices.remove(service.name)
+        selectService(service)
+    }
+
+    /// Gibt es mindestens einen gefundenen, ungekoppelten v2-Mac (Pairing möglich)?
+    /// Steuert den immer sichtbaren „Mac koppeln"-Hinweis in der Scanner-Ansicht,
+    /// damit man nach einem Abbruch OHNE App-Neustart zurück zum Koppeln findet.
+    var hasPairableMac: Bool {
+        services.contains { $0.isV2 && crypto.pairedMac(forServiceName: $0.name) == nil }
+    }
+
+    /// Alle gefundenen, ungekoppelten v2-Macs (Pairing möglich).
+    var pairableServices: [DiscoveredService] {
+        services.filter { $0.isV2 && crypto.pairedMac(forServiceName: $0.name) == nil }
     }
 
     /// Klassifiziert einen gefundenen Mac für die Auswahlliste: aktuell verbunden,
@@ -311,6 +356,9 @@ final class ConnectionManager: ObservableObject {
         showServicePicker = false
         // Wechsel ist ein bewusster Neuaufbau — evtl. Zähler dieses Ziels verwerfen.
         handshakeFailuresByService[service.name] = nil
+        // Aktive Mac-Wahl ist ein bewusster Nutzerwunsch: eine frühere Ablehnung
+        // aufheben, damit ein ungekoppelter Mac hier wieder Pairing anbieten darf.
+        declinedPairingServices.remove(service.name)
         selectService(service)
     }
 
@@ -436,6 +484,9 @@ final class ConnectionManager: ObservableObject {
     private func concludeNotPaired(serviceName: String) {
         awaitingSessionReady = false
         handshakeFailuresByService[serviceName] = nil
+        // Host hat uns aktiv entkoppelt — ein NEUES Ereignis, das ein erneutes
+        // Pairing-Angebot rechtfertigt: eine frühere Ablehnung nicht nachwirken lassen.
+        declinedPairingServices.remove(serviceName)
         // PSK/Mac-Eintrag für genau diesen Mac löschen — danach routet
         // `selectService` künftige Funde dieses Macs auf den Pairing-Screen,
         // sodass ein frisches Pairing (neuer `pair_hello`) möglich ist.
@@ -711,6 +762,9 @@ final class ConnectionManager: ObservableObject {
             serviceName: serviceName, hostName: msg.hostName, hostPublicKey: hostPub,
             deviceID: deviceID, psk: psk
         )
+        // Erfolgreich gekoppelt: eine evtl. frühere Ablehnung dieses Macs ist
+        // gegenstandslos (selectService routet ihn künftig auf `connect`).
+        declinedPairingServices.remove(serviceName)
         finishPairing(.success(record))
     }
 

@@ -95,6 +95,9 @@ struct ContentView: View {
                 if connectionManager.hostAccessibilityDenied {
                     accessibilityWarning
                 }
+                if showPairPrompt {
+                    pairMacPrompt
+                }
                 Spacer(minLength: 0)
                 if let repeatCandidate {
                     resendButton(for: repeatCandidate)
@@ -246,6 +249,48 @@ struct ContentView: View {
                 .multilineTextAlignment(.center)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - „Mac koppeln“-Hinweis (immer sichtbarer Weg zurück ins Pairing)
+
+    /// True, sobald ein v2-Mac gefunden wurde, der (noch) nicht gekoppelt und
+    /// nicht verbunden ist. Dann zeigen wir einen deutlichen „Mac koppeln“-Button
+    /// — der Pairing-Screen poppt bewusst NICHT mehr von allein auf (Loop-Fix),
+    /// aber der Nutzer kommt hierüber jederzeit ohne App-Neustart zurück zum Koppeln.
+    private var showPairPrompt: Bool {
+        guard case .connected = connectionManager.state else {
+            return connectionManager.hasPairableMac
+        }
+        return false
+    }
+
+    /// Deutlicher, tippbarer Hinweis in der Statuszone: öffnet den Pairing-Screen
+    /// (bzw. bei mehreren gefundenen Macs die Mac-Auswahl).
+    private var pairMacPrompt: some View {
+        Button {
+            openPairingEntry()
+        } label: {
+            Label("Pair Mac", systemImage: "desktopcomputer")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.blue, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens the pairing screen to connect a found Mac.")
+    }
+
+    /// Öffnet den Weg zurück ins Pairing: bei genau einem gefundenen (ungekoppelten)
+    /// Mac direkt den Pairing-Screen, sonst die Mac-Auswahlliste, in der man den
+    /// gewünschten Mac antippt.
+    private func openPairingEntry() {
+        let pairable = connectionManager.pairableServices
+        if pairable.count == 1 && connectionManager.services.count == 1 {
+            connectionManager.beginPairing(for: pairable[0])
+        } else {
+            showMacSwitcher = true
+        }
     }
 
     // MARK: - Bedienleiste unten
@@ -409,9 +454,19 @@ struct ContentView: View {
                 Section {
                     ForEach(connectionManager.services) { service in
                         Button {
+                            // Erst die Auswahlliste schließen, dann (im nächsten
+                            // Runloop) den Wechsel/das Pairing anstoßen. Sonst
+                            // konkurrieren zwei Sheet-Übergänge im selben Update und
+                            // der Pairing-Screen würde u. U. gar nicht präsentiert
+                            // („Tippen tut nichts“). switchTo räumt eine frühere
+                            // Ablehnung dieses Macs und öffnet für ungekoppelte
+                            // Macs den Pairing-Screen.
                             connectionManager.showServicePicker = false
                             showMacSwitcher = false
-                            connectionManager.switchTo(service)
+                            let target = service
+                            Task { @MainActor in
+                                connectionManager.switchTo(target)
+                            }
                         } label: {
                             HStack {
                                 Label(service.name, systemImage: "desktopcomputer")

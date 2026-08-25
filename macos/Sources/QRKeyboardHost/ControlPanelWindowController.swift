@@ -1,27 +1,53 @@
 import AppKit
 
-/// Zentrales „KeystrokeQR“-Panel (Kontrollzentrum) im dunklen KeystrokeQR-Stil.
-/// Bündelt die früher über einzelne Menüpunkte verstreuten Funktionen:
+/// Zentrales „KeystrokeQR“-Fenster im dunklen KeystrokeQR-Stil. Seit v0.10.0
+/// **ein einziges Fenster** mit interner Navigation: Home (Kontrollzentrum),
+/// „Hilfe“ und „Über“ werden als Unterseiten in denselben Fensterrahmen
+/// geschoben. Oben links ein **Zurück-Button** (nur auf Unterseiten), oben
+/// rechts — auf gleicher Höhe — ein dezenter grauer **„Einführung“-Button**.
+///
+/// Das Fenster öffnet für jede Seite genau so groß wie ihr Inhalt (kein Scroll):
+/// beim Navigieren wird die Content-Größe berechnet und die Fenstergröße
+/// animiert angepasst (`resizeWindow(to:)`), wobei die obere linke Ecke fix
+/// bleibt.
+///
+/// Bündelt die früher über einzelne Menüpunkte/Fenster verstreuten Funktionen:
 /// Verbindungsstatus, Bedienungshilfen-Status (LIVE), gekoppelte Geräte
-/// (inkl. Entfernen + Neu-Pairing), Tippgeschwindigkeit sowie Zugänge zu Hilfe
-/// und Über. Alle nutzersichtbaren Strings zweisprachig über `L()`.
+/// (inkl. Entfernen + Neu-Pairing), Tippgeschwindigkeit sowie Hilfe und Über.
+/// Alle nutzersichtbaren Strings zweisprachig über `L()`.
 ///
 /// Läuft in der `.accessory`-App als normales, fokussierbares Fenster
 /// (`present()` aktiviert die App + bringt das Fenster nach vorn).
 final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
 
-    /// Aktionen, die der Host (AppDelegate) für das Panel bereitstellt.
+    /// Aktionen, die der Host (AppDelegate) für das Fenster bereitstellt.
+    /// Hilfe/Über liegen jetzt als Unterseiten im Fenster selbst — nur die
+    /// „Einführung“ (Onboarding) bleibt ein eigenes Fenster.
     struct Actions {
         let openAccessibility: () -> Void
         let pairDevice: () -> Void
         let removeDevice: (UUID) -> Void
-        let showHelp: () -> Void
-        let showAbout: () -> Void
         let showIntro: () -> Void
+    }
+
+    private enum Page {
+        case home, help, about
     }
 
     private let crypto: CryptoManager
     private let actions: Actions
+
+    // Navigation
+    private static let topBarHeight: CGFloat = 44
+    private static let homeWidth: CGFloat = 460
+    private static let helpWidth: CGFloat = 460
+    private static let aboutWidth: CGFloat = 440
+
+    private let contentContainer = NSView()
+    private var backButton: NSButton!
+    private var introButton: NSButton!
+    private var currentPage: Page = .home
+    private var currentPageView: NSView?
 
     // Verbindungsstatus
     private let connectionLabel = NSTextField(labelWithString: "")
@@ -42,6 +68,12 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
     private var accessibilityTimer: Timer?
     private var lastTrusted: Bool?
 
+    // Seiten werden einmalig gebaut und wiederverwendet (Home enthält
+    // live-aktualisierte Labels, deren Referenzen erhalten bleiben müssen).
+    private lazy var homeView: NSView = makeHomeView()
+    private lazy var helpView: NSView = makeHelpView()
+    private lazy var aboutView: NSView = makeAboutView()
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .medium
@@ -53,8 +85,8 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         self.crypto = crypto
         self.actions = actions
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 620),
-            styleMask: [.titled, .closable, .resizable],
+            contentRect: NSRect(x: 0, y: 0, width: Self.homeWidth, height: 620),
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
@@ -62,20 +94,121 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.appearance = HostUI.appearance
         window.backgroundColor = HostUI.windowBackground
-        window.minSize = NSSize(width: 420, height: 460)
         super.init(window: window)
         window.delegate = self
-        buildUI()
+        buildChrome()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) not implemented") }
 
-    // MARK: - UI-Aufbau
+    // MARK: - Fenster-Gerüst (Top-Bar + Container)
 
-    private func buildUI() {
+    private func buildChrome() {
         guard let content = window?.contentView else { return }
 
+        backButton = HostUI.makeToolbarButton(
+            title: L("nav.back"), systemImage: "chevron.left",
+            target: self, action: #selector(goBack))
+        backButton.isHidden = true
+
+        introButton = HostUI.makeToolbarButton(
+            title: L("nav.intro"), systemImage: "sparkles",
+            target: self, action: #selector(showIntro))
+
+        let topBar = NSView()
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+        backButton.translatesAutoresizingMaskIntoConstraints = false
+        introButton.translatesAutoresizingMaskIntoConstraints = false
+        topBar.addSubview(backButton)
+        topBar.addSubview(introButton)
+
+        contentContainer.translatesAutoresizingMaskIntoConstraints = false
+
+        content.addSubview(topBar)
+        content.addSubview(contentContainer)
+
+        NSLayoutConstraint.activate([
+            topBar.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            topBar.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            topBar.topAnchor.constraint(equalTo: content.topAnchor),
+            topBar.heightAnchor.constraint(equalToConstant: Self.topBarHeight),
+
+            backButton.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 16),
+            backButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            introButton.trailingAnchor.constraint(equalTo: topBar.trailingAnchor, constant: -16),
+            introButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+
+            contentContainer.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            contentContainer.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            contentContainer.topAnchor.constraint(equalTo: topBar.bottomAnchor),
+            contentContainer.bottomAnchor.constraint(equalTo: content.bottomAnchor)
+        ])
+    }
+
+    // MARK: - Navigation
+
+    private func view(for page: Page) -> NSView {
+        switch page {
+        case .home:  return homeView
+        case .help:  return helpView
+        case .about: return aboutView
+        }
+    }
+
+    private func title(for page: Page) -> String {
+        switch page {
+        case .home:  return L("panel.window.title")
+        case .help:  return L("help.window.title")
+        case .about: return L("about.window.title")
+        }
+    }
+
+    private func showPage(_ page: Page, animated: Bool) {
+        let pageView = view(for: page)
+        guard pageView !== currentPageView else { return }
+
+        currentPageView?.removeFromSuperview()
+        pageView.translatesAutoresizingMaskIntoConstraints = false
+        contentContainer.addSubview(pageView)
+        NSLayoutConstraint.activate([
+            pageView.centerXAnchor.constraint(equalTo: contentContainer.centerXAnchor),
+            pageView.topAnchor.constraint(equalTo: contentContainer.topAnchor),
+            pageView.bottomAnchor.constraint(lessThanOrEqualTo: contentContainer.bottomAnchor)
+        ])
+        currentPageView = pageView
+        currentPage = page
+
+        backButton.isHidden = (page == .home)
+        window?.title = title(for: page)
+
+        if page == .home { refresh() }
+        resizeWindow(to: pageView, animated: animated)
+    }
+
+    /// Passt die Fenstergröße exakt an die Seite an (kein Scroll). Hält die obere
+    /// linke Ecke fix, animiert optional.
+    private func resizeWindow(to pageView: NSView, animated: Bool) {
+        guard let window else { return }
+        contentContainer.layoutSubtreeIfNeeded()
+        let fitting = pageView.fittingSize
+        let contentSize = NSSize(width: fitting.width,
+                                 height: Self.topBarHeight + fitting.height)
+        let newFrame = window.frameRect(forContentRect: NSRect(origin: .zero, size: contentSize))
+        var frame = window.frame
+        frame.origin.y += frame.height - newFrame.height   // obere Kante fix
+        frame.size = newFrame.size
+        window.setFrame(frame, display: true, animate: animated)
+    }
+
+    @objc private func goBack() { showPage(.home, animated: true) }
+    @objc private func showIntro() { actions.showIntro() }
+    @objc private func showHelp() { showPage(.help, animated: true) }
+    @objc private func showAbout() { showPage(.about, animated: true) }
+
+    // MARK: - Home-Seite
+
+    private func makeHomeView() -> NSView {
         let header = HostUI.makeHeader()
 
         let sections = NSStackView(views: [
@@ -84,41 +217,16 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
             makeAccessibilityCard(),
             makeDevicesCard(),
             makeTypingSpeedCard(),
-            makeFooter()
+            makeHomeFooter()
         ])
         sections.orientation = .vertical
         sections.alignment = .leading
         sections.spacing = 18
         sections.setCustomSpacing(20, after: header)
-        sections.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        sections.edgeInsets = NSEdgeInsets(top: 20, left: 24, bottom: 24, right: 24)
         sections.translatesAutoresizingMaskIntoConstraints = false
-
-        let documentView = NSView()
-        documentView.translatesAutoresizingMaskIntoConstraints = false
-        documentView.addSubview(sections)
-
-        let scrollView = NSScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.hasVerticalScroller = true
-        scrollView.drawsBackground = false
-        scrollView.documentView = documentView
-
-        content.addSubview(scrollView)
-        NSLayoutConstraint.activate([
-            scrollView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            scrollView.topAnchor.constraint(equalTo: content.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-
-            documentView.leadingAnchor.constraint(equalTo: scrollView.contentView.leadingAnchor),
-            documentView.trailingAnchor.constraint(equalTo: scrollView.contentView.trailingAnchor),
-            documentView.topAnchor.constraint(equalTo: scrollView.contentView.topAnchor),
-
-            sections.leadingAnchor.constraint(equalTo: documentView.leadingAnchor),
-            sections.trailingAnchor.constraint(equalTo: documentView.trailingAnchor),
-            sections.topAnchor.constraint(equalTo: documentView.topAnchor),
-            sections.bottomAnchor.constraint(equalTo: documentView.bottomAnchor)
-        ])
+        sections.widthAnchor.constraint(equalToConstant: Self.homeWidth).isActive = true
+        return sections
     }
 
     /// Karte mit Abschnittsüberschrift und beliebigem Inhalt, feste Breite (412),
@@ -197,7 +305,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
 
         let pairButton = HostUI.makePrimaryButton(
             title: L("menu.pairDevice"), target: self, action: #selector(pairDevice))
-        // Kein Standard-Return-Key (das Panel ist kein modaler Dialog).
+        // Kein Standard-Return-Key (das Fenster ist kein modaler Dialog).
         pairButton.keyEquivalent = ""
 
         let inner = NSStackView(views: [devicesStack, pairButton])
@@ -233,29 +341,192 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         return makeCard(title: L("panel.section.typingSpeed"), content: inner)
     }
 
-    private func makeFooter() -> NSView {
+    /// Fußzeile der Home-Ansicht: Einstiege in die Unterseiten Hilfe & Über.
+    private func makeHomeFooter() -> NSView {
         let helpButton = HostUI.makeSecondaryButton(
             title: L("panel.help.button"), target: self, action: #selector(showHelp))
         let aboutButton = HostUI.makeSecondaryButton(
             title: L("panel.about.button"), target: self, action: #selector(showAbout))
-        let introButton = HostUI.makeLinkButton(
-            title: L("panel.showIntro"), target: self, action: #selector(showIntro))
 
         let buttonRow = NSStackView(views: [helpButton, aboutButton])
         buttonRow.orientation = .horizontal
         buttonRow.spacing = 12
+        return buttonRow
+    }
 
-        let stack = NSStackView(views: [buttonRow, introButton])
+    // MARK: - Hilfe-Seite
+
+    private func makeHelpView() -> NSView {
+        let header = HostUI.makeHeader()
+
+        let title = NSTextField(labelWithString: L("help.title"))
+        title.font = .systemFont(ofSize: 18, weight: .bold)
+        title.textColor = .labelColor
+
+        let quickCard = makeHelpTextCard(
+            title: L("help.quickstart.title"),
+            body: L("help.quickstart.body"))
+        let troubleCard = makeHelpTroubleCard()
+
+        let linksTitle = HostUI.makeSectionTitle(L("help.links.title"))
+        let githubButton = HostUI.makeIconButton(
+            title: L("help.link.github"), systemImage: "chevron.left.forwardslash.chevron.right",
+            target: self, action: #selector(openRepo))
+        let docsButton = HostUI.makeIconButton(
+            title: L("help.link.docs"), systemImage: "book",
+            target: self, action: #selector(openDocs))
+        let linksStack = NSStackView(views: [linksTitle, githubButton, docsButton])
+        linksStack.orientation = .vertical
+        linksStack.alignment = .leading
+        linksStack.spacing = 8
+
+        let stack = NSStackView(views: [header, title, quickCard, troubleCard, linksStack])
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 10
+        stack.spacing = 18
+        stack.setCustomSpacing(14, after: header)
+        stack.setCustomSpacing(18, after: title)
+        stack.edgeInsets = NSEdgeInsets(top: 20, left: 24, bottom: 24, right: 24)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.widthAnchor.constraint(equalToConstant: Self.helpWidth).isActive = true
         return stack
+    }
+
+    private func makeHelpTextCard(title: String, body: String) -> NSView {
+        let card = HostUI.makeCard()
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.textColor = .labelColor
+        let bodyLabel = HostUI.makeBodyLabel(body)
+
+        let inner = NSStackView(views: [titleLabel, bodyLabel])
+        inner.orientation = .vertical
+        inner.alignment = .leading
+        inner.spacing = 8
+        embedCardContent(inner, in: card)
+        return card
+    }
+
+    private func makeHelpTroubleCard() -> NSView {
+        let card = HostUI.makeCard()
+
+        let title = NSTextField(labelWithString: L("help.troubleshooting.title"))
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        title.textColor = .labelColor
+
+        func problem(_ head: String, _ text: String) -> NSStackView {
+            let h = NSTextField(labelWithString: head)
+            h.font = .systemFont(ofSize: 12, weight: .semibold)
+            h.textColor = .labelColor
+            let b = HostUI.makeBodyLabel(text)
+            let s = NSStackView(views: [h, b])
+            s.orientation = .vertical
+            s.alignment = .leading
+            s.spacing = 3
+            return s
+        }
+
+        let notFound = problem(L("help.trouble.notFound.title"), L("help.trouble.notFound.body"))
+        let notTyping = problem(L("help.trouble.notTyping.title"), L("help.trouble.notTyping.body"))
+
+        let inner = NSStackView(views: [title, notFound, notTyping])
+        inner.orientation = .vertical
+        inner.alignment = .leading
+        inner.spacing = 12
+        embedCardContent(inner, in: card)
+        return card
+    }
+
+    /// Verankert einen Inhalts-Stack mit Innenabstand in einer Karte (feste
+    /// Kartenbreite, damit Fließtext sauber umbricht).
+    private func embedCardContent(_ inner: NSStackView, in card: NSView) {
+        inner.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        inner.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(inner)
+        NSLayoutConstraint.activate([
+            inner.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            inner.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            inner.topAnchor.constraint(equalTo: card.topAnchor),
+            inner.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+            card.widthAnchor.constraint(equalToConstant: 412)
+        ])
+    }
+
+    // MARK: - Über-Seite
+
+    private func makeAboutView() -> NSView {
+        let icon = NSImageView()
+        let config = NSImage.SymbolConfiguration(pointSize: 40, weight: .semibold)
+        icon.image = NSImage(systemSymbolName: "qrcode.viewfinder",
+                             accessibilityDescription: L("app.name"))?
+            .withSymbolConfiguration(config)
+        icon.contentTintColor = .labelColor
+
+        let name = NSTextField(labelWithString: L("app.name"))
+        name.font = .systemFont(ofSize: 18, weight: .bold)
+        name.textColor = .labelColor
+        name.alignment = .center
+
+        let version = NSTextField(labelWithString: Self.versionText())
+        version.font = .systemFont(ofSize: 12)
+        version.textColor = .secondaryLabelColor
+        version.alignment = .center
+
+        let copyright = NSTextField(labelWithString: L("about.copyright"))
+        copyright.font = .systemFont(ofSize: 12)
+        copyright.textColor = .secondaryLabelColor
+        copyright.alignment = .center
+
+        let license = NSTextField(labelWithString: L("about.license"))
+        license.font = .systemFont(ofSize: 12)
+        license.textColor = .secondaryLabelColor
+        license.alignment = .center
+
+        // Links als Buttons mit Icon (wie iOS-App) statt blauer Text-Links.
+        let githubButton = HostUI.makeIconButton(
+            title: L("about.link.github"), systemImage: "chevron.left.forwardslash.chevron.right",
+            target: self, action: #selector(openGitHub))
+        let contactButton = HostUI.makeIconButton(
+            title: L("about.link.contact"), systemImage: "envelope",
+            target: self, action: #selector(openContact))
+        let docsButton = HostUI.makeIconButton(
+            title: L("about.link.docs"), systemImage: "book",
+            target: self, action: #selector(openDocs))
+
+        let linkStack = NSStackView(views: [githubButton, contactButton, docsButton])
+        linkStack.orientation = .vertical
+        linkStack.alignment = .centerX
+        linkStack.spacing = 10
+
+        let stack = NSStackView(views: [icon, name, version, copyright, license, linkStack])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 8
+        stack.setCustomSpacing(14, after: icon)
+        stack.setCustomSpacing(2, after: name)
+        stack.setCustomSpacing(18, after: copyright)
+        stack.setCustomSpacing(22, after: license)
+        stack.edgeInsets = NSEdgeInsets(top: 24, left: 28, bottom: 28, right: 28)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.widthAnchor.constraint(equalToConstant: Self.aboutWidth).isActive = true
+        return stack
+    }
+
+    /// `CFBundleShortVersionString` (Marketing) und `CFBundleVersion` (Build)
+    /// direkt aus dem laufenden Bundle — kein hartkodierter Wert.
+    private static func versionText() -> String {
+        let info = Bundle.main.infoDictionary
+        let short = (info?["CFBundleShortVersionString"] as? String) ?? "–"
+        let build = (info?["CFBundleVersion"] as? String) ?? "–"
+        return String(format: L("about.version"), short, build)
     }
 
     // MARK: - Öffentliche Aktualisierung
 
-    /// Zeigt das Panel, aktiviert die App und startet den Live-Poll.
+    /// Zeigt das Fenster (auf der Home-Ansicht), aktiviert die App und startet
+    /// den Live-Poll.
     func present() {
+        showPage(.home, animated: false)
         window?.center()
         showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -271,7 +542,7 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         updateConnection()
     }
 
-    /// Baut Geräte-Liste neu auf und aktualisiert Verbindungs-/AX-Status.
+    /// Aktualisiert Verbindungs-/AX-Status und die Geräte-Liste.
     func refresh() {
         updateConnection()
         rebuildDevices()
@@ -401,9 +672,10 @@ final class ControlPanelWindowController: NSWindowController, NSWindowDelegate {
         TypingSpeed.current = TypingSpeed.allCases[index]
     }
 
-    @objc private func showHelp() { actions.showHelp() }
-    @objc private func showAbout() { actions.showAbout() }
-    @objc private func showIntro() { actions.showIntro() }
+    @objc private func openRepo() { NSWorkspace.shared.open(HostLinks.repository) }
+    @objc private func openDocs() { NSWorkspace.shared.open(HostLinks.docs) }
+    @objc private func openGitHub() { NSWorkspace.shared.open(HostLinks.repository) }
+    @objc private func openContact() { NSWorkspace.shared.open(HostLinks.contactMailto) }
 
     private func syncSpeedSelection() {
         if let index = TypingSpeed.allCases.firstIndex(of: TypingSpeed.current) {

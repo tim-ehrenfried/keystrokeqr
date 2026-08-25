@@ -1,1146 +1,1156 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Connection to the Mac failed. Please try again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung zum Mac fehlgeschlagen. Bitte erneut versuchen."
+  "sourceLanguage": "en",
+  "strings": {
+    "**Action Button (iPhone 15 Pro and newer):** Settings → **Action Button** → **Shortcut** → choose the **“Scan QR Code”** action.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Action Button (iPhone 15 Pro und neuer):** Einstellungen → **Action Button** → **Kurzbefehl** → Aktion **„QR-Code scannen“** wählen."
           }
         }
       }
     },
-    "No response from the Mac. Please try again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Antwort vom Mac. Bitte erneut versuchen."
+    "**Connected, but nothing is typed?**": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Verbunden, aber es wird nichts getippt?**"
           }
         }
       }
     },
-    "Paired ✓" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelt ✓"
+    "**Lock Screen widget:** press and hold the Lock Screen → **Customize** → pick the Lock Screen → tap the widget area → add **KeystrokeQR**. Tapping it opens the scanner directly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Sperrbildschirm-Widget:** Sperrbildschirm gedrückt halten → **Anpassen** → Sperrbildschirm wählen → Widget-Bereich antippen → **KeystrokeQR** hinzufügen. Antippen startet den Scanner direkt."
           }
         }
       }
     },
-    "Pairing…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopplung läuft…"
+    "**No Mac found?**": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Kein Mac gefunden?**"
           }
         }
       }
     },
-    "The pairing window on the Mac is closed. Reopen it and try again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Pairing-Fenster am Mac ist geschlossen. Erneut öffnen und noch einmal versuchen."
+    "**Pairing fails / wrong code?**": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Pairing schlägt fehl / Code falsch?**"
           }
         }
       }
     },
-    "Wrong code – please try again. A new code is on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falscher Code – bitte erneut eingeben. Ein neuer Code liegt am Mac bereit."
+    "**Siri/Spotlight:** say “Scan QR Code with KeystrokeQR” or search Spotlight for “scan”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**Siri/Spotlight:** „Scanne QR-Code mit KeystrokeQR“ sagen oder in Spotlight nach „Scannen“ suchen."
           }
         }
       }
     },
-    "1. On the Mac, open **System Settings**." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Auf dem Mac **Systemeinstellungen** öffnen."
+    "**iOS 18 – Controls:** while customizing the Lock Screen, replace one of the two bottom controls (flashlight/camera) with **“Scan QR Code”**. The same control can also be added to **Control Center**.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**iOS 18 – Schnelltasten:** Beim Anpassen des Sperrbildschirms eine der beiden unteren Schnelltasten (Taschenlampe/Kamera) durch **„QR-Code scannen“** ersetzen. Dieselbe Steuerung lässt sich auch ins **Kontrollzentrum** legen."
           }
         }
       }
     },
-    "1. On the Mac, open the KeystrokeQR menu → **“Pair Device…”**." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Am Mac das KeystrokeQR-Menü öffnen → **„Gerät koppeln…“**."
+    "**“Please update the Mac app”?**": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**„Bitte Mac-App aktualisieren“?**"
           }
         }
       }
     },
-    "2. Choose **Privacy & Security → Accessibility**." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. **Datenschutz & Sicherheit → Bedienungshilfen** wählen."
+    "1. On the Mac, open **System Settings**.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Auf dem Mac **Systemeinstellungen** öffnen."
           }
         }
       }
     },
-    "2. The Mac shows a **6-digit code** (valid for 90 seconds)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Der Mac zeigt einen **6-stelligen Code** (90 Sekunden gültig)."
+    "1. On the Mac, open the KeystrokeQR menu → **“Pair Device…”**.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Am Mac das KeystrokeQR-Menü öffnen → **„Gerät koppeln…“**."
           }
         }
       }
     },
-    "3. Enable **KeystrokeQR Host** in the list (add it with “+” if needed)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. **KeystrokeQR Host** in der Liste aktivieren (ggf. über „+“ hinzufügen)."
+    "2. Choose **Privacy & Security → Accessibility**.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. **Datenschutz & Sicherheit → Bedienungshilfen** wählen."
           }
         }
       }
     },
-    "3. When your iPhone finds a new Mac, the pairing screen appears automatically — enter the code and tap **Pair**." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Findet das iPhone einen neuen Mac, erscheint automatisch der Pairing-Screen — Code eintippen, **Koppeln** antippen."
+    "2. The Mac shows a **6-digit code** (valid for 90 seconds).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Der Mac zeigt einen **6-stelligen Code** (90 Sekunden gültig)."
           }
         }
       }
     },
-    "4. If the app was already running: quit it once and relaunch." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Falls die App schon lief: einmal beenden und neu starten."
+    "3. Enable **KeystrokeQR Host** in the list (add it with “+” if needed).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. **KeystrokeQR Host** in der Liste aktivieren (ggf. über „+“ hinzufügen)."
           }
         }
       }
     },
-    "4. Pairing is **one-time**: the shared key is stored securely in the keychain and used automatically for every future connection." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Das Pairing ist **einmalig**: Der gemeinsame Schlüssel wird sicher im Schlüsselbund gespeichert und bei jeder künftigen Verbindung automatisch verwendet."
+    "3. When your iPhone finds a new Mac, the pairing screen appears automatically — enter the code and tap **Pair**.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Findet das iPhone einen neuen Mac, erscheint automatisch der Pairing-Screen — Code eintippen, **Koppeln** antippen."
           }
         }
       }
     },
-    "About" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Über"
+    "4. If the app was already running: quit it once and relaunch.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. Falls die App schon lief: einmal beenden und neu starten."
           }
         }
       }
     },
-    "After this, all codes will be sent automatically again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Danach werden alle Codes wieder automatisch gesendet."
+    "4. Pairing is **one-time**: the shared key is stored securely in the keychain and used automatically for every future connection.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. Das Pairing ist **einmalig**: Der gemeinsame Schlüssel wird sicher im Schlüsselbund gespeichert und bei jeder künftigen Verbindung automatisch verwendet."
           }
         }
       }
     },
-    "Allow Accessibility on the Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedienungshilfen auf dem Mac erlauben"
+    "About": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über"
           }
         }
       }
     },
-    "Allow camera access" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kamerazugriff erlauben"
+    "After this, all codes will be sent automatically again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danach werden alle Codes wieder automatisch gesendet."
           }
         }
       }
     },
-    "Camera" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kamera"
+    "Allow Accessibility on the Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen auf dem Mac erlauben"
           }
         }
       }
     },
-    "Cancel" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abbrechen"
+    "Allow camera access": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamerazugriff erlauben"
           }
         }
       }
     },
-    "Choose Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac auswählen"
+    "Camera": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera"
           }
         }
       }
     },
-    "Connected" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbunden"
+    "Cancel": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
           }
         }
       }
     },
-    "New" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neu"
+    "Choose Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac auswählen"
           }
         }
       }
     },
-    "Paired" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelt"
+    "Clear history": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf leeren"
           }
         }
       }
     },
-    "Tap a Mac to connect. A new Mac is paired once." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zum Verbinden einen Mac antippen. Ein neuer Mac wird einmalig gekoppelt."
+    "Clear scan history?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan-Verlauf leeren?"
           }
         }
       }
     },
-    "Update" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualisieren"
+    "Connected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbunden"
           }
         }
       }
     },
-    "Clear history" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verlauf leeren"
+    "Connected to %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbunden mit %@"
           }
         }
       }
     },
-    "Clear scan history?" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan-Verlauf leeren?"
+    "Connecting…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinde …"
           }
         }
       }
     },
-    "Connected to %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbunden mit %@"
+    "Connection to the Mac failed. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zum Mac fehlgeschlagen. Bitte erneut versuchen."
           }
         }
       }
     },
-    "Connecting…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbinde …"
+    "Continue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
           }
         }
       }
     },
-    "Continue" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weiter"
+    "Disconnected – searching again…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getrennt – suche erneut …"
           }
         }
       }
     },
-    "Disconnected – searching again…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Getrennt – suche erneut …"
+    "Done": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
           }
         }
       }
     },
-    "Done" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fertig"
+    "Enter the code from the Mac menu “Pair Device…”:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code aus dem Mac-Menü „Gerät koppeln…“ eingeben:"
           }
         }
       }
     },
-    "Enter the code from the Mac menu “Pair Device…”:" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code aus dem Mac-Menü „Gerät koppeln…“ eingeben:"
+    "Found Mac is running an outdated app – please update": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gefundener Mac läuft mit veralteter App – bitte aktualisieren"
           }
         }
       }
     },
-    "Found Mac is running an outdated app – please update" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gefundener Mac läuft mit veralteter App – bitte aktualisieren"
+    "Help": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilfe"
           }
         }
       }
     },
-    "Help" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hilfe"
+    "How it works": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So funktioniert’s"
           }
         }
       }
     },
-    "How it works" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "So funktioniert’s"
+    "Introduction": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einführung"
           }
         }
       }
     },
-    "Introduction" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einführung"
+    "KeystrokeQR needs two permissions to do its job:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KeystrokeQR benötigt für seine Aufgabe zwei Berechtigungen:"
           }
         }
       }
     },
-    "iPhone and Mac are on the **same Wi-Fi** (or the same local network)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone und Mac sind im **gleichen WLAN** (bzw. gleichen lokalen Netzwerk)."
+    "Last scanned": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt gescannt"
           }
         }
       }
     },
-    "iPhone and Mac talk directly over your local Wi-Fi. Nothing goes through the cloud, and every connection is paired and end-to-end encrypted." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone und Mac kommunizieren direkt über dein lokales WLAN. Nichts läuft über die Cloud, und jede Verbindung ist gekoppelt und Ende-zu-Ende verschlüsselt."
+    "Let’s go": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los geht’s"
           }
         }
       }
     },
-    "KeystrokeQR needs two permissions to do its job:" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KeystrokeQR benötigt für seine Aufgabe zwei Berechtigungen:"
+    "Local network": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokales Netzwerk"
           }
         }
       }
     },
-    "Last scanned" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zuletzt gescannt"
+    "Mac not found.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac nicht gefunden."
           }
         }
       }
     },
-    "Let’s go" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los geht’s"
+    "Mac: Accessibility permission missing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac: Bedienungshilfen-Berechtigung fehlt"
           }
         }
       }
     },
-    "Local network" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokales Netzwerk"
+    "Manage paired Macs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelte Macs verwalten"
           }
         }
       }
     },
-    "Mac not found." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac nicht gefunden."
+    "New": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu"
           }
         }
       }
     },
-    "Mac: Accessibility permission missing" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac: Bedienungshilfen-Berechtigung fehlt"
+    "New Mac — pair it once.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Mac — bitte einmalig koppeln."
           }
         }
       }
     },
-    "Manage paired Macs" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelte Macs verwalten"
+    "No Mac paired yet. On the Mac, open the “Pair Device…” menu.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Mac gekoppelt. Öffne auf dem Mac das Menü „Gerät koppeln…“."
           }
         }
       }
     },
-    "New Mac — pair it once." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neuer Mac — bitte einmalig koppeln."
+    "No camera access": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Kamerazugriff"
           }
         }
       }
     },
-    "No camera access" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Kamerazugriff"
+    "No response from the Mac. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Antwort vom Mac. Bitte erneut versuchen."
           }
         }
       }
     },
-    "No Mac paired yet. On the Mac, open the “Pair Device…” menu." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Mac gekoppelt. Öffne auf dem Mac das Menü „Gerät koppeln…“."
+    "On your Mac, open the KeystrokeQR menu and choose “Pair Device…”. It shows a 6-digit code — type it here once when your iPhone finds the Mac. That’s it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne am Mac das KeystrokeQR-Menü und wähle „Gerät koppeln…“. Es erscheint ein 6-stelliger Code — tippe ihn hier einmalig ein, sobald dein iPhone den Mac findet. Fertig."
           }
         }
       }
     },
-    "On your Mac, open the KeystrokeQR menu and choose “Pair Device…”. It shows a 6-digit code — type it here once when your iPhone finds the Mac. That’s it." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffne am Mac das KeystrokeQR-Menü und wähle „Gerät koppeln…“. Es erscheint ein 6-stelliger Code — tippe ihn hier einmalig ein, sobald dein iPhone den Mac findet. Fertig."
+    "One-time pairing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmaliges Koppeln (Pairing)"
           }
         }
       }
     },
-    "One-time pairing" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einmaliges Koppeln (Pairing)"
+    "Open Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
           }
         }
       }
     },
-    "Open Settings" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen öffnen"
+    "Open source on GitHub": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Source auf GitHub"
           }
         }
       }
     },
-    "Open source on GitHub" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Source auf GitHub"
+    "Opens the KeystrokeQR scanner and readies the camera.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet den KeystrokeQR-Scanner und macht die Kamera scharf."
           }
         }
       }
     },
-    "Opens the KeystrokeQR scanner." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet den KeystrokeQR-Scanner."
+    "Opens the KeystrokeQR scanner directly — even from the Lock Screen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet den KeystrokeQR-Scanner direkt — auch vom Sperrbildschirm."
           }
         }
       }
     },
-    "Opens the KeystrokeQR scanner and readies the camera." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet den KeystrokeQR-Scanner und macht die Kamera scharf."
+    "Opens the KeystrokeQR scanner.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet den KeystrokeQR-Scanner."
           }
         }
       }
     },
-    "Opens the KeystrokeQR scanner directly — even from the Lock Screen." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet den KeystrokeQR-Scanner direkt — auch vom Sperrbildschirm."
+    "Opens the pairing screen to connect a found Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet den Pairing-Screen, um einen gefundenen Mac zu koppeln."
           }
         }
       }
     },
-    "Pair" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koppeln"
+    "Pair": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppeln"
           }
         }
       }
     },
-    "Pair Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac koppeln"
+    "Pair Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac koppeln"
           }
         }
       }
     },
-    "Pair with your Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit deinem Mac koppeln"
+    "Pair with your Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit deinem Mac koppeln"
           }
         }
       }
     },
-    "Paired Macs" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelte Macs"
+    "Paired": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelt"
           }
         }
       }
     },
-    "Paired: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gekoppelt: %@"
+    "Paired Macs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelte Macs"
           }
         }
       }
     },
-    "Permissions" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Berechtigungen"
+    "Paired ✓": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelt ✓"
           }
         }
       }
     },
-    "Quick start from the Lock Screen" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schnellstart vom Sperrbildschirm"
+    "Paired: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelt: %@"
           }
         }
       }
     },
-    "Requirements" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voraussetzungen"
+    "Pairing…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopplung läuft…"
           }
         }
       }
     },
-    "Scan" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scannen"
+    "Permissions": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigungen"
           }
         }
       }
     },
-    "Scan QR" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "QR scannen"
+    "QR → type on Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR → Mac tippen"
           }
         }
       }
     },
-    "Scan QR Code" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "QR-Code scannen"
+    "Quick start from the Lock Screen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnellstart vom Sperrbildschirm"
           }
         }
       }
     },
-    "Scan a QR or barcode with your iPhone — and your Mac types it instantly, as if you had entered it on the keyboard." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scanne mit deinem iPhone einen QR- oder Barcode — und dein Mac tippt ihn sofort, als hättest du ihn auf der Tastatur eingegeben."
+    "Requirements": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voraussetzungen"
           }
         }
       }
     },
-    "Searching for Mac…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suche Mac …"
+    "Scan": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scannen"
           }
         }
       }
     },
-    "Send again" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erneut senden"
+    "Scan QR": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR scannen"
           }
         }
       }
     },
-    "Sends the already-transmitted code to the Mac again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sendet den bereits übertragenen Code noch einmal an den Mac."
+    "Scan QR Code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR-Code scannen"
           }
         }
       }
     },
-    "Show the intro again" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einführung erneut anzeigen"
+    "Scan a QR or barcode with your iPhone — and your Mac types it instantly, as if you had entered it on the keyboard.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanne mit deinem iPhone einen QR- oder Barcode — und dein Mac tippt ihn sofort, als hättest du ihn auf der Tastatur eingegeben."
           }
         }
       }
     },
-    "Skip" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Überspringen"
+    "Searching for Mac…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche Mac …"
           }
         }
       }
     },
-    "Starting camera…" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kamera wird gestartet …"
+    "Send again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut senden"
           }
         }
       }
     },
-    "The app needs access to the camera to scan codes. Please allow access in Settings." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zum Scannen von Codes benötigt die App Zugriff auf die Kamera. Bitte erlaube den Zugriff in den Einstellungen."
+    "Sends the already-transmitted code to the Mac again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sendet den bereits übertragenen Code noch einmal an den Mac."
           }
         }
       }
     },
-    "The code has expired (90 s). Generate a new code on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Code ist abgelaufen (90 s). Am Mac einen neuen Code erzeugen."
+    "Show the intro again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einführung erneut anzeigen"
           }
         }
       }
     },
-    "The connection is **encrypted and paired** — only explicitly paired iPhones can trigger keystrokes on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Verbindung ist **verschlüsselt und gekoppelt** — nur ausdrücklich gekoppelte iPhones können Tastatureingaben auf dem Mac auslösen."
+    "Skip": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
           }
         }
       }
     },
-    "The Mac has granted **Accessibility permission** — only then can it simulate keystrokes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac hat die **Bedienungshilfen-Berechtigung** erteilt — nur damit kann er Tastatureingaben simulieren."
+    "Starting camera…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera wird gestartet …"
           }
         }
       }
     },
-    "The **KeystrokeQR Mac app is running** on the Mac (menu bar icon visible)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die **KeystrokeQR-Mac-App läuft** auf dem Mac (Menüleisten-Symbol sichtbar)."
+    "Tap a Mac to connect. A new Mac is paired once.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Verbinden einen Mac antippen. Ein neuer Mac wird einmalig gekoppelt."
           }
         }
       }
     },
-    "The pairing window on the Mac is closed." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Pairing-Fenster am Mac ist geschlossen."
+    "The **KeystrokeQR Mac app is running** on the Mac (menu bar icon visible).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die **KeystrokeQR-Mac-App läuft** auf dem Mac (Menüleisten-Symbol sichtbar)."
           }
         }
       }
     },
-    "To find your Mac and send scans to it. iOS asks for this the first time scanning starts." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Um deinen Mac zu finden und Scans an ihn zu senden. iOS fragt beim ersten Scan-Start danach."
+    "The Mac has granted **Accessibility permission** — only then can it simulate keystrokes.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Mac hat die **Bedienungshilfen-Berechtigung** erteilt — nur damit kann er Tastatureingaben simulieren."
           }
         }
       }
     },
-    "To read QR and barcodes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zum Lesen von QR- und Barcodes."
+    "The app needs access to the camera to scan codes. Please allow access in Settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Scannen von Codes benötigt die App Zugriff auf die Kamera. Bitte erlaube den Zugriff in den Einstellungen."
           }
         }
       }
     },
-    "Troubleshooting" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Problembehebung"
+    "The code has expired (90 s). Generate a new code on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Code ist abgelaufen (90 s). Am Mac einen neuen Code erzeugen."
           }
         }
       }
     },
-    "Unexpected response from the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unerwartete Antwort vom Mac."
+    "The connection is **encrypted and paired** — only explicitly paired iPhones can trigger keystrokes on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung ist **verschlüsselt und gekoppelt** — nur ausdrücklich gekoppelte iPhones können Tastatureingaben auf dem Mac auslösen."
           }
         }
       }
     },
-    "Unpairing deletes the shared key on this iPhone; any active connection to this Mac is disconnected immediately. To connect again, pair once more on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entkoppeln löscht den gemeinsamen Schlüssel auf diesem iPhone; eine laufende Verbindung zu diesem Mac wird sofort getrennt. Um wieder zu verbinden, ist erneutes Pairing am Mac nötig."
+    "The pairing window on the Mac is closed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Pairing-Fenster am Mac ist geschlossen."
           }
         }
       }
     },
-    "Usage" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedienung"
+    "The pairing window on the Mac is closed. Reopen it and try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Pairing-Fenster am Mac ist geschlossen. Erneut öffnen und noch einmal versuchen."
           }
         }
       }
     },
-    "Version %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %@"
+    "To find your Mac and send scans to it. iOS asks for this the first time scanning starts.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um deinen Mac zu finden und Scans an ihn zu senden. iOS fragt beim ersten Scan-Start danach."
           }
         }
       }
     },
-    "Welcome to KeystrokeQR" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Willkommen bei KeystrokeQR"
+    "To read QR and barcodes.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Lesen von QR- und Barcodes."
           }
         }
       }
     },
-    "Wrong code. On the Mac, generate a new code via “Pair Device…”." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falscher Code. Am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen."
+    "Troubleshooting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problembehebung"
           }
         }
       }
     },
-    "QR → type on Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "QR → Mac tippen"
+    "Unexpected response from the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unerwartete Antwort vom Mac."
           }
         }
       }
     },
-    "• **Auto-Enter**: the Return key is sent after the text." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• **Auto-Enter**: Nach dem Text wird zusätzlich die Return-Taste gesendet."
+    "Unpairing deletes the shared key on this iPhone; any active connection to this Mac is disconnected immediately. To connect again, pair once more on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entkoppeln löscht den gemeinsamen Schlüssel auf diesem iPhone; eine laufende Verbindung zu diesem Mac wird sofort getrennt. Um wieder zu verbinden, ist erneutes Pairing am Mac nötig."
           }
         }
       }
     },
-    "• **Auto-Tab**: the Tab key is sent after the text (with both: Tab first, then Enter)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• **Auto-Tab**: Nach dem Text wird zusätzlich die Tab-Taste gesendet (bei beiden: erst Tab, dann Enter)."
+    "Update": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
           }
         }
       }
     },
-    "• **Clear history** (⟲ in the control bar) forgets all codes already sent; this also happens automatically on app restart." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• **Verlauf leeren** (⟲ in der Bedienleiste) vergisst alle bereits gesendeten Codes; beim App-Neustart passiert das automatisch."
+    "Usage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienung"
           }
         }
       }
     },
-    "• **Each code is typed automatically only once.** If the same code is scanned again, the app does not send automatically — instead the yellow **“Send again”** button appears at the bottom to transmit the code deliberately once more." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• **Jeder Code wird nur einmal automatisch getippt.** Wird derselbe Code erneut gescannt, sendet die App nicht automatisch — stattdessen erscheint unten der gelbe Auslöser **„Erneut senden“**, der den Code bewusst noch einmal überträgt."
+    "Version %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
           }
         }
       }
     },
-    "• **Tap** the viewfinder to focus on that spot (yellow frame), **pinch** with two fingers to zoom. The camera automatically switches lenses for nearby codes (macro on newer iPhones)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• **Tippen** auf den Sucher fokussiert auf die Stelle (gelber Rahmen), **Auf-/Zuziehen** mit zwei Fingern zoomt. Die Kamera wechselt bei nahen Codes automatisch die Linse (Makro auf neueren iPhones)."
+    "Welcome to KeystrokeQR": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei KeystrokeQR"
           }
         }
       }
     },
-    "• The app automatically looks for Macs and connects to the first one found. If several are found, a picker appears." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Die App sucht automatisch nach Macs und verbindet sich mit dem ersten gefundenen. Werden mehrere gefunden, erscheint eine Auswahl."
+    "Wrong code – please try again. A new code is on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falscher Code – bitte erneut eingeben. Ein neuer Code liegt am Mac bereit."
           }
         }
       }
     },
-    "• The most recently scanned text is shown at the bottom." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Der zuletzt gescannte Text wird unten angezeigt."
+    "Wrong code. On the Mac, generate a new code via “Pair Device…”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falscher Code. Am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen."
           }
         }
       }
     },
-    "• Point the camera at a QR or barcode — on recognition the iPhone vibrates briefly, the viewfinder freezes for 1 second and the text is “typed” on the Mac right away." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Kamera auf einen QR- oder Barcode richten — bei Erkennung vibriert das iPhone kurz, der Sucher friert 1 Sekunde ein und der Text wird sofort am Mac „getippt“."
+    "iPhone and Mac are on the **same Wi-Fi** (or the same local network).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone und Mac sind im **gleichen WLAN** (bzw. gleichen lokalen Netzwerk)."
           }
         }
       }
     },
-    "**Action Button (iPhone 15 Pro and newer):** Settings → **Action Button** → **Shortcut** → choose the **“Scan QR Code”** action." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Action Button (iPhone 15 Pro und neuer):** Einstellungen → **Action Button** → **Kurzbefehl** → Aktion **„QR-Code scannen“** wählen."
+    "iPhone and Mac talk directly over your local Wi-Fi. Nothing goes through the cloud, and every connection is paired and end-to-end encrypted.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone und Mac kommunizieren direkt über dein lokales WLAN. Nichts läuft über die Cloud, und jede Verbindung ist gekoppelt und Ende-zu-Ende verschlüsselt."
           }
         }
       }
     },
-    "**Connected, but nothing is typed?**" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Verbunden, aber es wird nichts getippt?**"
+    "• **Auto-Enter**: the Return key is sent after the text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• **Auto-Enter**: Nach dem Text wird zusätzlich die Return-Taste gesendet."
           }
         }
       }
     },
-    "**iOS 18 – Controls:** while customizing the Lock Screen, replace one of the two bottom controls (flashlight/camera) with **“Scan QR Code”**. The same control can also be added to **Control Center**." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**iOS 18 – Schnelltasten:** Beim Anpassen des Sperrbildschirms eine der beiden unteren Schnelltasten (Taschenlampe/Kamera) durch **„QR-Code scannen“** ersetzen. Dieselbe Steuerung lässt sich auch ins **Kontrollzentrum** legen."
+    "• **Auto-Tab**: the Tab key is sent after the text (with both: Tab first, then Enter).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• **Auto-Tab**: Nach dem Text wird zusätzlich die Tab-Taste gesendet (bei beiden: erst Tab, dann Enter)."
           }
         }
       }
     },
-    "**Lock Screen widget:** press and hold the Lock Screen → **Customize** → pick the Lock Screen → tap the widget area → add **KeystrokeQR**. Tapping it opens the scanner directly." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Sperrbildschirm-Widget:** Sperrbildschirm gedrückt halten → **Anpassen** → Sperrbildschirm wählen → Widget-Bereich antippen → **KeystrokeQR** hinzufügen. Antippen startet den Scanner direkt."
+    "• **Clear history** (⟲ in the control bar) forgets all codes already sent; this also happens automatically on app restart.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• **Verlauf leeren** (⟲ in der Bedienleiste) vergisst alle bereits gesendeten Codes; beim App-Neustart passiert das automatisch."
           }
         }
       }
     },
-    "**No Mac found?**" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Kein Mac gefunden?**"
+    "• **Each code is typed automatically only once.** If the same code is scanned again, the app does not send automatically — instead the yellow **“Send again”** button appears at the bottom to transmit the code deliberately once more.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• **Jeder Code wird nur einmal automatisch getippt.** Wird derselbe Code erneut gescannt, sendet die App nicht automatisch — stattdessen erscheint unten der gelbe Auslöser **„Erneut senden“**, der den Code bewusst noch einmal überträgt."
           }
         }
       }
     },
-    "**Pairing fails / wrong code?**" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Pairing schlägt fehl / Code falsch?**"
+    "• **Tap** the viewfinder to focus on that spot (yellow frame), **pinch** with two fingers to zoom. The camera automatically switches lenses for nearby codes (macro on newer iPhones).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• **Tippen** auf den Sucher fokussiert auf die Stelle (gelber Rahmen), **Auf-/Zuziehen** mit zwei Fingern zoomt. Die Kamera wechselt bei nahen Codes automatisch die Linse (Makro auf neueren iPhones)."
           }
         }
       }
     },
-    "**Siri/Spotlight:** say “Scan QR Code with KeystrokeQR” or search Spotlight for “scan”." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Siri/Spotlight:** „Scanne QR-Code mit KeystrokeQR“ sagen oder in Spotlight nach „Scannen“ suchen."
+    "• Check that the iPhone allows the app to access the **local network**: Settings → Apps → KeystrokeQR → Local Network.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Prüfe, ob das iPhone der App den Zugriff auf das **lokale Netzwerk** erlaubt: Einstellungen → Apps → KeystrokeQR → Lokales Netzwerk."
           }
         }
       }
     },
-    "**“Please update the Mac app”?**" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**„Bitte Mac-App aktualisieren“?**"
+    "• Check that the iPhone and Mac are really on the same network (no guest Wi-Fi, no VPN blocking local traffic).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Prüfe, ob iPhone und Mac wirklich im selben Netz sind (kein Gäste-WLAN, kein VPN mit blockiertem lokalen Verkehr)."
           }
         }
       }
     },
-    "• Check that the iPhone allows the app to access the **local network**: Settings → Apps → KeystrokeQR → Local Network." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Prüfe, ob das iPhone der App den Zugriff auf das **lokale Netzwerk** erlaubt: Einstellungen → Apps → KeystrokeQR → Lokales Netzwerk."
+    "• Codes are valid for only 90 seconds and are **one-time** — on the Mac, generate a new code via “Pair Device…” and enter it promptly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Codes sind nur 90 Sekunden gültig und **einmalig** — am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen und zügig eintippen."
           }
         }
       }
     },
-    "• Check that the iPhone and Mac are really on the same network (no guest Wi-Fi, no VPN blocking local traffic)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Prüfe, ob iPhone und Mac wirklich im selben Netz sind (kein Gäste-WLAN, kein VPN mit blockiertem lokalen Verkehr)."
+    "• Make sure the desired input field is focused on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Stelle sicher, dass am Mac das gewünschte Eingabefeld fokussiert ist."
           }
         }
       }
     },
-    "• Codes are valid for only 90 seconds and are **one-time** — on the Mac, generate a new code via “Pair Device…” and enter it promptly." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Codes sind nur 90 Sekunden gültig und **einmalig** — am Mac im Menü „Gerät koppeln…“ einen neuen Code erzeugen und zügig eintippen."
+    "• Point the camera at a QR or barcode — on recognition the iPhone vibrates briefly, the viewfinder freezes for 1 second and the text is “typed” on the Mac right away.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Kamera auf einen QR- oder Barcode richten — bei Erkennung vibriert das iPhone kurz, der Sucher friert 1 Sekunde ein und der Text wird sofort am Mac „getippt“."
           }
         }
       }
     },
-    "• Make sure the desired input field is focused on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Stelle sicher, dass am Mac das gewünschte Eingabefeld fokussiert ist."
+    "• The **macOS firewall** must not block incoming connections for KeystrokeQR: System Settings → Network → Firewall → Options.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Die **macOS-Firewall** darf eingehende Verbindungen für KeystrokeQR nicht blockieren: Systemeinstellungen → Netzwerk → Firewall → Optionen."
           }
         }
       }
     },
-    "• The **macOS firewall** must not block incoming connections for KeystrokeQR: System Settings → Network → Firewall → Options." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Die **macOS-Firewall** darf eingehende Verbindungen für KeystrokeQR nicht blockieren: Systemeinstellungen → Netzwerk → Firewall → Optionen."
+    "• The Mac found is still running the old, unencrypted version. Install the new version on the Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Der gefundene Mac läuft noch mit der alten, unverschlüsselten Version. Auf dem Mac die neue Version installieren."
           }
         }
       }
     },
-    "• The Mac found is still running the old, unencrypted version. Install the new version on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Der gefundene Mac läuft noch mit der alten, unverschlüsselten Version. Auf dem Mac die neue Version installieren."
+    "• The app automatically looks for Macs and connects to the first one found. If several are found, a picker appears.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Die App sucht automatisch nach Macs und verbindet sich mit dem ersten gefundenen. Werden mehrere gefunden, erscheint eine Auswahl."
           }
         }
       }
     },
-    "• Usually the Accessibility permission is missing on the Mac (see above) — the app shows a warning in that case." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Meist fehlt die Bedienungshilfen-Berechtigung auf dem Mac (siehe oben) — die App zeigt dann einen Hinweis an."
+    "• The most recently scanned text is shown at the bottom.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Der zuletzt gescannte Text wird unten angezeigt."
+          }
+        }
+      }
+    },
+    "• Usually the Accessibility permission is missing on the Mac (see above) — the app shows a warning in that case.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Meist fehlt die Bedienungshilfen-Berechtigung auf dem Mac (siehe oben) — die App zeigt dann einen Hinweis an."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

@@ -21,6 +21,10 @@
 "menu.openPanel" = "KeystrokeQR öffnen…";
 "menu.quit" = "Beenden";
 
+/* Navigation im Fenster */
+"nav.back" = "Zurück";
+"nav.intro" = "Einführung";
+
 /* Kontrollzentrum */
 "panel.window.title" = "KeystrokeQR";
 "panel.section.connection" = "Verbindung";
@@ -57,6 +61,7 @@
 "about.license" = "MIT-Lizenz";
 "about.link.github" = "GitHub";
 "about.link.contact" = "mail@tim-ehrenfried.de";
+"about.link.docs" = "Dokumentation";
 
 /* Tippgeschwindigkeit */
 "menu.typingSpeed" = "Tippgeschwindigkeit";
@@ -72,7 +77,7 @@
 "pairing.waiting" = "Warte auf iPhone …";
 "pairing.countdown.valid" = "gültig für %d s";
 "pairing.countdown.expired" = "Code abgelaufen";
-"pairing.newCode" = "Neuen Code erzeugen";
+"pairing.autoRenewed" = "Code abgelaufen – neuer Code erzeugt.";
 "pairing.badOTP" = "Falscher Code – ein neuer Code wurde erzeugt. Bitte erneut eingeben.";
 "pairing.successShort" = "Gerät gekoppelt ✓";
 "pairing.success" = "„%@“ erfolgreich gekoppelt.";

@@ -117,9 +117,10 @@ erzeugt keinen neuen Code) ist zu vermeiden. Stattdessen:
     Timeout laufen): klaren Hinweis „Falscher Code" zeigen, Eingabefeld leeren, auf dem
     Pairing-Screen bleiben und für den nächsten Versuch die Pairing-Verbindung neu aufbauen
     (`pair_hello`), damit gegen den **neuen** OTP gehandshaked wird.
-- **Abgelaufener Code (`pairing_expired`) / Fenster geschlossen (`pairing_closed`):**
-  Host erzeugt auf Wunsch (Button „Neuen Code") einen neuen OTP; Client zeigt klaren Hinweis
-  und ermöglicht erneuten Versuch. Kein stiller Timeout ohne Rückmeldung.
+- **Abgelaufener Code (`pairing_expired`):** Solange das Pairing-Fenster offen ist, erzeugt
+  der Host bei Ablauf **automatisch einen neuen OTP** (kein „Neuen Code"-Button nötig) und
+  setzt den Countdown zurück. Client zeigt bei `pairing_expired` einen klaren Hinweis und
+  kann direkt gegen den neuen Code weiterversuchen. Kein stiller Timeout ohne Rückmeldung.
 - **Erfolg (`pair_ok`):** Client speichert und **schließt den Pairing-Screen automatisch**,
   verbindet zur Sitzung. Host zeigt kurz „Gerät gekoppelt ✓" und **schließt das
   Pairing-Fenster automatisch** (nach ~1,5 s).

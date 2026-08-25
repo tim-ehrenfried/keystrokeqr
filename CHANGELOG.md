@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.10.0] – 2026-08-25
+
+### Changed
+- **macOS – ein Fenster statt drei**: Kontrollpanel, Hilfe und Über sind jetzt ein Fenster mit interner Navigation (Zurück-Button); das Fenster öffnet exakt in Inhaltsgröße (kein Scrollen). „Einführung anzeigen" ist ein dezenter grauer Button oben rechts (kein blauer Link mehr); die Links in Über/Hilfe sind Icon-Buttons (GitHub/E-Mail/Doku) wie in der iOS-App.
+- **macOS – Pairing**: bei Ablauf des Codes wird automatisch ein neuer erzeugt (kein „Neuen Code"-Button mehr), Countdown zurückgesetzt, Hinweis „Code abgelaufen – neuer Code erzeugt".
+
+### Fixed
+- **iOS – Pairing-Screen war nach dem Schließen nur per App-Neustart wieder erreichbar**: Der Screen poppte durch die laufende Discovery in einer Schleife auf; der einzige Ausweg war Neustart. Jetzt merkt sich die App eine bewusste Ablehnung (kein automatisches Wieder-Aufpoppen) UND bietet einen jederzeit sichtbaren Weg zurück — ein „Mac koppeln"-Button in der Scanner-Ansicht (sobald ein Mac gefunden, aber nicht verbunden) sowie die Mac-Auswahlliste öffnen den Pairing-Screen erneut.
+
 ## [0.9.0] – 2026-08-25
 
 ### Added

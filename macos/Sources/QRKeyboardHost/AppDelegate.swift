@@ -12,8 +12,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pairingWindowController: PairingWindowController?
     private var onboardingWindowController: OnboardingWindowController?
     private var controlPanelWindowController: ControlPanelWindowController?
-    private var helpWindowController: HelpWindowController?
-    private var aboutWindowController: AboutWindowController?
     private var server: ScanServer?
 
     private let connectionItem = NSMenuItem(title: L("menu.status.waiting"), action: nil, keyEquivalent: "")
@@ -143,8 +141,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 openAccessibility: { [weak self] in self?.openAccessibilitySettings() },
                 pairDevice: { [weak self] in self?.openPairingWindow() },
                 removeDevice: { [weak self] id in self?.removeDevice(id) },
-                showHelp: { [weak self] in self?.showHelp() },
-                showAbout: { [weak self] in self?.showAbout() },
                 showIntro: { [weak self] in self?.showOnboarding() }
             )
         )
@@ -157,18 +153,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let controller = pairingWindowController ?? PairingWindowController(coordinator: pairingCoordinator)
         pairingWindowController = controller
         controller.start()
-    }
-
-    private func showHelp() {
-        let controller = helpWindowController ?? HelpWindowController()
-        helpWindowController = controller
-        controller.present()
-    }
-
-    private func showAbout() {
-        let controller = aboutWindowController ?? AboutWindowController()
-        aboutWindowController = controller
-        controller.present()
     }
 
     private func showOnboarding() {

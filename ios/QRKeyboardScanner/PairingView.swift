@@ -110,10 +110,22 @@ struct PairingView: View {
         // Während eines laufenden Versuchs und nach Erfolg (Auto-Close) kein
         // versehentliches Wegwischen.
         .interactiveDismissDisabled(isPairing || didPair)
+        .onDisappear {
+            // Auffangnetz für ALLE Schließ-Wege (Cancel-Button, Wegwischen): war
+            // es kein Erfolg, gilt der Mac als abgelehnt, damit die automatische
+            // Discovery ihn nicht sofort wieder aufpoppt. Idempotent zu cancel().
+            if !didPair {
+                connectionManager.declinePairing(for: service)
+            }
+        }
     }
 
     private func cancel() {
-        connectionManager.pendingPairingService = nil
+        // Bewusster Abbruch: Screen schließen UND den Mac als „abgelehnt" merken,
+        // damit die automatische Discovery ihn nicht sofort wieder aufpoppt
+        // (sonst käme man nur per App-Neustart aus dem Pairing heraus). Der Mac
+        // bleibt über den Mac-Auswahl-Button manuell koppelbar.
+        connectionManager.declinePairing(for: service)
         dismiss()
     }
 
