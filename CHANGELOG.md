@@ -3,6 +3,11 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.6.1] – 2026-08-25
+
+### Fixed
+- **iOS – „Mac-App veraltet" trotz v0.6.0-Host**: `NWBrowser` liefert den Bonjour-TXT-Record in Browse-Ergebnissen nicht zuverlässig mit (oft `.none`), wodurch der Client jeden Mac fälschlich als v1 einstufte und den Pairing-Screen unterdrückte. Ein Host gilt jetzt nur noch als veraltet, wenn er sich **explizit** als `v=1` meldet; fehlender Record oder `v=2` → als v2 behandelt (die Version wird beim Handshake final geprüft). Damit erscheint der Kopplungs-Dialog korrekt.
+
 ## [0.6.0] – 2026-08-25
 
 ### Added

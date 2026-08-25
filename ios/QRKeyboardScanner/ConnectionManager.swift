@@ -199,10 +199,17 @@ final class ConnectionManager: ObservableObject {
         newBrowser.start(queue: queue)
     }
 
-    /// Liest `v=2`/`v=1` aus dem Bonjour-TXT-Record des Ergebnisses.
+    /// Bewertet die Protokollversion aus dem Bonjour-TXT-Record.
+    ///
+    /// Wichtig: `NWBrowser` liefert den TXT-Record in den Browse-Ergebnissen
+    /// NICHT zuverlässig mit (häufig `.none`, obwohl der Host `v=2` announced).
+    /// Deshalb gilt ein Host nur dann als veraltet, wenn er sich **explizit**
+    /// als `v=1` meldet. Fehlt der Record oder steht `v=2` drin, behandeln wir
+    /// ihn als v2 — die tatsächliche Version wird beim Sitzungs-/Pairing-
+    /// Handshake ohnehin final geprüft (falscher Handshake ⇒ Verbindung scheitert).
     private static func isV2(_ result: NWBrowser.Result) -> Bool {
-        guard case let .bonjour(txt) = result.metadata else { return false }
-        return txt.dictionary["v"] == "2"
+        guard case let .bonjour(txt) = result.metadata else { return true }
+        return txt.dictionary["v"] != "1"
     }
 
     private func handleBrowseResults(_ results: Set<NWBrowser.Result>) {
