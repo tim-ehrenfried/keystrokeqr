@@ -30,6 +30,15 @@ jobs:
           S4: ${{ secrets.ASC_ISSUER_ID }}
           S5: ${{ secrets.ASC_KEY_P8 }}
         run: |
+          # Diagnose: pro Secret nur gesetzt/LEER + Zeichenlänge (nie Werte).
+          for pair in "MACOS_CERT_P12:$S1" "MACOS_CERT_PASSWORD:$S2" "ASC_KEY_ID:$S3" "ASC_ISSUER_ID:$S4" "ASC_KEY_P8:$S5"; do
+            name="${pair%%:*}"; val="${pair#*:}"
+            if [ -n "$val" ]; then
+              echo "  $name: gesetzt (${#val} Zeichen)"
+            else
+              echo "::warning::$name ist LEER — mit 'gh secret set $name' neu setzen."
+            fi
+          done
           if [ -n "$S1" ] && [ -n "$S2" ] && [ -n "$S3" ] && [ -n "$S4" ] && [ -n "$S5" ]; then
             echo "has=true" >> "$GITHUB_OUTPUT"
             echo "Signing-Secrets vollständig — Developer-ID-Pfad aktiv."
