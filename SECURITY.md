@@ -99,6 +99,33 @@ and networks that by definition contain no untrusted devices.
   that is its purpose, but it means: if you don't trust the code, read it before
   granting the permission (it's short).
 
+## Official builds & how to verify them
+
+KeystrokeQR is open source (MIT), so anyone may build and redistribute it —
+including binaries that compile in the official branding (the contact email
+and website are public by design, so they are not a secret). What nobody else
+can reproduce is the **signature** of an official build.
+
+**The only official distribution channels are:**
+
+- https://keystrokeqr.tim-ehrenfried.de (the `/mac` download)
+- https://github.com/tim-ehrenfried/keystrokeqr/releases
+- the App Store (iOS app)
+
+**Verifying an official macOS build** — every official DMG/app is signed with
+the Developer ID of team **U98SQM43B5** and notarized by Apple:
+
+```bash
+codesign -dv --verbose=2 "/Applications/KeystrokeQR Host.app" 2>&1 | grep TeamIdentifier
+# expected: TeamIdentifier=U98SQM43B5
+spctl --assess --type open --context context:primary-signature KeystrokeQR-Host-macOS.dmg
+# expected: accepted, source=Notarized Developer ID
+```
+
+A build from any other source, or one whose Team ID differs, is **not an
+official build** — regardless of what its About screen or embedded links
+claim. Support is provided for official builds only.
+
 ## Reporting vulnerabilities (responsible disclosure)
 
 Please do **not** report security issues as public GitHub issues; instead, email:
