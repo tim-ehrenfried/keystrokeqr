@@ -12,17 +12,31 @@ jobs:
   release-macos:
     name: macOS-App bauen & Release veröffentlichen
     runs-on: macos-15
-    # Secrets sind im `if:` einer Step-Bedingung nicht direkt nutzbar
-    # (GitHub Actions unterstützt den `secrets`-Kontext dort nicht) — daher
-    # hier einmal auf job-level env gemappt und Steps über `if: env....`
-    # gesteuert. Solange die 5 Secrets aus docs/RELEASE-PHASE.md (Phase 4)
-    # fehlen, ist HAS_SIGNING_SECRETS "false" und der ad-hoc-Pfad
-    # (unverändertes Alt-Verhalten) läuft wie bisher.
-    env:
-      HAS_SIGNING_SECRETS: ${{ secrets.MACOS_CERT_P12 != '' && secrets.MACOS_CERT_PASSWORD != '' && secrets.ASC_KEY_ID != '' && secrets.ASC_ISSUER_ID != '' && secrets.ASC_KEY_P8 != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Secrets sind in `if:`-Ausdrücken nicht direkt nutzbar und die
+      # Job-env-Expression-Variante erwies sich als unzuverlässig (Lauf
+      # 2026-08-26 nahm trotz gesetzter Secrets den ad-hoc-Pfad). Robustes
+      # Muster: Secrets auf STEP-env mappen und das Gate als Step-Output
+      # berechnen — Folge-Steps prüfen `steps.gate.outputs.has`.
+      - name: Signing-Secrets prüfen
+        id: gate
+        env:
+          S1: ${{ secrets.MACOS_CERT_P12 }}
+          S2: ${{ secrets.MACOS_CERT_PASSWORD }}
+          S3: ${{ secrets.ASC_KEY_ID }}
+          S4: ${{ secrets.ASC_ISSUER_ID }}
+          S5: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          if [ -n "$S1" ] && [ -n "$S2" ] && [ -n "$S3" ] && [ -n "$S4" ] && [ -n "$S5" ]; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+            echo "Signing-Secrets vollständig — Developer-ID-Pfad aktiv."
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+            echo "Signing-Secrets unvollständig — ad-hoc-Pfad."
+          fi
 
       - name: Gestyltes DMG bauen (ad-hoc-signiert)
         working-directory: macos
@@ -42,7 +56,7 @@ jobs:
           test -f "dist/KeystrokeQR-Host.dmg"
 
       - name: "Developer-ID: signieren + notarisieren"
-        if: env.HAS_SIGNING_SECRETS == 'true'
+        if: steps.gate.outputs.has == 'true'
         working-directory: macos
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
@@ -111,13 +125,13 @@ jobs:
           echo "Signiert + notarisiert + gestapelt: dist/KeystrokeQR-Host.dmg"
 
       - name: "Signing-Keychain + Key-Dateien aufräumen"
-        if: always() && env.HAS_SIGNING_SECRETS == 'true'
+        if: always() && steps.gate.outputs.has == 'true'
         run: |
           security delete-keychain "$KEYCHAIN" 2>/dev/null || true
           rm -f "$CERT_PATH" "$ASC_KEY_PATH" 2>/dev/null || true
 
       - name: "Hinweis: unsigniertes Release (Secrets fehlen)"
-        if: env.HAS_SIGNING_SECRETS != 'true'
+        if: steps.gate.outputs.has != 'true'
         run: |
           echo "::warning::MACOS_CERT_P12/MACOS_CERT_PASSWORD/ASC_KEY_ID/ASC_ISSUER_ID/ASC_KEY_P8 sind nicht (vollständig) als GitHub-Secrets gesetzt — es wird ein NICHT signiertes/notarisiertes (nur ad-hoc-signiertes) DMG released. macOS zeigt Endnutzern beim Öffnen eine Gatekeeper-Warnung. Setup: docs/RELEASE-PHASE.md, Phase 4."
 
