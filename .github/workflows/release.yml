@@ -48,7 +48,7 @@ jobs:
           fi
 
       - name: dmgbuild installieren (gestyltes DMG ohne Finder)
-        run: python3 -m pip install --user --quiet dmgbuild
+        run: python3 -m pip install --user --break-system-packages --quiet dmgbuild
 
       - name: Gestyltes DMG bauen (ad-hoc-signiert)
         working-directory: macos
