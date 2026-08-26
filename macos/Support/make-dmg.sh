@@ -29,6 +29,17 @@ ICON_SIZE=110
 APP_X=150;  APP_Y=205
 APPS_X=450; APPS_Y=205
 
+# Secure Timestamp: von Apple für Developer-ID-Signaturen verlangt
+# (Notarisierung scheitert sonst); bei ad-hoc ("-") wird Timestamping nicht
+# unterstützt (codesign würde fehlschlagen) — daher nur setzen, wenn eine
+# echte Signing-Identität übergeben wurde. Bewusst ein einfacher String statt
+# eines Arrays: macOS' /bin/bash ist 3.2, das "${ARR[@]}" bei leerem Array
+# unter `set -u` fälschlich als unbound variable ablehnt.
+TIMESTAMP_FLAG=""
+if [ "$SIGN_IDENTITY" != "-" ]; then
+  TIMESTAMP_FLAG="--timestamp"
+fi
+
 rm -f "$OUT_DMG"
 
 # ---- Bevorzugt: create-dmg ------------------------------------------------
@@ -48,7 +59,7 @@ if command -v create-dmg >/dev/null 2>&1; then
     --no-internet-enable \
     "$OUT_DMG" "$APP_BUNDLE"
   if [ "$SIGN_IDENTITY" != "-" ] || true; then
-    codesign --force --sign "$SIGN_IDENTITY" "$OUT_DMG" 2>/dev/null || \
+    codesign --force $TIMESTAMP_FLAG --sign "$SIGN_IDENTITY" "$OUT_DMG" 2>/dev/null || \
       echo "make-dmg: DMG-Signatur übersprungen"
   fi
   echo "make-dmg: erstellt $OUT_DMG"
@@ -129,7 +140,7 @@ MOUNT_DIR=""
 hdiutil convert "$RW_DMG" -format UDZO -imagekey zlib-level=9 -o "$OUT_DMG" -ov -quiet
 
 # Optional signieren (ad-hoc "-" oder Developer-ID)
-codesign --force --sign "$SIGN_IDENTITY" "$OUT_DMG" 2>/dev/null && \
+codesign --force $TIMESTAMP_FLAG --sign "$SIGN_IDENTITY" "$OUT_DMG" 2>/dev/null && \
   echo "make-dmg: DMG signiert ($SIGN_IDENTITY)" || \
   echo "make-dmg: DMG-Signatur übersprungen"
 

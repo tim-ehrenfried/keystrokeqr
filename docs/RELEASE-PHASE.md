@@ -106,17 +106,91 @@ Same store steps afterwards.
 
 ## Phase 4 — macOS: signed + notarized DMG (≈ 1 h) `[Tim+Claude]`
 
-1. `[Tim]` Add three **GitHub secrets** (repo → Settings → Secrets →
-   Actions): `MACOS_CERT_P12` (Developer ID cert exported as base64 .p12),
-   `MACOS_CERT_PASSWORD`, and the ASC API key trio
-   (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` base64).
-2. `[Claude]` I extend `release.yml`: import the cert into a temp keychain →
-   `make dmg OFFICIAL=1 SIGN_IDENTITY="Developer ID Application: …"` →
-   `xcrun notarytool submit --wait` → `xcrun stapler staple` → upload the
-   stapled DMG. Result: **no Gatekeeper friction** — download, open, drag,
-   done. I also trim `docs/INSTALL.md`'s Gatekeeper section accordingly.
-3. Optional (post-launch): **Sparkle** auto-updates fed from GitHub
-   releases, so DMG users get updates in-app.
+**Status:** `release.yml` already has the conditional signing/notarization
+block (`.github/workflows/release.yml`, step *"Developer-ID: signieren +
+notarisieren"*) and `macos/Makefile` has the `notarize` target — both wired
+up and tested locally (ad-hoc path unchanged). All that's missing are the
+five GitHub secrets below; once they exist, the **next tag** produces a
+notarized DMG automatically. Nothing else to build.
+
+### 1. `[Tim]` Export the Developer ID certificate as `.p12`
+
+In **Keychain Access** (`Keychain Access.app`) → login keychain → *My
+Certificates*: find **"Developer ID Application: Tim Ehrenfried (TEAMID)"**,
+expand it to see the private key underneath, select **both** the
+certificate *and* the private key (⌘-click), right-click → **Export 2
+items…** → format **Personal Information Exchange (.p12)** → save as
+e.g. `~/Desktop/developer-id.p12` → set a strong export password when
+prompted (this becomes `MACOS_CERT_PASSWORD` below).
+
+### 2. `[Tim]` Base64-encode it and set the GitHub secrets
+
+Run from a terminal (repo checked out, `gh` CLI authenticated,
+`cd` into the repo first so `gh secret set` targets the right repo):
+
+```sh
+# 1) Certificate, base64 → clipboard, paste as the secret value
+base64 -i ~/Desktop/developer-id.p12 | pbcopy
+gh secret set MACOS_CERT_P12
+# → paste (⌘V), confirm with Ctrl-D
+
+# 2) Certificate export password (the one you set in step 1)
+gh secret set MACOS_CERT_PASSWORD
+# → type/paste the password, confirm with Ctrl-D
+
+# 3) App Store Connect API key trio (from Phase 1 — Key ID, Issuer ID, and
+#    the .p8 file stored in ~/.secrets/)
+gh secret set ASC_KEY_ID
+# → paste the Key ID, confirm with Ctrl-D
+
+gh secret set ASC_ISSUER_ID
+# → paste the Issuer ID (UUID), confirm with Ctrl-D
+
+base64 -i ~/.secrets/AuthKey_XXXXXXXXXX.p8 | gh secret set ASC_KEY_P8
+```
+
+(Replace `AuthKey_XXXXXXXXXX.p8` with the actual filename from Phase 1.)
+Verify all five landed: `gh secret list` should show `MACOS_CERT_P12`,
+`MACOS_CERT_PASSWORD`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`.
+
+Afterwards, securely delete the local `.p12` export
+(`rm ~/Desktop/developer-id.p12`) — the secret is now in GitHub, no need to
+keep a plaintext copy lying around.
+
+### 3. `[Tim]` Cut a release tag — that's it
+
+```sh
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+`release.yml` detects the secrets, re-signs the app + DMG with the
+Developer ID identity (hardened runtime + secure timestamp), submits to
+`notarytool`, staples the ticket, verifies with `spctl`/`stapler validate`,
+and uploads the notarized DMG as the release asset. Watch the run under
+**Actions** — the signing step logs the identity it picked and the
+`notarytool submit --wait` output (accepted/rejected + any issues).
+Cleanup of the temporary keychain and key files happens automatically,
+even if a step fails.
+
+If any of the five secrets is missing or empty, the pipeline silently
+falls back to the previous ad-hoc-only behavior and logs a
+`::warning::` in the Actions run explaining why — so a partially-configured
+secret set never blocks a release, it just ships unsigned like before.
+
+### 4. Result
+
+**No Gatekeeper friction** for end users — download, open, drag, done.
+`docs/INSTALL.md`'s Gatekeeper section already has the "as of vX, this no
+longer applies" paragraph prepared as an **HTML comment** right above the
+ad-hoc instructions — after the first notarized release lands, uncomment
+it, replace `vX` with the actual version tag, and remove the `TODO(Tim)`
+note above it.
+
+### 5. Optional (post-launch)
+
+**Sparkle** auto-updates fed from GitHub releases, so DMG users get updates
+in-app.
 
 ---
 
