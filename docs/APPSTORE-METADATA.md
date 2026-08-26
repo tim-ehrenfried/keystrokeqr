@@ -1,5 +1,99 @@
 # App Store Metadata — ready to paste
 
+## Status & where each field lives (updated 2026-08-26)
+
+Already entered in ASC ✅: app record, EN description/keywords/promotional
+text, support+marketing URL, categories, privacy (published, "no data
+collected"), price 0.00 + all countries, age rating 4+.
+
+Still to paste — field → ASC location:
+
+| What | Where in App Store Connect | Source below |
+|---|---|---|
+| **Subtitle** (Untertitel) | Vertrieb → App-Informationen → Lokalisierbare Informationen | "Basics" table |
+| **Encryption declaration** | Vertrieb → App-Informationen → "Dokumentation zur App-Verschlüsselung" (+) | "Encryption" section |
+| **Review contact + notes** | Version 1.0 page → section "App-Prüfung" | "App Review notes" |
+| **TestFlight test notes** | TestFlight → build → Testdetails | "TestFlight notes" |
+| **German localization** | Version page → language switcher (top right) → add Deutsch | DE blocks below |
+| App icon | **nothing to upload** — ships inside the build (1024 asset, Xcode 14+) | — |
+| "What's New" / release notes | field does **not exist for 1.0**; appears from the first update on | "Release notes" |
+| Screenshots | Version 1.0 page (per device size) | screenshot plan |
+
+## Encryption declaration (export compliance)
+
+ASC question | Answer
+---|---
+"Does your app use encryption?" / "Verwendet deine App Verschlüsselung?" | **Yes / Ja**
+"Does your app qualify for any of the exemptions …?" / standard algorithms only? | **Yes / Ja** — the app uses **only standard, operating-system-provided encryption** (Apple CryptoKit: Curve25519 key agreement, HKDF-SHA256, HMAC-SHA256, ChaCha20-Poly1305) to secure the local device-to-device connection. No proprietary or custom cryptography.
+Result | Exempt (mass-market, standard crypto). `ITSAppUsesNonExemptEncryption = NO` is already set in the app's Info.plist, so uploads won't re-ask per build.
+
+## TestFlight notes ("What to Test", per build)
+
+EN:
+```
+KeystrokeQR needs its free Mac companion app on the same Wi-Fi:
+https://keystrokeqr.tim-ehrenfried.de (or build from GitHub).
+
+1. Launch "KeystrokeQR Host" on the Mac, grant Accessibility.
+2. In the Mac menu bar app choose "Pair device…" and enter the 6-digit
+   code on the iPhone (one time).
+3. Put the cursor in any Mac text field, scan a QR/barcode, hold the
+   yellow shutter until the haptic pop — the text is typed on the Mac.
+
+Please also try: Continuous mode (Settings), Auto-Tab/Auto-Enter,
+aiming with two codes in view, typing speed (Mac panel).
+```
+
+DE:
+```
+KeystrokeQR braucht die kostenlose Mac-App im selben WLAN:
+https://keystrokeqr.tim-ehrenfried.de (oder von GitHub bauen).
+
+1. „KeystrokeQR Host" am Mac starten, Bedienungshilfen erlauben.
+2. Im Mac-Menü „Gerät koppeln…" wählen und den 6-stelligen Code am
+   iPhone eingeben (einmalig).
+3. Cursor am Mac in ein Textfeld setzen, QR-/Barcode scannen, den gelben
+   Auslöser bis zum haptischen „Pop" halten — der Text wird am Mac getippt.
+
+Bitte auch testen: Kontinuierlicher Modus (Einstellungen), Auto-Tab/
+Auto-Enter, Zielen mit zwei Codes im Bild, Tippgeschwindigkeit (Mac-Panel).
+```
+
+## Release notes (for the FIRST UPDATE's "What's New"; 1.0 has no such field)
+
+EN 1.0-style (also usable as GitHub release text):
+```
+First public release.
+
+• Scan QR codes and common barcodes on your iPhone — typed instantly on your Mac
+• One-time encrypted pairing, local Wi-Fi only, no cloud, no accounts
+• Push-to-send with hold-to-trigger, plus a continuous scanning mode
+• Aiming scan window, Auto-Tab/Auto-Enter, adjustable typing speed
+• Lock Screen widget, Control Center control, Action button & Siri
+```
+
+DE:
+```
+Erste öffentliche Version.
+
+• QR-Codes und gängige Barcodes mit dem iPhone scannen — sofort am Mac getippt
+• Einmalige verschlüsselte Kopplung, nur im lokalen WLAN, keine Cloud, keine Konten
+• Push-to-Send mit Halte-Auslöser, plus kontinuierlicher Scan-Modus
+• Scan-Fenster mit Zielen, Auto-Tab/Auto-Enter, einstellbare Tippgeschwindigkeit
+• Sperrbildschirm-Widget, Kontrollzentrum, Action Button & Siri
+```
+
+## App Review contact (template — fill your details)
+
+| Field | Value |
+|---|---|
+| First/last name | Tim Ehrenfried |
+| Phone | +49 … (your number) |
+| Email | mail@tim-ehrenfried.de |
+| Sign-in required | **No** (no accounts in the app) |
+| Notes | see "App Review notes" section below + attach the demo video |
+
+
 All texts for the App Store Connect record (Phase 2 of
 [RELEASE-PHASE.md](RELEASE-PHASE.md)). English is the primary locale, German
 the second. Character limits are noted per field.
