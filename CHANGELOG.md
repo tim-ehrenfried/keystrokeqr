@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer](https://semver.org/).
 
+## [0.16.2] – 2026-08-26 (macOS only)
+
+### Fixed
+- **DMG window styling actually ships now**: the DMG is built with `dmgbuild` (programmatic `.DS_Store`) instead of Finder/AppleScript — the branded background, window size, and icon positions are baked in deterministically, including on headless CI runners. (Previously the Finder never flushed the `.DS_Store`, so every DMG opened as an unstyled white window.)
+
 ## [0.16.1] – 2026-08-26 (macOS only)
 
 ### Changed

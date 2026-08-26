@@ -47,6 +47,9 @@ jobs:
             echo "Signing-Secrets unvollständig — ad-hoc-Pfad."
           fi
 
+      - name: dmgbuild installieren (gestyltes DMG ohne Finder)
+        run: python3 -m pip install --user --quiet dmgbuild
+
       - name: Gestyltes DMG bauen (ad-hoc-signiert)
         working-directory: macos
         # OFFICIAL=1: only our release pipeline bakes in the official branding

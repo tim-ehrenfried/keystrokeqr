@@ -42,7 +42,25 @@ fi
 
 rm -f "$OUT_DMG"
 
-# ---- Bevorzugt: create-dmg ------------------------------------------------
+# ---- Bevorzugt: dmgbuild (headless-fähig, kein Finder/AppleScript) ---------
+# Schreibt die .DS_Store (Hintergrund, Icon-Positionen, Fenstergröße)
+# programmatisch — funktioniert deterministisch auch auf CI-Runnern.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+if python3 -c "import dmgbuild" >/dev/null 2>&1; then
+  echo "make-dmg: nutze dmgbuild"
+  python3 -m dmgbuild -s "$HERE/dmgbuild-settings.py" \
+    -D app="$APP_BUNDLE" \
+    -D background="$BG_PNG" \
+    ${VOL_ICNS:+-D icns="$VOL_ICNS"} \
+    "$VOLNAME" "$OUT_DMG"
+  codesign --force $TIMESTAMP_FLAG --sign "$SIGN_IDENTITY" "$OUT_DMG" 2>/dev/null && \
+    echo "make-dmg: DMG signiert ($SIGN_IDENTITY)" || \
+    echo "make-dmg: DMG-Signatur übersprungen"
+  echo "make-dmg: erstellt $OUT_DMG (gestylt via dmgbuild)"
+  exit 0
+fi
+
+# ---- Fallback: create-dmg -------------------------------------------------
 if command -v create-dmg >/dev/null 2>&1; then
   echo "make-dmg: nutze create-dmg"
   VOLICON_ARGS=()
@@ -91,9 +109,16 @@ fi
 hdiutil create -srcfolder "$STAGE" -volname "$VOLNAME" \
   -fs HFS+ -format UDRW -ov "$RW_DMG" -quiet
 
-# Mounten
-MOUNT_DIR="$(mktemp -d)"
-hdiutil attach "$RW_DMG" -mountpoint "$MOUNT_DIR" -nobrowse -noverify -noautoopen -quiet
+# Mounten — bewusst OHNE -nobrowse und OHNE eigenen Mountpoint: nur für
+# regulär unter /Volumes gemountete, browsebare Volumes schreibt der Finder
+# die .DS_Store (Fensterlayout/Hintergrund). Das Volume erscheint dadurch
+# während des Builds kurz im Finder — das ist der Preis fürs Styling.
+hdiutil attach "$RW_DMG" -noverify -noautoopen -quiet
+MOUNT_DIR="/Volumes/$VOLNAME"
+if [ ! -d "$MOUNT_DIR" ]; then
+  echo "make-dmg: WARNUNG – erwarteter Mountpoint $MOUNT_DIR fehlt" >&2
+  MOUNT_DIR="$(hdiutil info | grep -A1 "$RW_DMG" | grep '/Volumes/' | awk '{print $NF}' | head -1)"
+fi
 
 # Best-effort Feinstyling über Finder-AppleScript (in Headless/CI oft nicht
 # erlaubt → Fehler werden ignoriert, das DMG bleibt trotzdem gültig).
@@ -118,7 +143,20 @@ end tell
 APPLESCRIPT
 then
   echo "make-dmg: Finder-Styling angewendet"
+  # Der Finder schreibt die .DS_Store (Fensterlayout + Hintergrund) VERZÖGERT —
+  # ohne Wartezeit fehlt sie im finalen DMG und das Styling geht verloren.
   sync
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    [ -f "$MOUNT_DIR/.DS_Store" ] && break
+    sleep 1
+  done
+  sleep 2
+  sync
+  if [ -f "$MOUNT_DIR/.DS_Store" ]; then
+    echo "make-dmg: .DS_Store geschrieben"
+  else
+    echo "make-dmg: WARNUNG – .DS_Store wurde nicht geschrieben (Styling geht verloren)"
+  fi
 else
   echo "make-dmg: Finder-Styling nicht möglich (Headless/CI) – DMG enthält App, /Applications-Symlink und Hintergrundbild, aber keine vorgesetzten Icon-Positionen."
 fi
