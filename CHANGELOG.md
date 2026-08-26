@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer](https://semver.org/).
 
+## [0.16.1] – 2026-08-26 (macOS only)
+
+### Changed
+- **Release DMGs are now signed with a Developer ID and notarized by Apple** (hardened runtime, secure timestamp, stapled ticket) — the Gatekeeper "unverified developer / potentially malicious" warning is gone for this and all future releases. Community builds from source are unaffected.
+
 ## [0.16.0] – 2026-08-25
 
 ### Added
