@@ -1,2 +1,6 @@
 # Lokale Layout-Verifikations-Screenshots (Simulator) — nicht einchecken.
 layout-verify.png
+
+# Nur in offiziellen Builds vorhanden (von ios/ci_scripts/ci_post_clone.sh
+# bzw. lokal erzeugt) — setzt OFFICIAL_BUILD via #include? in Shared.xcconfig.
+Config/Official.xcconfig

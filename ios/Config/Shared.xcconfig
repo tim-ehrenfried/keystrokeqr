@@ -1,0 +1,17 @@
+// Shared.xcconfig — von App- und Widget-Target (Debug + Release) als
+// Base-Konfiguration eingebunden.
+//
+// Zweck: Xcode-Cloud-Builds können keine CLI-Overrides wie
+// `SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFICIAL_BUILD'`
+// mitgeben. Stattdessen inkludiert diese committete Datei OPTIONAL eine
+// lokale `Official.xcconfig` (gitignored, siehe ios/.gitignore):
+//
+//   - Fehlt `Official.xcconfig` (Normalfall: Checkout aus dem Repo),
+//     ist dieser Include ein No-op → neutraler Community-Build.
+//   - In Xcode Cloud schreibt `ios/ci_scripts/ci_post_clone.sh` die Datei
+//     vor dem Build → das Flag `OFFICIAL_BUILD` ist gesetzt und
+//     BrandingConfig.swift kompiliert die offiziellen Referenzen ein.
+//
+// Hintergrund: docs/BRANDING.md, Abschnitt "Official vs. community builds".
+
+#include? "Official.xcconfig"

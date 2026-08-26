@@ -248,6 +248,14 @@ xcodebuild -project QRKeyboardScanner.xcodeproj \
   SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) OFFICIAL_BUILD'
 ```
 
+**Xcode Cloud** cannot pass CLI overrides, so the app and widget configs use
+[`Config/Shared.xcconfig`](Config/Shared.xcconfig) as their base, which
+optionally includes a gitignored `Config/Official.xcconfig`
+(`#include? "Official.xcconfig"`). On Xcode Cloud,
+[`ci_scripts/ci_post_clone.sh`](ci_scripts/ci_post_clone.sh) writes that file
+after cloning, making every Xcode Cloud build an official build; a plain
+checkout has no `Official.xcconfig` and stays a neutral community build.
+
 ## Version
 
 `0.16.0` (`MARKETING_VERSION` in the app, widget and test targets, Debug + Release).
