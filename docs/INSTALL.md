@@ -18,18 +18,12 @@ Requirement: **macOS 13 (Ventura) or newer**.
 
 ## 2. Gatekeeper: "App can't be opened"
 
-<!-- TODO(Tim): once Phase 4 (docs/RELEASE-PHASE.md) has produced the first
-     notarized release, replace "vX" below with that version tag (e.g. v0.17.0)
-     and delete this comment. Until then this paragraph must stay commented
-     out / absent — it would be factually wrong for the ad-hoc-only DMGs
-     that ship before the GitHub secrets exist. -->
 
-<!--
-> **As of vX: the DMG is signed with a Developer ID and notarized by
+
+> **As of v0.16.1: the DMG is signed with a Developer ID and notarized by
 > Apple — it opens without any Gatekeeper warning.** Just download, open the
 > DMG, and drag the app to Applications; nothing else needed. The steps
 > below only apply if you're using an **older release**.
--->
 
 The app is **ad-hoc signed and not notarized** (an open-source project without
 a paid Apple Developer certificate). macOS therefore blocks it with a warning
